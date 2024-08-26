@@ -35,6 +35,8 @@ export const getJWEToken = (data: JWETokenPayLoad, serviceType: string) =>
     })
   );
 
+
+
 // Returns the list of service types available
 export const getCloudPulseServiceTypes = () =>
   Request<ServiceTypesList>(

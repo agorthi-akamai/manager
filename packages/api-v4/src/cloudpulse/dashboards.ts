@@ -1,5 +1,5 @@
 import { ResourcePage } from 'src/types';
-import Request, { setMethod, setURL } from '../request';
+import Request, { setHeaders, setMethod, setURL } from '../request';
 import { Dashboard } from './types';
 // import { API_ROOT } from 'src/constants';
 
@@ -19,7 +19,11 @@ export const getDashboards = (serviceType: string) =>
 
 export const getDashboardById = (dashboardId: number) =>
   Request<Dashboard>(
-    setURL(`${API_ROOT}/monitor/dashboards/${encodeURIComponent(dashboardId)}`),
+    setURL(
+      `https://blr-lhv95n.bangalore.corp.akamai.com:9000/v4beta/monitor/dashboards/${encodeURIComponent(
+        dashboardId
+      )}`
+    ),
     setMethod('GET'),
     setHeaders({
       Authorization: 'Bearer vagrant',

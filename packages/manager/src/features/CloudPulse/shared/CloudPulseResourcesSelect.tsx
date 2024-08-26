@@ -20,9 +20,11 @@ export interface CloudPulseResourcesSelectProps {
     savePref?: boolean
   ) => void;
   placeholder?: string;
+  preferences: AclpConfig;
   region?: string;
   resourceType: string | undefined;
   savePreferences?: boolean;
+  updatePreferences: (data: {}) => void;
   xFilter?: Filter;
 }
 
@@ -33,6 +35,7 @@ export const CloudPulseResourcesSelect = React.memo(
       disabled,
       handleResourcesSelection,
       placeholder,
+      preferences,
       region,
       resourceType,
       savePreferences,
