@@ -5,26 +5,19 @@ import {
   usePreferences,
 } from 'src/queries/profile/preferences';
 
+
 import { DASHBOARD_ID, TIME_DURATION } from './constants';
 
 import type { AclpWidget } from '@linode/api-v4';
-
-/**
- *
- *  This hook is used in CloudPulseDashboardLanding, GlobalFilters & CloudPulseWidget component
- */
 
 export const useAclpPreference = () => {
   const { data: preferences, isLoading } = usePreferences();
 
   const { mutateAsync: updateFunction } = useMutatePreferences();
 
-  /**
-   *
-   * @param data AclpConfig data to be updated in preferences
-   */
+  const preferenceRef = useRef({ ...(preferences?.aclpPreference ?? {}) });
   const updateGlobalFilterPreference = (data: {}) => {
-    let currentPreferences = { ...(preferences?.aclpPreference ?? {}) };
+    let currentPreferences = { ...preferenceRef.current };
     const keys = Object.keys(data);
 
     if (keys.includes(DASHBOARD_ID)) {
@@ -38,16 +31,12 @@ export const useAclpPreference = () => {
         ...data,
       };
     }
+    preferenceRef.current = currentPreferences;
     updateFunction({ aclpPreference: currentPreferences });
   };
 
-  /**
-   *
-   * @param label label of the widget that should be updated
-   * @param data AclpWidget data for the label that is to be updated in preference
-   */
   const updateWidgetPreference = (label: string, data: Partial<AclpWidget>) => {
-    const updatedPreferences = { ...(preferences?.aclpPreference ?? {}) };
+    const updatedPreferences = { ...preferenceRef.current };
 
     if (!updatedPreferences.widgets) {
       updatedPreferences.widgets = {};
@@ -58,11 +47,12 @@ export const useAclpPreference = () => {
       label,
       ...data,
     };
+    preferenceRef.current = updatedPreferences;
     updateFunction({ aclpPreference: updatedPreferences });
   };
   return {
     isLoading,
-    preferences: preferences?.aclpPreference ?? {},
+    preferences: preferenceRef.current,
     updateGlobalFilterPreference,
     updateWidgetPreference,
   };

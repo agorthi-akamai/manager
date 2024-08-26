@@ -312,7 +312,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
 
           <CloudPulseLineGraph
             error={
-              (status === 'error' && metricsApiCallError !== jweTokenExpiryError) 
+              (status === 'error' && metricsApiCallError !== jweTokenExpiryError)
               // || widget.label.includes('CPU') // show the error only if the error is not related to token expiration
                 ? metricsApiCallError ?? 'Error while rendering graph'
                 : undefined

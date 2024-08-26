@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import { Autocomplete } from 'src/components/Autocomplete/Autocomplete';
 
-import type { TimeDuration } from '@linode/api-v4';
+import type { AclpConfig, TimeDuration } from '@linode/api-v4';
 import type {
   BaseSelectProps,
   Item,
@@ -20,7 +20,9 @@ export interface CloudPulseTimeRangeSelectProps
     savePref?: boolean
   ) => void;
   placeholder?: string;
+  preferences?: AclpConfig;
   savePreferences?: boolean;
+  updatePreferences?: (data: {}) => void;
 }
 
 const PAST_7_DAYS = 'Last 7 Days';

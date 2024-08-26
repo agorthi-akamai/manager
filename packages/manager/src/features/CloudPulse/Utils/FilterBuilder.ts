@@ -101,6 +101,7 @@ export const getResourcesProperties = (
     ),
     handleResourcesSelection: handleResourceChange,
     placeholder,
+    preferences,
     resourceType: dashboard.service_type,
     savePreferences: !isServiceAnalyticsIntegration,
     xFilter: buildXFilter(config, dependentFilters ?? {}),
@@ -191,7 +192,9 @@ export const getTimeDurationProperties = (
       timeDuration !== undefined ? (timeDuration as string) : undefined,
     handleStatsChange: handleTimeRangeChange,
     placeholder,
+    preferences,
     savePreferences: !isServiceAnalyticsIntegration,
+    updatePreferences,
   };
 };
 
