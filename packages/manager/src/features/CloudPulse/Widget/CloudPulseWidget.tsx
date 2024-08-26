@@ -13,10 +13,7 @@ import {
 } from '../Utils/CloudPulseWidgetUtils';
 import { AGGREGATE_FUNCTION, SIZE, TIME_GRANULARITY } from '../Utils/constants';
 import { convertValueToUnit, formatToolTip } from '../Utils/unitConversion';
-import {
-  getUserPreferenceObject,
-  updateWidgetPreference,
-} from '../Utils/UserPreference';
+import { useAclpPreference } from '../Utils/UserPreference';
 import { convertStringToCamelCasesWithSpaces } from '../Utils/utils';
 import { CloudPulseAggregateFunction } from './components/CloudPulseAggregateFunction';
 import { CloudPulseIntervalSelect } from './components/CloudPulseIntervalSelect';
@@ -108,12 +105,14 @@ export interface LegendRow {
 }
 
 export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
+  const {
+    preferences,
+    updateWidgetPreference: updatePreferences,
+  } = useAclpPreference();
   const { data: profile } = useProfile();
-
   const timezone = profile?.timezone ?? DateTime.local().zoneName;
 
   const [widget, setWidget] = React.useState<Widgets>({ ...props.widget });
-
   const {
     ariaLabel,
     authToken,
@@ -125,6 +124,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
     serviceType,
     timeStamp,
     unit,
+    widget: widgetProp,
   } = props;
 
   const flags = useFlags();
@@ -135,7 +135,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
    */
   const handleZoomToggle = React.useCallback((zoomInValue: boolean) => {
     if (savePref) {
-      updateWidgetPreference(widget.label, {
+      updatePreferences(widget.label, {
         [SIZE]: zoomInValue ? 12 : 6,
       });
     }
@@ -155,20 +155,19 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
   const handleAggregateFunctionChange = React.useCallback(
     (aggregateValue: string) => {
       // To avoid updation if user again selected the currently selected value from drop down.
-      if (aggregateValue !== widget.aggregate_function) {
-        if (savePref) {
-          updateWidgetPreference(widget.label, {
-            [AGGREGATE_FUNCTION]: aggregateValue,
-          });
-        }
 
-        setWidget((currentWidget: Widgets) => {
-          return {
-            ...currentWidget,
-            aggregate_function: aggregateValue,
-          };
+      if (savePref) {
+        updatePreferences(widget.label, {
+          [AGGREGATE_FUNCTION]: aggregateValue,
         });
       }
+
+      setWidget((currentWidget: Widgets) => {
+        return {
+          ...currentWidget,
+          aggregate_function: aggregateValue,
+        };
+      });
     },
     []
   );
@@ -179,33 +178,27 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
    */
   const handleIntervalChange = React.useCallback(
     (intervalValue: TimeGranularity) => {
-      if (
-        !widget.time_granularity ||
-        intervalValue.unit !== widget.time_granularity.unit ||
-        intervalValue.value !== widget.time_granularity.value
-      ) {
-        if (savePref) {
-          updateWidgetPreference(widget.label, {
-            [TIME_GRANULARITY]: { ...intervalValue },
-          });
-        }
-
-        setWidget((currentWidget: Widgets) => {
-          return {
-            ...currentWidget,
-            time_granularity: { ...intervalValue },
-          };
+      if (savePref) {
+        updatePreferences(widget.label, {
+          [TIME_GRANULARITY]: { ...intervalValue },
         });
       }
+
+      setWidget((currentWidget: Widgets) => {
+        return {
+          ...currentWidget,
+          time_granularity: { ...intervalValue },
+        };
+      });
     },
     []
   );
   // Update the widget preference if already not present in the preferences
   React.useEffect(() => {
     if (savePref) {
-      const widgets = getUserPreferenceObject()?.widgets;
+      const widgets = preferences.widgets;
       if (!widgets || !widgets[widget.label]) {
-        updateWidgetPreference(widget.label, {
+        updatePreferences(widget.label, {
           [AGGREGATE_FUNCTION]: widget.aggregate_function,
           [SIZE]: widget.size,
           [TIME_GRANULARITY]: widget.time_granularity,
@@ -266,6 +259,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
     today = generatedData.today;
     currentUnit = generatedData.unit;
   }
+
   return (
     <Grid item lg={widget.size} xs={12}>
       <Paper>
@@ -294,7 +288,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
             >
               {availableMetrics?.scrape_interval && (
                 <CloudPulseIntervalSelect
-                  default_interval={widget?.time_granularity}
+                  default_interval={widgetProp?.time_granularity}
                   onIntervalChange={handleIntervalChange}
                   scrape_interval={availableMetrics.scrape_interval}
                 />
@@ -306,7 +300,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
                   availableAggregateFunctions={
                     availableMetrics!.available_aggregate_functions
                   }
-                  defaultAggregateFunction={widget?.aggregate_function}
+                  defaultAggregateFunction={widgetProp?.aggregate_function}
                   onAggregateFuncChange={handleAggregateFunctionChange}
                 />
               )}

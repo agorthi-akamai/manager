@@ -6,22 +6,22 @@ import { Typography } from 'src/components/Typography';
 import { useCloudPulseDashboardsQuery } from 'src/queries/cloudpulse/dashboards';
 
 import { DASHBOARD_ID, REGION, RESOURCES } from '../Utils/constants';
-import {
-  getUserPreferenceObject,
-  updateGlobalFilterPreference,
-} from '../Utils/UserPreference';
 
 import type { Dashboard } from '@linode/api-v4';
 
 export interface CloudPulseDashboardSelectProps {
+  defaultValue: number | undefined;
   handleDashboardChange: (
     dashboard: Dashboard | undefined,
     isDefault?: boolean
   ) => void;
+  updatePreferences: (data: {}) => void;
 }
 
 export const CloudPulseDashboardSelect = React.memo(
   (props: CloudPulseDashboardSelectProps) => {
+    const { defaultValue, handleDashboardChange, updatePreferences } = props;
+
     const {
       data: dashboardsList,
       error,
@@ -47,16 +47,16 @@ export const CloudPulseDashboardSelect = React.memo(
     // Once the data is loaded, set the state variable with value stored in preferences
     React.useEffect(() => {
       if (dashboardsList) {
-        const dashboardId = getUserPreferenceObject()?.dashboardId;
+        // const dashboardId = preferences.dashboardId;
 
-        if (dashboardId) {
+        if (defaultValue) {
           const dashboard = dashboardsList.data.find(
-            (obj) => obj.id === dashboardId
+            (obj) => obj.id === defaultValue
           );
           setSelectedDashboard(dashboard);
-          props.handleDashboardChange(dashboard, true);
+          handleDashboardChange(dashboard, true);
         } else {
-          props.handleDashboardChange(undefined, true);
+          handleDashboardChange(undefined, true);
         }
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -65,13 +65,13 @@ export const CloudPulseDashboardSelect = React.memo(
     return (
       <Autocomplete
         onChange={(_: any, dashboard: Dashboard) => {
-          updateGlobalFilterPreference({
+          updatePreferences({
             [DASHBOARD_ID]: dashboard?.id,
             [REGION]: undefined,
             [RESOURCES]: undefined,
           });
           setSelectedDashboard(dashboard);
-          props.handleDashboardChange(dashboard);
+          handleDashboardChange(dashboard);
         }}
         renderGroup={(params) => (
           <Box key={params.key}>
