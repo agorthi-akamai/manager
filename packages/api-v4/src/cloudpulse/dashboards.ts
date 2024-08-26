@@ -4,7 +4,7 @@ import { Dashboard } from './types';
 // import { API_ROOT } from 'src/constants';
 
 // Returns the list of all the dashboards available
-export const getDashboards = () =>
+export const getDashboards = (serviceType: string) =>
   Request<ResourcePage<Dashboard>>(
     setURL(
       `https://blr-lhv95n.bangalore.corp.akamai.com:9000/v4beta/monitor/services/linode/dashboards`

@@ -122,3 +122,11 @@ export interface CloudPulseMetricsList {
   metric: { [resourceName: string]: string };
   values: [number, string][];
 }
+
+export interface ServiceTypes {
+  service_type: string;
+}
+
+export interface ServiceTypesList {
+  data: ServiceTypes[];
+}
