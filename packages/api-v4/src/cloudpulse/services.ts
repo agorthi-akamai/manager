@@ -1,13 +1,17 @@
-// import { API_ROOT } from 'src/constants';
 import { API_ROOT } from 'src/constants';
 import Request, { setData, setHeaders, setMethod, setURL } from '../request';
-import { JWEToken, JWETokenPayLoad, MetricDefinitions, ServiceTypesList } from './types';
+import {
+  JWEToken,
+  JWETokenPayLoad,
+  MetricDefinitions,
+  ServiceTypesList,
+} from './types';
 import { ResourcePage as Page } from 'src/types';
 
 export const getMetricDefinitionsByServiceType = (serviceType: string) => {
   return Request<Page<MetricDefinitions>>(
     setURL(
-      `https://blr-lhv95n.bangalore.corp.akamai.com:9000/v4beta/monitor/services/${encodeURIComponent(
+      `${API_ROOT}/monitor/services/${encodeURIComponent(
         serviceType
       )}/metric-definitions`
     ),
@@ -21,9 +25,7 @@ export const getMetricDefinitionsByServiceType = (serviceType: string) => {
 export const getJWEToken = (data: JWETokenPayLoad, serviceType: string) =>
   Request<JWEToken>(
     setURL(
-      `https://blr-lhv95n.bangalore.corp.akamai.com:9000/v4beta/monitor/services/${encodeURIComponent(
-        serviceType
-      )}/token`
+      `${API_ROOT}/monitor/services/${encodeURIComponent(serviceType)}/token`
     ),
     setMethod('POST'),
     setData(data),
