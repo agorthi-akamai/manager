@@ -75,7 +75,9 @@ export const fetchCloudPulseMetrics = (
       Authorization: `Bearer ${token}`,
     },
     method: 'POST',
-    url: `${readApiEndpoint}${encodeURIComponent(serviceType!)}/metrics`,
+    url: `https://metrics-query.aclp.linode.com/v1/monitor/services/${encodeURIComponent(
+      serviceType!
+    )}/metrics`,
   };
 
   return axiosInstance
