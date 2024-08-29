@@ -8,71 +8,15 @@ import {
   assertSelections,
   applyGlobalRefresh,
   visitCloudPulseWithFeatureFlagsDisabled,
+  dashboardName,
+  actualRelativeTimeDuration,
+  region,
+  resource,
+  cloudpulseTestData,
 } from 'support/util/cloudpulse';
 import { timeUnit } from 'support/constants/time';
-import { granularity } from 'support/constants/granularity';
-import { aggregation } from 'support/constants/aggregation';
-import { timeRange } from 'support/constants/timeRange';
 import { interceptMetricsRequests } from 'support/intercepts/cloudpulseAPIHandler';
 
-
-const dashboardName = 'Linode Service I/O Statistics';
-const region = 'Chicago, IL';
-const actualRelativeTimeDuration = timeRange.Last24Hours;
-const expectedGranularityValues = [
-  granularity.Auto,
-  granularity.Min1,
-  granularity.Min5,
-  granularity.Hr1,
-  granularity.Day1,
-];
-const resource = 'test1';
-const expectedBasicAggregations= [aggregation.Max, aggregation.Min, aggregation.Avg];
-const expectedAllAggregations = [
-  aggregation.Max,
-  aggregation.Min,
-  aggregation.Avg,
-  aggregation.Sum,
-];
-
-
-const cloudpulseTestData = [
-  {
-    name: 'system_disk_OPS_total',
-    expectedTextAggregation: expectedAllAggregations,
-    expectedTextGranularity: expectedGranularityValues,
-    granularity: granularity.Hr1,
-    aggregation: aggregation.Max,
-  },
-  {
-    name: 'system_network_io_by_resource',
-    expectedTextAggregation: expectedAllAggregations,
-    expectedTextGranularity: expectedGranularityValues,
-    granularity: granularity.Day1,
-    aggregation: aggregation.Sum,
-  },
-  {
-    name: 'system_network_io_by_resource',
-    expectedTextAggregation: expectedAllAggregations,
-    expectedTextGranularity: expectedGranularityValues,
-    granularity: granularity.Hr1,
-    aggregation: aggregation.Max,
-  },
-  {
-    name: 'system_memory_usage_by_resource',
-    expectedTextAggregation: expectedAllAggregations,
-    expectedTextGranularity: expectedGranularityValues,
-    granularity: granularity.Hr1,
-    aggregation: aggregation.Max,
-  },
-  {
-    name: 'system_cpu_utilization_percent',
-    expectedTextAggregation: expectedBasicAggregations,
-    expectedTextGranularity: expectedGranularityValues,
-    granularity: granularity.Hr1,
-    aggregation: aggregation.Max,
-  },
-];
 
 describe('Standard Dashboard Test Cases', () => {
   beforeEach(() => {
