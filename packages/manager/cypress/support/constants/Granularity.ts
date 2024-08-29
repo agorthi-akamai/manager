@@ -1,4 +1,4 @@
-export enum Granularity {
+export enum granularity {
   Auto = 'Auto',
   Min1 = '1 min',
   Min5 = '5 min',
@@ -6,7 +6,7 @@ export enum Granularity {
   Day1 = '1 day',
 }
 
-export enum TimeUnit {
+export enum timeUnit {
   Min = 'min',
   Hr = 'hr',
   Day = 'day',

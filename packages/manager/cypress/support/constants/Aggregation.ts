@@ -1,4 +1,4 @@
-export enum Aggregation {
+export enum aggregation {
   Min = 'min',
   Max = 'max',
   Avg = 'avg',

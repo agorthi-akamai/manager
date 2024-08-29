@@ -3,31 +3,31 @@ import {
   mockGetFeatureFlagClientstream,
 } from 'support/intercepts/feature-flags';
 import { makeFeatureFlagData } from 'support/util/feature-flags';
-import { Cloudpulse } from 'support/util/CloudpulsePage';
-import { TimeUnit } from 'support/constants/TimeEnums';
-import { Granularity } from 'support/constants/Granularity';
-import { Aggregation } from 'support/constants/Aggregation';
-import { TimeRange } from 'support/constants/TimeRange';
+import { Cloudpulse } from 'support/util/cloudpulse-page';
+import { timeUnit } from 'support/constants/time';
+import { granularity } from 'support/constants/granularity';
+import { aggregation } from 'support/constants/aggregation';
+import { timeRange } from 'support/constants/timeRange';
 import { interceptMetricsRequests } from 'support/intercepts/cloudpulseAPIHandler';
 
 
 const dashboardName = 'Linode Service I/O Statistics';
 const region = 'Chicago, IL';
-const actualRelativeTimeDuration = TimeRange.Last24Hours;
+const actualRelativeTimeDuration = timeRange.Last24Hours;
 const expectedTextsCommonGranularity = [
-  Granularity.Auto,
-  Granularity.Min1,
-  Granularity.Min5,
-  Granularity.Hr1,
-  Granularity.Day1,
+  granularity.Auto,
+  granularity.Min1,
+  granularity.Min5,
+  granularity.Hr1,
+  granularity.Day1,
 ];
 const resource = 'test1';
-const expectedTextAgg = [Aggregation.Max, Aggregation.Min, Aggregation.Avg];
+const expectedTextAgg = [aggregation.Max, aggregation.Min, aggregation.Avg];
 const expectedTextAggregationCommon = [
-  Aggregation.Max,
-  Aggregation.Min,
-  Aggregation.Avg,
-  Aggregation.Sum,
+  aggregation.Max,
+  aggregation.Min,
+  aggregation.Avg,
+  aggregation.Sum,
 ];
 
 const cloudPulsePage = new Cloudpulse();
@@ -37,36 +37,36 @@ const SDTestData = [
     name: 'system_disk_OPS_total',
     expectedTextAggregation: expectedTextAggregationCommon,
     expectedTextGranularity: expectedTextsCommonGranularity,
-    granularity: Granularity.Hr1,
-    aggregation: Aggregation.Max,
+    granularity: granularity.Hr1,
+    aggregation: aggregation.Max,
   },
   {
     name: 'system_network_io_by_resource',
     expectedTextAggregation: expectedTextAggregationCommon,
     expectedTextGranularity: expectedTextsCommonGranularity,
-    granularity: Granularity.Day1,
-    aggregation: Aggregation.Sum,
+    granularity: granularity.Day1,
+    aggregation: aggregation.Sum,
   },
   {
     name: 'system_network_io_by_resource',
     expectedTextAggregation: expectedTextAggregationCommon,
     expectedTextGranularity: expectedTextsCommonGranularity,
-    granularity: Granularity.Hr1,
-    aggregation: Aggregation.Max,
+    granularity: granularity.Hr1,
+    aggregation: aggregation.Max,
   },
   {
     name: 'system_memory_usage_by_resource',
     expectedTextAggregation: expectedTextAggregationCommon,
     expectedTextGranularity: expectedTextsCommonGranularity,
-    granularity: Granularity.Hr1,
-    aggregation: Aggregation.Max,
+    granularity: granularity.Hr1,
+    aggregation: aggregation.Max,
   },
   {
     name: 'system_cpu_utilization_percent',
     expectedTextAggregation: expectedTextAgg,
     expectedTextGranularity: expectedTextsCommonGranularity,
-    granularity: Granularity.Hr1,
-    aggregation: Aggregation.Max,
+    granularity: granularity.Hr1,
+    aggregation: aggregation.Max,
   },
 ];
 
@@ -107,19 +107,18 @@ describe('Standard Dashboard Test Cases', () => {
    it('should apply global refresh button and verify network calls', () => {
     cloudPulsePage.applyGlobalRefresh();
     interceptMetricsRequests().then((xhrArray) => {
-      xhrArray.forEach((xhr: any) => {
+      xhrArray.forEach((xhr) => {
         const requestPayload = xhr.request.body;
         const metricIndex = SDTestData.findIndex( (testdata) => testdata.name === requestPayload['metric'] );
-
         if (metricIndex !== -1) {
           const currentAggregation = requestPayload['aggregate_function'];
           const currentGranularity =
           requestPayload['time_granularity']?.value + requestPayload['time_granularity']?.unit;
           const relativeTimeDurationUnit =requestPayload['relative_time_duration']?.unit;
-          if (relativeTimeDurationUnit &&relativeTimeDurationUnit in TimeUnit ) {
-            const currentRelativeTimeDuration = 'Last' +
-              requestPayload['relative_time_duration']?.value +
-              TimeUnit[relativeTimeDurationUnit as keyof typeof TimeUnit];
+          if (relativeTimeDurationUnit &&relativeTimeDurationUnit in timeUnit ) {
+             const currentRelativeTimeDuration = 'Last' +
+             requestPayload['relative_time_duration']?.value +
+             timeUnit[relativeTimeDurationUnit as keyof typeof timeUnit];
             SDTestData[metricIndex].aggregation = currentAggregation;
             SDTestData[metricIndex].granularity = currentGranularity;
             assert.equal( currentAggregation, SDTestData[metricIndex].aggregation);

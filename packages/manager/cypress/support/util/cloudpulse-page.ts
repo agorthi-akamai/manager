@@ -1,5 +1,4 @@
 import { ui } from 'support/ui';
-import { TimeUnit } from 'support/constants/TimeEnums';
 import {
   mockAppendFeatureFlags,
   mockGetFeatureFlagClientstream,
@@ -14,7 +13,7 @@ export class Cloudpulse {
     );
     mockGetFeatureFlagClientstream().as('getClientStream');
     cy.visitWithLogin('/monitor/cloudpulse', {
-      onLoad: (contentWindow: any) => {
+      onLoad: (contentWindow: Window) => {
         if (contentWindow.document.readyState !== 'complete') {
           throw new Error('Page did not load completely');
         }
@@ -25,13 +24,7 @@ export class Cloudpulse {
     cy.url().should('include', '/monitor/cloudpulse');
   }
 
-  
-
-  
-
-  
-
- selectServiceName(serviceName: string) {
+  selectServiceName(serviceName: string) {
     ui.autocomplete.findByPlaceholderCustom('Select Dashboard').click().clear();
     ui.autocompletePopper.findByTitle(serviceName).should('be.visible').click();
   }
@@ -44,16 +37,13 @@ export class Cloudpulse {
       .type(region).click();
   }
 
-  selectTimeRange(timeRange: any) {
+  selectTimeRange(timeRange: string) {
     ui.autocomplete.findByTestId('cloudpulse-time-duration').click();
     ui.autocompletePopper.findByTitle(timeRange).click();
   }
 
-  
-
   selectAndVerifyServiceName(service: string) {
-
-    const resourceInput = cy.findByPlaceholderText('Select Resources');
+   const resourceInput = cy.findByPlaceholderText('Select Resources');
     resourceInput.click()
      cy.get('li[role="option"]').each($el => {
       const itemText = $el.text().trim();
@@ -71,15 +61,11 @@ export class Cloudpulse {
   }
   
   
-  
-
-  assertSelections(expectedOptions: any) {
+  assertSelections(expectedOptions: string) {
     expect(cy.get(`[value*='${expectedOptions}']`), expectedOptions);
   }
 
-
-
-  applyGlobalRefresh() {
+applyGlobalRefresh() {
     cy.get('[data-test-id="ReloadIcon"]', { timeout: 10000 })
       .should('exist')
       .should('be.visible')
@@ -91,23 +77,6 @@ export class Cloudpulse {
 
  
 
-  checkAssertions = (
-    requestPayload: any,
-    aggregation: any,
-    granularity: any,
-    actualRelativeTimeDuration: any
-  ) => {
-    assert.equal(requestPayload['aggregate_function'], aggregation);
-    expect(
-      requestPayload['time_granularity'].value +
-        requestPayload['time_granularity'].unit
-    ).to.containIgnoreSpaces(granularity);
-    expect(
-      'Last' +
-        requestPayload['relative_time_duration'].value +
-        TimeUnit[requestPayload['relative_time_duration'].unit]
-    ).to.containIgnoreSpaces(actualRelativeTimeDuration);
-  };
 
   
   }
