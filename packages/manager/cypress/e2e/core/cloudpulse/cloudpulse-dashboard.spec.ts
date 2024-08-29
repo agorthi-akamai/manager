@@ -1,9 +1,14 @@
+
 import {
-  mockAppendFeatureFlags,
-  mockGetFeatureFlagClientstream,
-} from 'support/intercepts/feature-flags';
-import { makeFeatureFlagData } from 'support/util/feature-flags';
-import { Cloudpulse } from 'support/util/cloudpulse-page';
+  navigateToCloudpulse,
+  selectServiceName,
+  selectRegion,
+  selectTimeRange,
+  selectAndVerifyServiceName,
+  assertSelections,
+  applyGlobalRefresh,
+  visitCloudPulseWithFeatureFlagsDisabled,
+} from 'support/util/cloudpulse';
 import { timeUnit } from 'support/constants/time';
 import { granularity } from 'support/constants/granularity';
 import { aggregation } from 'support/constants/aggregation';
@@ -14,7 +19,7 @@ import { interceptMetricsRequests } from 'support/intercepts/cloudpulseAPIHandle
 const dashboardName = 'Linode Service I/O Statistics';
 const region = 'Chicago, IL';
 const actualRelativeTimeDuration = timeRange.Last24Hours;
-const expectedTextsCommonGranularity = [
+const expectedGranularityValues = [
   granularity.Auto,
   granularity.Min1,
   granularity.Min5,
@@ -22,49 +27,48 @@ const expectedTextsCommonGranularity = [
   granularity.Day1,
 ];
 const resource = 'test1';
-const expectedTextAgg = [aggregation.Max, aggregation.Min, aggregation.Avg];
-const expectedTextAggregationCommon = [
+const expectedBasicAggregations= [aggregation.Max, aggregation.Min, aggregation.Avg];
+const expectedAllAggregations = [
   aggregation.Max,
   aggregation.Min,
   aggregation.Avg,
   aggregation.Sum,
 ];
 
-const cloudPulsePage = new Cloudpulse();
 
-const SDTestData = [
+const cloudpulseTestData = [
   {
     name: 'system_disk_OPS_total',
-    expectedTextAggregation: expectedTextAggregationCommon,
-    expectedTextGranularity: expectedTextsCommonGranularity,
+    expectedTextAggregation: expectedAllAggregations,
+    expectedTextGranularity: expectedGranularityValues,
     granularity: granularity.Hr1,
     aggregation: aggregation.Max,
   },
   {
     name: 'system_network_io_by_resource',
-    expectedTextAggregation: expectedTextAggregationCommon,
-    expectedTextGranularity: expectedTextsCommonGranularity,
+    expectedTextAggregation: expectedAllAggregations,
+    expectedTextGranularity: expectedGranularityValues,
     granularity: granularity.Day1,
     aggregation: aggregation.Sum,
   },
   {
     name: 'system_network_io_by_resource',
-    expectedTextAggregation: expectedTextAggregationCommon,
-    expectedTextGranularity: expectedTextsCommonGranularity,
+    expectedTextAggregation: expectedAllAggregations,
+    expectedTextGranularity: expectedGranularityValues,
     granularity: granularity.Hr1,
     aggregation: aggregation.Max,
   },
   {
     name: 'system_memory_usage_by_resource',
-    expectedTextAggregation: expectedTextAggregationCommon,
-    expectedTextGranularity: expectedTextsCommonGranularity,
+    expectedTextAggregation: expectedAllAggregations,
+    expectedTextGranularity: expectedGranularityValues,
     granularity: granularity.Hr1,
     aggregation: aggregation.Max,
   },
   {
     name: 'system_cpu_utilization_percent',
-    expectedTextAggregation: expectedTextAgg,
-    expectedTextGranularity: expectedTextsCommonGranularity,
+    expectedTextAggregation: expectedBasicAggregations,
+    expectedTextGranularity: expectedGranularityValues,
     granularity: granularity.Hr1,
     aggregation: aggregation.Max,
   },
@@ -72,44 +76,39 @@ const SDTestData = [
 
 describe('Standard Dashboard Test Cases', () => {
   beforeEach(() => {
-   cloudPulsePage.navigateToCloudpulse();
+   navigateToCloudpulse();
   });
 
   it('should verify cloud view availability when feature flag is set to false', () => {
-    cy.visitWithLogin('/linodes');
-    mockAppendFeatureFlags({
-      aclp: makeFeatureFlagData(false),
-    }).as('getFeatureFlags');
-    mockGetFeatureFlagClientstream().as('getClientStream');
-    cy.findByLabelText('Monitor').should('not.exist');
+    visitCloudPulseWithFeatureFlagsDisabled();
   });
 
   it('should set and verify dashboard name', () => {
-    cloudPulsePage.selectServiceName(dashboardName);
-    cloudPulsePage.assertSelections(dashboardName);
+    selectServiceName(dashboardName);
+    assertSelections(dashboardName);
   });
   it('should set and verify time range', () => {
-    cloudPulsePage.selectTimeRange(actualRelativeTimeDuration);
-    cloudPulsePage.assertSelections(actualRelativeTimeDuration);
+    selectTimeRange(actualRelativeTimeDuration);
+    assertSelections(actualRelativeTimeDuration);
   });
 
   it.only('should set and verify region', () => {
-    cloudPulsePage.selectRegion(region);
-    cloudPulsePage.assertSelections(region);
+    selectRegion(region);
+    assertSelections(region);
   });
 
   it('should set and verify resource', () => {
-    cloudPulsePage.selectRegion(region);
-    cloudPulsePage.selectAndVerifyServiceName(resource);
+    selectRegion(region);
+    selectAndVerifyServiceName(resource);
   });
   
 
    it('should apply global refresh button and verify network calls', () => {
-    cloudPulsePage.applyGlobalRefresh();
+    applyGlobalRefresh();
     interceptMetricsRequests().then((xhrArray) => {
       xhrArray.forEach((xhr) => {
         const requestPayload = xhr.request.body;
-        const metricIndex = SDTestData.findIndex( (testdata) => testdata.name === requestPayload['metric'] );
+        const metricIndex = cloudpulseTestData.findIndex( (testdata) => testdata.name === requestPayload['metric'] );
         if (metricIndex !== -1) {
           const currentAggregation = requestPayload['aggregate_function'];
           const currentGranularity =
@@ -119,10 +118,10 @@ describe('Standard Dashboard Test Cases', () => {
              const currentRelativeTimeDuration = 'Last' +
              requestPayload['relative_time_duration']?.value +
              timeUnit[relativeTimeDurationUnit as keyof typeof timeUnit];
-            SDTestData[metricIndex].aggregation = currentAggregation;
-            SDTestData[metricIndex].granularity = currentGranularity;
-            assert.equal( currentAggregation, SDTestData[metricIndex].aggregation);
-            expect(currentGranularity).to.containIgnoreSpaces(SDTestData[metricIndex].granularity );
+             cloudpulseTestData[metricIndex].aggregation = currentAggregation;
+             cloudpulseTestData[metricIndex].granularity = currentGranularity;
+            assert.equal( currentAggregation, cloudpulseTestData[metricIndex].aggregation);
+            expect(currentGranularity).to.containIgnoreSpaces(cloudpulseTestData[metricIndex].granularity );
             expect(currentRelativeTimeDuration).to.containIgnoreSpaces(actualRelativeTimeDuration);
           } else {
             throw new Error( `Unknown or invalid time unit: ${relativeTimeDurationUnit}`);
