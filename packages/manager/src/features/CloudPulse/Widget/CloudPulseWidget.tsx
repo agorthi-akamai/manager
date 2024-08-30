@@ -297,6 +297,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
             padding={1}
           >
             <Typography
+              data-qa-widget={convertStringToCamelCasesWithSpaces(widget.label)}
               fontSize={{ sm: '1.5rem', xs: '2rem' }}
               marginLeft={1}
               variant="h1"
