@@ -36,13 +36,12 @@ describe('Standard Dashboard Test Cases', () => {
     assertSelections(actualRelativeTimeDuration);
   });
 
-  it.only('should set and verify region', () => {
+  it('should set and verify region', () => {
     selectRegion(region);
     assertSelections(region);
   });
 
   it('should set and verify resource', () => {
-    selectRegion(region);
     selectAndVerifyServiceName(resource);
   });
   
