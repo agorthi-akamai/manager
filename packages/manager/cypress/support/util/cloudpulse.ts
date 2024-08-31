@@ -6,7 +6,7 @@ import {
 import { makeFeatureFlagData } from 'support/util/feature-flags';
 import 'cypress-wait-until';
 import { granularity } from 'support/constants/granularity';
-import { aggregation } from 'support/constants/aggregation';
+import { aggregation,aggregationConfig } from 'support/constants/aggregation';
 import { timeRange } from 'support/constants/timeRange';
 
 
@@ -14,56 +14,43 @@ import { timeRange } from 'support/constants/timeRange';
 export const dashboardName = 'Linode Service I/O Statistics';
 export const region = 'Chicago, IL';
 export const actualRelativeTimeDuration = timeRange.Last24Hours;
-export const expectedGranularityValues = [
-  granularity.Auto,
-  granularity.Min1,
-  granularity.Min5,
-  granularity.Hr1,
-  granularity.Day1,
-];
+
 export const resource = 'test1';
-export const expectedBasicAggregations= [aggregation.Max, aggregation.Min, aggregation.Avg];
-export const expectedAllAggregations = [
-  aggregation.Max,
-  aggregation.Min,
-  aggregation.Avg,
-  aggregation.Sum,
-];
 
 
 export const cloudpulseTestData = [
   {
     name: 'system_disk_OPS_total',
-    expectedTextAggregation: expectedAllAggregations,
-    expectedTextGranularity: expectedGranularityValues,
+    expectedTextAggregation: aggregationConfig.all,
+    expectedTextGranularity: Object.values(granularity),
     granularity: granularity.Hr1,
     aggregation: aggregation.Max,
   },
   {
     name: 'system_network_io_by_resource',
-    expectedTextAggregation: expectedAllAggregations,
-    expectedTextGranularity: expectedGranularityValues,
+    expectedTextAggregation: aggregationConfig.all,
+    expectedTextGranularity:Object.values(granularity),
     granularity: granularity.Day1,
     aggregation: aggregation.Sum,
   },
   {
     name: 'system_network_io_by_resource',
-    expectedTextAggregation: expectedAllAggregations,
-    expectedTextGranularity: expectedGranularityValues,
+    expectedTextAggregation: aggregationConfig.all,
+    expectedTextGranularity: Object.values(granularity),
     granularity: granularity.Hr1,
     aggregation: aggregation.Max,
   },
   {
     name: 'system_memory_usage_by_resource',
-    expectedTextAggregation: expectedAllAggregations,
-    expectedTextGranularity: expectedGranularityValues,
+    expectedTextAggregation: aggregationConfig.all,
+    expectedTextGranularity: Object.values(granularity),
     granularity: granularity.Hr1,
     aggregation: aggregation.Max,
   },
   {
     name: 'system_cpu_utilization_percent',
-    expectedTextAggregation: expectedBasicAggregations,
-    expectedTextGranularity: expectedGranularityValues,
+    expectedTextAggregation: aggregationConfig.basic,
+    expectedTextGranularity: Object.values(granularity),
     granularity: granularity.Hr1,
     aggregation: aggregation.Max,
   },

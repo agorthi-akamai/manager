@@ -23,8 +23,25 @@ describe('Standard Dashboard Test Cases', () => {
    navigateToCloudpulse();
   });
 
-  it('should verify cloud view availability when feature flag is set to false', () => {
+  
+
+  it.only('should verify cloud view availability when feature flag is set to false', () => {
     visitCloudPulseWithFeatureFlagsDisabled();
+    cloudpulseTestData.forEach(testData => {
+      cy.log(`Name: ${testData.name}`);
+      
+      // Log Expected Text Aggregation
+      cy.log('Expected Text Aggregation:');
+      cy.log(JSON.stringify(testData.expectedTextAggregation));
+    
+      // Log Expected Text Granularity
+      cy.log('Expected Text Granularity:');
+      cy.log(JSON.stringify(testData.expectedTextGranularity));
+      
+      cy.log('---'); // Separator for readability
+    });
+    
+
   });
 
   it('should set and verify dashboard name', () => {
@@ -46,7 +63,7 @@ describe('Standard Dashboard Test Cases', () => {
   });
   
 
-   it('should apply global refresh button and verify network calls', () => {
+   it.only('should apply global refresh button and verify network calls', () => {
     applyGlobalRefresh();
     interceptMetricsRequests().then((xhrArray) => {
       xhrArray.forEach((xhr) => {
