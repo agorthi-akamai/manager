@@ -15,7 +15,8 @@ import type { CloudPulseServiceTypeFilters } from './models';
 import type {
   AclpConfig,
   Dashboard,
-  Filter, Filters,
+  Filter,
+  Filters,
   TimeDuration,
 } from '@linode/api-v4';
 
@@ -127,7 +128,13 @@ export const getCustomSelectProperties = (
     options,
     placeholder,
   } = props.config.configuration;
-  const { dashboard, dependentFilters, isServiceAnalyticsIntegration } = props;
+  const {
+    dashboard,
+    dependentFilters,
+    isServiceAnalyticsIntegration,
+    preferences,
+    updatePreferences,
+  } = props;
   return {
     apiResponseIdField: apiIdField,
     apiResponseLabelField: apiLabelField,
@@ -148,10 +155,12 @@ export const getCustomSelectProperties = (
     maxSelections,
     options,
     placeholder,
+    preferences,
     savePreferences: !isServiceAnalyticsIntegration,
     type: options
       ? CloudPulseSelectTypes.static
       : CloudPulseSelectTypes.dynamic,
+    updatePreferences,
   };
 };
 
