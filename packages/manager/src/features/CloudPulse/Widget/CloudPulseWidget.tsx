@@ -141,6 +141,8 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
   } = props;
   const flags = useFlags();
 
+  const jweTokenExpiryError = 'Token expired';
+
   /**
    *
    * @param zoomInValue: True if zoom in clicked &  False if zoom out icon clicked
@@ -253,6 +255,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
       serviceType,
       status,
       unit,
+      widgetChartType: widget.chart_type,
       widgetColor: widget.color,
     });
 
@@ -263,8 +266,8 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
   }
 
   return (
-    <Grid item lg={widget.size} xs={12}>
-      <Paper>
+    <Grid item lg={widget.size} xs={12} >
+      <Paper data-qa-widget={convertStringToCamelCasesWithSpaces(widget.label)}>
         <Stack spacing={2}>
           <Stack
             alignItems={'center'}
@@ -274,6 +277,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
             padding={1}
           >
             <Typography
+              data-qa-widget={convertStringToCamelCasesWithSpaces(widget.label)}
               fontSize={{ sm: '1.5rem', xs: '2rem' }}
               marginLeft={1}
               variant="h1"
@@ -298,14 +302,14 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
               {Boolean(
                 availableMetrics?.available_aggregate_functions?.length
               ) && (
-                <CloudPulseAggregateFunction
-                  availableAggregateFunctions={
-                    availableMetrics!.available_aggregate_functions
-                  }
-                  defaultAggregateFunction={widgetProp?.aggregate_function}
-                  onAggregateFuncChange={handleAggregateFunctionChange}
-                />
-              )}
+                  <CloudPulseAggregateFunction
+                    availableAggregateFunctions={
+                      availableMetrics!.available_aggregate_functions
+                    }
+                    defaultAggregateFunction={widgetProp?.aggregate_function}
+                    onAggregateFuncChange={handleAggregateFunctionChange}
+                  />
+                )}
               <Box sx={{ display: { lg: 'flex', xs: 'none' } }}>
                 <ZoomIcon
                   handleZoomToggle={handleZoomToggle}
@@ -318,7 +322,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
 
           <CloudPulseLineGraph
             error={
-              status === 'error'
+              status === 'error' && error?.[0]?.reason !== jweTokenExpiryError // show the error only if the error is not related to token expiration
                 ? error?.[0]?.reason ?? 'Error while rendering graph'
                 : undefined
             }
@@ -330,7 +334,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
             formatData={(data: number) => convertValueToUnit(data, currentUnit)}
             formatTooltip={(value: number) => formatToolTip(value, unit)}
             gridSize={widget.size}
-            loading={isLoading}
+            loading={isLoading || error?.[0]?.reason === jweTokenExpiryError} // keep loading until we fetch the refresh token
             nativeLegend
             showToday={today}
             timezone={timezone}

@@ -31,7 +31,7 @@ export const getJWEToken = (data: JWETokenPayLoad, serviceType: string) =>
     setMethod('POST'),
     setData(data),
     setHeaders({
-      Authorization: 'Bearer mlishuser',
+      Authorization: `Bearer mlishuser`,
     })
   );
 

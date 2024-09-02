@@ -1,7 +1,7 @@
 import { getRegionById, getRegionByLabel } from 'support/util/regions';
 
-import type { SelectorMatcherOptions } from '@testing-library/cypress';
 import type { Region } from '@linode/api-v4';
+import type { SelectorMatcherOptions } from '@testing-library/cypress';
 
 /**
  * Autocomplete UI element.
@@ -12,6 +12,19 @@ export const autocomplete = {
    */
   find: (): Cypress.Chainable => {
     return cy.get('[data-qa-autocomplete] input');
+  },
+
+  /**
+   * Finds a autocomplete that has the given placehoder text.
+   */
+  findByPlaceholderCustom: (
+    title: string,
+    options?: SelectorMatcherOptions
+  ): Cypress.Chainable => {
+    return cy.get("[data-qa-autocomplete] input[placeholder='" + title + ']');
+  },
+  findByTitleCustom: (title: string): Cypress.Chainable => {
+    return cy.get('[data-qa-autocomplete="' + title + '"]');
   },
 };
 

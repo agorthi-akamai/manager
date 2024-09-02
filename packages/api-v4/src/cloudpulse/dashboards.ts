@@ -6,7 +6,9 @@ import { Dashboard } from './types';
 export const getDashboards = (serviceType: string) =>
   Request<ResourcePage<Dashboard>>(
     setURL(
-      `https://blr-lhv95n.bangalore.corp.akamai.com:9000/v4beta/monitor/services/${serviceType}/dashboards`
+      `https://blr-lhv95n.bangalore.corp.akamai.com:9000/v4beta/monitor/services/${encodeURIComponent(
+        serviceType
+      )}/dashboards`
     ),
     setMethod('GET'),
     setHeaders({
@@ -18,7 +20,7 @@ export const getDashboardById = (dashboardId: number) =>
   Request<Dashboard>(
     setURL(
       `https://blr-lhv95n.bangalore.corp.akamai.com:9000/v4beta/monitor/dashboards/${encodeURIComponent(
-        dashboardId
+        dashboardId!
       )}`
     ),
     setMethod('GET'),

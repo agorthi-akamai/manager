@@ -99,6 +99,12 @@ export const CloudPulseDashboardLanding = () => {
           filterValue,
           dashboard.service_type
         )}
+        manualRefreshTimeStamp={
+          filterValue['timestamp'] &&
+          typeof filterValue['timestamp'] === 'number'
+            ? filterValue['timestamp']
+            : undefined
+        }
         region={
           typeof filterValue[REGION] === 'string'
             ? (filterValue[REGION] as string)

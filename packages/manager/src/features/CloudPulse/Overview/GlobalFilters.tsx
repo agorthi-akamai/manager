@@ -1,4 +1,4 @@
-import { IconButton, Tooltip } from '@mui/material';
+import { IconButton } from '@mui/material';
 import { Grid } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import * as React from 'react';
@@ -56,7 +56,12 @@ export const GlobalFilters = React.memo((props: GlobalFilterProperties) => {
     []
   );
 
-  const handleGlobalRefresh = React.useCallback(() => {}, []);
+  const handleGlobalRefresh = React.useCallback((dashboardObj?: Dashboard) => {
+    if (!dashboardObj) {
+      return;
+    }
+    handleAnyFilterChange('timestamp', Date.now());
+  }, []);
 
   return (
     <Grid container gap={1}>
@@ -87,17 +92,17 @@ export const GlobalFilters = React.memo((props: GlobalFilterProperties) => {
             savePreferences
             updatePreferences={updatePreferences}
           />
-          <Tooltip arrow enterDelay={500} placement="top" title="Refresh">
-            <IconButton
-              sx={{
-                marginBlockEnd: 'auto',
-              }}
-              onClick={handleGlobalRefresh}
-              size="small"
-            >
-              <StyledReload />
-            </IconButton>
-          </Tooltip>
+          <IconButton
+            sx={{
+              marginBlockEnd: 'auto',
+            }}
+            data-qa-refresh-button
+            disabled={!selectedDashboard}
+            onClick={() => handleGlobalRefresh(selectedDashboard)}
+            size="small"
+          >
+            <StyledReload />
+          </IconButton>
         </Grid>
       </Grid>
       <Grid item xs={12}>

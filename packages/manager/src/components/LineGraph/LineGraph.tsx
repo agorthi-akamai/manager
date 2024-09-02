@@ -202,6 +202,11 @@ export const LineGraph = (props: LineGraphProps) => {
       },
       legend: {
         display: _nativeLegend,
+        onClick: (e, legendItem) => {
+          if (legendItem) {
+            handleLegendClick(legendItem.datasetIndex!);
+          }
+        },
         position: _nativeLegend ? 'bottom' : undefined,
       },
       maintainAspectRatio: false,
@@ -378,6 +383,7 @@ export const LineGraph = (props: LineGraphProps) => {
               width: isLegendsFullSize ? '100%' : '85%',
             }} // this sx is added because styled table forcing the legends to be 85% width & 600px max width
             aria-label={`Controls for ${ariaLabel || 'Stats and metrics'}`}
+            data-qa-table-id={ariaLabel}
             noBorder
           >
             <StyledTableHead>
@@ -515,7 +521,7 @@ export const _formatTooltip = curry(
      */
     const dataset = t?.datasetIndex ? data[t?.datasetIndex] : data[0];
     const label = dataset.label;
-    const val = t?.index ? dataset.data[t?.index][1] || 0 : 0;
+    const val = t?.index !== undefined ? dataset.data[t?.index][1] || 0 : 0; // bug, t?.index if 0, it is considered as false, so added undefined check directly
     const value = formatter ? formatter(val) : roundTo(val);
     return `${label}: ${value}${unit ? unit : ''}`;
   }

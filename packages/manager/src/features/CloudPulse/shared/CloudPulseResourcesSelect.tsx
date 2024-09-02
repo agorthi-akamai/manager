@@ -57,12 +57,12 @@ export const CloudPulseResourcesSelect = React.memo(
 
     // Once the data is loaded, set the state variable with value stored in preferences
     React.useEffect(() => {
-      const defaultValue = preferences?.resources;
-      if (resources && savePreferences && !selectedResources) {
-        if (defaultValue && Array.isArray(defaultValue)) {
-          const defaultResources = defaultValue.map((resource) =>
-            String(resource)
-          );
+      const saveResources = preferences?.resources;
+      const defaultResources = Array.isArray(saveResources)
+        ? saveResources.map((resourceId) => String(resourceId))
+        : undefined;
+      if (resources) {
+        if (defaultResources) {
           const resource = getResourcesList().filter((resource) =>
             defaultResources.includes(String(resource.id))
           );
@@ -98,6 +98,9 @@ export const CloudPulseResourcesSelect = React.memo(
             sx: {
               maxHeight: '55px',
               overflow: 'auto',
+              svg: {
+                color: '#c2c2ca',
+              },
             },
           },
           hideLabel: true,
