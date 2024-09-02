@@ -21,18 +21,7 @@ export const autocomplete = {
     options?: SelectorMatcherOptions
   ): Cypress.Chainable => {
     return cy
-      .get('[data-qa-autocomplete]')
-      .findByPlaceholderText(title, options);
-  },
-  /**
-   * Finds a autocomplete that has the given  data-test-id.
-   */
-  findByTestId: (
-    title: string,
-    options?: SelectorMatcherOptions
-  ): Cypress.Chainable => {
-    return cy.get('[data-testid='+title+']')
-    
+      .get("[data-qa-autocomplete] input[placeholder='" + title + "]");
   },
 };
 

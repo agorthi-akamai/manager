@@ -22,7 +22,7 @@ export const expectedGranularityValues = [
   granularity.Day1,
 ];
 export const resource = 'test1';
-export const expectedBasicAggregations= [aggregation.Max, aggregation.Min, aggregation.Avg];
+export const expectedBasicAggregations = [aggregation.Max, aggregation.Min, aggregation.Avg];
 export const expectedAllAggregations = [
   aggregation.Max,
   aggregation.Min,
@@ -87,11 +87,11 @@ export const navigateToCloudpulse = () => {
 };
 export const visitCloudPulseWithFeatureFlagsDisabled = () => {
   cy.visitWithLogin('/linodes');
-    mockAppendFeatureFlags({
-      aclp: makeFeatureFlagData(false),
-    }).as('getFeatureFlags');
-    mockGetFeatureFlagClientstream().as('getClientStream');
-    cy.findByLabelText('Monitor').should('not.exist');
+  mockAppendFeatureFlags({
+    aclp: makeFeatureFlagData(false),
+  }).as('getFeatureFlags');
+  mockGetFeatureFlagClientstream().as('getClientStream');
+  cy.findByLabelText('Monitor').should('not.exist');
 };
 
 export const selectServiceName = (serviceName: string) => {
@@ -104,7 +104,7 @@ export const selectRegion = (region: string) => {
 };
 
 export const selectTimeRange = (timeRange: string) => {
-  ui.autocomplete.findByTestId('cloudpulse-time-duration').click();
+  ui.autocomplete.findByPlaceholderCustom('Select Time Duration').click();
   ui.autocompletePopper.findByTitle(timeRange).click();
 };
 
