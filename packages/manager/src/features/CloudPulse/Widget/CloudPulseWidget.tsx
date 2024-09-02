@@ -286,8 +286,8 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
     currentUnit = generatedData.unit;
   }
   return (
-    <Grid item lg={widget.size} xs={12}>
-      <Paper>
+    <Grid item lg={widget.size} xs={12} >
+      <Paper data-qa-widget={convertStringToCamelCasesWithSpaces(widget.label)}>
         <Stack spacing={2}>
           <Stack
             alignItems={'center'}
@@ -322,14 +322,14 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
               {Boolean(
                 availableMetrics?.available_aggregate_functions?.length
               ) && (
-                <CloudPulseAggregateFunction
-                  availableAggregateFunctions={
-                    availableMetrics!.available_aggregate_functions
-                  }
-                  defaultAggregateFunction={widget?.aggregate_function}
-                  onAggregateFuncChange={handleAggregateFunctionChange}
-                />
-              )}
+                  <CloudPulseAggregateFunction
+                    availableAggregateFunctions={
+                      availableMetrics!.available_aggregate_functions
+                    }
+                    defaultAggregateFunction={widget?.aggregate_function}
+                    onAggregateFuncChange={handleAggregateFunctionChange}
+                  />
+                )}
               <Box sx={{ display: { lg: 'flex', xs: 'none' } }}>
                 <ZoomIcon
                   handleZoomToggle={handleZoomToggle}

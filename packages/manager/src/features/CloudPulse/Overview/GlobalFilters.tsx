@@ -101,6 +101,7 @@ export const GlobalFilters = React.memo((props: GlobalFilterProperties) => {
             disabled={!selectedDashboard}
             onClick={() => handleGlobalRefresh(selectedDashboard)}
             size="small"
+            data-qa-refresh-button
           >
             <StyledReload />
           </IconButton>
