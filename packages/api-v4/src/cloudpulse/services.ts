@@ -10,7 +10,9 @@ import { ResourcePage as Page } from 'src/types';
 export const getMetricDefinitionsByServiceType = (serviceType: string) => {
   return Request<Page<MetricDefinitions>>(
     setURL(
-      `https://blr-lhv95n.bangalore.corp.akamai.com:9000/v4beta/monitor/services/${serviceType}/metric-definitions`
+      `https://blr-lhv95n.bangalore.corp.akamai.com:9000/v4beta/monitor/services/${encodeURIComponent(
+        serviceType
+      )}/metric-definitions`
     ),
     setMethod('GET'),
     setHeaders({

@@ -7,23 +7,29 @@ import { useCloudPulseDashboardsQuery } from 'src/queries/cloudpulse/dashboards'
 import { useCloudPulseServiceTypes } from 'src/queries/cloudpulse/services';
 
 import { DASHBOARD_ID } from '../Utils/constants';
-import {
-  getUserPreferenceObject,
-  updateGlobalFilterPreference,
-} from '../Utils/UserPreference';
 import { formattedServiceTypes, getAllDashboards } from '../Utils/utils';
 
 import type { Dashboard } from '@linode/api-v4';
 
 export interface CloudPulseDashboardSelectProps {
+  defaultValue?: number;
   handleDashboardChange: (
     dashboard: Dashboard | undefined,
     isDefault?: boolean
   ) => void;
+  savePreferences?: boolean;
+  updatePreferences?: (data: {}) => void;
 }
 
 export const CloudPulseDashboardSelect = React.memo(
   (props: CloudPulseDashboardSelectProps) => {
+    const {
+      defaultValue,
+      handleDashboardChange,
+      savePreferences,
+      updatePreferences,
+    } = props;
+
     const {
       data: serviceTypesList,
       error: serviceTypesError,
@@ -70,17 +76,19 @@ export const CloudPulseDashboardSelect = React.memo(
     // Once the data is loaded, set the state variable with value stored in preferences
     React.useEffect(() => {
       // only call this code when the component is rendered initially
-      if (dashboardsList.length > 0 && selectedDashboard === undefined) {
-        const dashboardId = getUserPreferenceObject()?.dashboardId;
-
-        if (dashboardId) {
+      if (
+        savePreferences &&
+        dashboardsList.length > 0 &&
+        selectedDashboard === undefined
+      ) {
+        if (defaultValue) {
           const dashboard = dashboardsList.find(
-            (obj: Dashboard) => obj.id === dashboardId
+            (obj: Dashboard) => obj.id === defaultValue
           );
           setSelectedDashboard(dashboard);
-          props.handleDashboardChange(dashboard, true);
+          handleDashboardChange(dashboard, true);
         } else {
-          props.handleDashboardChange(undefined, true);
+          handleDashboardChange(undefined, true);
         }
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,11 +96,13 @@ export const CloudPulseDashboardSelect = React.memo(
     return (
       <Autocomplete
         onChange={(_: any, dashboard: Dashboard) => {
-          updateGlobalFilterPreference({
-            [DASHBOARD_ID]: dashboard?.id,
-          });
+          if (savePreferences && updatePreferences) {
+            updatePreferences({
+              [DASHBOARD_ID]: dashboard?.id,
+            });
+          }
           setSelectedDashboard(dashboard);
-          props.handleDashboardChange(dashboard);
+          handleDashboardChange(dashboard);
         }}
         renderGroup={(params) => (
           <Box key={params.key}>
@@ -123,5 +133,6 @@ export const CloudPulseDashboardSelect = React.memo(
         value={selectedDashboard ?? null} // Undefined is not allowed for uncontrolled component
       />
     );
-  }
+  },
+  () => true
 );

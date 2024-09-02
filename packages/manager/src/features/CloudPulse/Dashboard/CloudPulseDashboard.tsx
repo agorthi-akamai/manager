@@ -12,7 +12,7 @@ import {
   useGetCloudPulseMetricDefinitionsByServiceType,
 } from 'src/queries/cloudpulse/services';
 
-import { getUserPreferenceObject } from '../Utils/UserPreference';
+import { useAclpPreference } from '../Utils/UserPreference';
 import { createObjectCopy } from '../Utils/utils';
 import { CloudPulseWidget } from '../Widget/CloudPulseWidget';
 import {
@@ -80,6 +80,8 @@ export const CloudPulseDashboard = (props: DashboardProperties) => {
     savePref,
   } = props;
 
+  const { preferences } = useAclpPreference();
+
   const getJweTokenPayload = (): JWETokenPayLoad => {
     return {
       resource_ids: resourceList?.map((resource) => Number(resource.id)) ?? [],
@@ -110,13 +112,25 @@ export const CloudPulseDashboard = (props: DashboardProperties) => {
   };
 
   const setPreferredWidgetPlan = (widgetObj: Widgets) => {
-    const widgetPreferences = getUserPreferenceObject().widgets;
+    const widgetPreferences = preferences.widgets;
     const pref = widgetPreferences?.[widgetObj.label];
     if (pref) {
       Object.assign(widgetObj, {
-        aggregate_function: pref.aggregateFunction,
-        size: pref.size,
-        time_granularity: { ...pref.timeGranularity },
+        aggregate_function:
+          pref.aggregateFunction ?? widgetObj.aggregate_function,
+        size: pref.size ?? widgetObj.size,
+        time_granularity: {
+          ...(pref.timeGranularity ?? widgetObj.time_granularity),
+        },
+      });
+    } else {
+      Object.assign(widgetObj, {
+        ...widgetObj,
+        time_granularity: {
+          label: 'Auto',
+          unit: 'Auto',
+          value: -1,
+        },
       });
     }
   };

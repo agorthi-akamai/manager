@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+
 import {
   useMutatePreferences,
   usePreferences,
@@ -5,82 +7,67 @@ import {
 
 import { DASHBOARD_ID, TIME_DURATION } from './constants';
 
-import type { AclpConfig, AclpWidget } from '@linode/api-v4';
+import type { AclpWidget } from '@linode/api-v4';
 
-let userPreference: AclpConfig;
-let timerId: ReturnType<typeof setTimeout>;
-let mutateFn: any;
+/**
+ *
+ *  This hook is used in CloudPulseDashboardLanding, GlobalFilters & CloudPulseWidget component
+ */
 
-export const useLoadUserPreferences = () => {
-  const { data: preferences, isError, isLoading } = usePreferences();
+export const useAclpPreference = () => {
+  const { data: preferences, isLoading } = usePreferences();
 
-  const { mutate } = useMutatePreferences();
+  const { mutateAsync: updateFunction } = useMutatePreferences();
 
-  if (isLoading) {
-    return { isLoading };
-  }
-  mutateFn = mutate;
+  const preferenceRef = useRef({ ...(preferences?.aclpPreference ?? {}) });
 
-  if (isError || !preferences) {
-    userPreference = {} as AclpConfig;
-  } else {
-    userPreference = preferences.aclpPreference ?? {};
-  }
+  /**
+   *
+   * @param data AclpConfig data to be updated in preferences
+   */
+  const updateGlobalFilterPreference = (data: {}) => {
+    let currentPreferences = { ...preferenceRef.current };
+    const keys = Object.keys(data);
 
-  return { isLoading };
-};
-
-export const getUserPreferenceObject = () => {
-  return { ...userPreference };
-};
-
-const useUpdateUserPreference = (updatedData: AclpConfig) => {
-  if (mutateFn) {
-    mutateFn({ aclpPreference: updatedData });
-  }
-};
-
-export const updateGlobalFilterPreference = (data: {}) => {
-  if (!userPreference) {
-    userPreference = {} as AclpConfig;
-  }
-  const keys = Object.keys(data);
-
-  if (keys.includes(DASHBOARD_ID)) {
-    userPreference = { ...data, [TIME_DURATION]: userPreference.timeDuration };
-  } else {
-    userPreference = { ...userPreference, ...data };
-  }
-
-  debounce(userPreference);
-};
-
-export const updateWidgetPreference = (
-  label: string,
-  data: Partial<AclpWidget>
-) => {
-  if (!userPreference) {
-    userPreference = {} as AclpConfig;
-  }
-
-  if (!userPreference.widgets) {
-    userPreference.widgets = {};
-  }
-
-  userPreference.widgets[label] = {
-    ...userPreference.widgets[label],
-    label,
-    ...data,
+    if (keys.includes(DASHBOARD_ID)) {
+      currentPreferences = {
+        ...data,
+        [TIME_DURATION]: currentPreferences[TIME_DURATION],
+      };
+    } else {
+      currentPreferences = {
+        ...currentPreferences,
+        ...data,
+      };
+    }
+    preferenceRef.current = currentPreferences;
+    updateFunction({ aclpPreference: currentPreferences });
   };
 
-  debounce(userPreference);
-};
+  /**
+   *
+   * @param label label of the widget that should be updated
+   * @param data AclpWidget data for the label that is to be updated in preference
+   */
+  const updateWidgetPreference = (label: string, data: Partial<AclpWidget>) => {
+    const updatedPreferences = { ...preferenceRef.current };
 
-// to avoid frequent preference update calls within 500 ms interval
-const debounce = (updatedData: AclpConfig) => {
-  if (timerId) {
-    clearTimeout(timerId);
-  }
+    if (!updatedPreferences.widgets) {
+      updatedPreferences.widgets = {};
+    }
 
-  timerId = setTimeout(() => useUpdateUserPreference(updatedData), 500);
+    updatedPreferences.widgets[label] = {
+      ...updatedPreferences.widgets[label],
+      label,
+      ...data,
+    };
+    preferenceRef.current = updatedPreferences;
+    updateFunction({ aclpPreference: updatedPreferences });
+  };
+  return {
+    isLoading,
+    preferences: preferenceRef.current,
+    updateGlobalFilterPreference,
+    updateWidgetPreference,
+  };
 };

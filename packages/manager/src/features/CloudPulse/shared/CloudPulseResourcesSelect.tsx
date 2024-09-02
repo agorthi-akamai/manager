@@ -5,12 +5,8 @@ import { Autocomplete } from 'src/components/Autocomplete/Autocomplete';
 import { useResourcesQuery } from 'src/queries/cloudpulse/resources';
 
 import { RESOURCES } from '../Utils/constants';
-import {
-  getUserPreferenceObject,
-  updateGlobalFilterPreference,
-} from '../Utils/UserPreference';
 
-import type { Filter } from '@linode/api-v4';
+import type { AclpConfig, Filter } from '@linode/api-v4';
 
 export interface CloudPulseResources {
   id: string;
@@ -22,9 +18,11 @@ export interface CloudPulseResourcesSelectProps {
   disabled?: boolean;
   handleResourcesSelection: (resources: CloudPulseResources[]) => void;
   placeholder?: string;
+  preferences?: AclpConfig;
   region?: string;
   resourceType: string | undefined;
   savePreferences?: boolean;
+  updatePreferences?: (data: {}) => void;
   xFilter?: Filter;
 }
 
@@ -34,8 +32,11 @@ export const CloudPulseResourcesSelect = React.memo(
       disabled,
       handleResourcesSelection,
       placeholder,
+      preferences,
       region,
       resourceType,
+      savePreferences,
+      updatePreferences,
       xFilter,
     } = props;
 
@@ -48,7 +49,7 @@ export const CloudPulseResourcesSelect = React.memo(
 
     const [selectedResources, setSelectedResources] = React.useState<
       CloudPulseResources[]
-    >([]);
+    >();
 
     const getResourcesList = (): CloudPulseResources[] => {
       return resources && resources.length > 0 ? resources : [];
@@ -56,7 +57,7 @@ export const CloudPulseResourcesSelect = React.memo(
 
     // Once the data is loaded, set the state variable with value stored in preferences
     React.useEffect(() => {
-      const saveResources = getUserPreferenceObject()?.resources;
+      const saveResources = preferences?.resources;
       const defaultResources = Array.isArray(saveResources)
         ? saveResources.map((resourceId) => String(resourceId))
         : undefined;
@@ -72,20 +73,23 @@ export const CloudPulseResourcesSelect = React.memo(
           setSelectedResources([]);
           handleResourcesSelection([]);
         }
-      } else {
+      } else if (selectedResources) {
+        handleResourcesSelection([]);
         setSelectedResources([]);
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [resources, region, resourceType, xFilter]);
+    }, [resources]);
 
     return (
       <Autocomplete
         onChange={(_: any, resourceSelections: CloudPulseResources[]) => {
-          updateGlobalFilterPreference({
-            [RESOURCES]: resourceSelections.map((resource: { id: string }) =>
-              String(resource.id)
-            ),
-          });
+          if (savePreferences && updatePreferences) {
+            updatePreferences({
+              [RESOURCES]: resourceSelections.map((resource: { id: string }) =>
+                String(resource.id)
+              ),
+            });
+          }
           setSelectedResources(resourceSelections);
           handleResourcesSelection(resourceSelections);
         }}
@@ -111,7 +115,7 @@ export const CloudPulseResourcesSelect = React.memo(
         multiple
         options={getResourcesList()}
         placeholder={placeholder ? placeholder : 'Select Resources'}
-        value={selectedResources}
+        value={selectedResources ?? []}
       />
     );
   },

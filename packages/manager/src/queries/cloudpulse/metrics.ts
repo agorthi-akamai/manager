@@ -92,5 +92,5 @@ export const fetchCloudPulseMetrics = (
   return axiosInstance
     .request(config)
     .then((response) => response.data)
-    .catch((error) => Promise.reject(error.response.data.errors));
+    .catch((error) => Promise.reject(error.response?.data?.errors));
 };

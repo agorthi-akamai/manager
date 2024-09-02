@@ -4,33 +4,38 @@ import { RegionSelect } from 'src/components/RegionSelect/RegionSelect';
 import { useRegionsQuery } from 'src/queries/regions/regions';
 
 import { REGION, RESOURCES } from '../Utils/constants';
-import {
-  getUserPreferenceObject,
-  updateGlobalFilterPreference,
-} from '../Utils/UserPreference';
 
-import type { Dashboard } from '@linode/api-v4';
+import type { AclpConfig, Dashboard } from '@linode/api-v4';
 
 export interface CloudPulseRegionSelectProps {
   handleRegionChange: (region: string | undefined) => void;
   placeholder?: string;
+  preferences?: AclpConfig;
   savePreferences?: boolean;
   selectedDashboard: Dashboard | undefined;
+  updatePreferences?: (data: {}) => void;
 }
 
 export const CloudPulseRegionSelect = React.memo(
   (props: CloudPulseRegionSelectProps) => {
     const { data: regions } = useRegionsQuery();
 
-    const { handleRegionChange, placeholder, selectedDashboard } = props;
+    const {
+      handleRegionChange,
+      placeholder,
+      preferences,
+      savePreferences,
+      selectedDashboard,
+      updatePreferences,
+    } = props;
 
     const [selectedRegion, setSelectedRegion] = React.useState<string>();
 
     // Once the data is loaded, set the state variable with value stored in preferences
     React.useEffect(() => {
-      const defaultRegion = getUserPreferenceObject()?.region;
+      const defaultRegion = preferences?.region;
 
-      if (regions) {
+      if (regions && savePreferences) {
         if (defaultRegion) {
           const region = regions.find((obj) => obj.id === defaultRegion)?.id;
           handleRegionChange(region);
@@ -46,10 +51,12 @@ export const CloudPulseRegionSelect = React.memo(
     return (
       <RegionSelect
         onChange={(_, region) => {
-          updateGlobalFilterPreference({
-            [REGION]: region?.id,
-            [RESOURCES]: undefined,
-          });
+          if (savePreferences && updatePreferences) {
+            updatePreferences({
+              [REGION]: region?.id,
+              [RESOURCES]: undefined,
+            });
+          }
           setSelectedRegion(region?.id);
           handleRegionChange(region?.id);
         }}
@@ -67,5 +74,9 @@ export const CloudPulseRegionSelect = React.memo(
         value={selectedRegion}
       />
     );
-  }
+  },
+  (
+    oldProps: CloudPulseRegionSelectProps,
+    newProps: CloudPulseRegionSelectProps
+  ) => oldProps.selectedDashboard?.id === newProps.selectedDashboard?.id
 );
