@@ -192,9 +192,7 @@ export const getTimeDurationProperties = (
       timeDuration !== undefined ? (timeDuration as string) : undefined,
     handleStatsChange: handleTimeRangeChange,
     placeholder,
-    preferences,
     savePreferences: !isServiceAnalyticsIntegration,
-    updatePreferences,
   };
 };
 
