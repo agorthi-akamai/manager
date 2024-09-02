@@ -1,6 +1,6 @@
 import type { FilterValueType } from '../Dashboard/CloudPulseDashboardLanding';
 import type { CloudPulseServiceTypeFiltersOptions } from '../Utils/models';
-import type { AclpConfig, FilterValue } from '@linode/api-v4';
+import type { AclpConfig } from '@linode/api-v4';
 
 interface CloudPulseCustomSelectProps {
   /**
@@ -65,6 +65,11 @@ interface CloudPulseCustomSelectionChangeProps
    */
   maxSelections?: number;
 
+  preferences?: AclpConfig;
+  savePreferences?: boolean;
+
+  updatePreferences?: (data: {}) => void;
+
   /**
    * The listed options in the custom select component
    */
@@ -90,6 +95,7 @@ export const getInitialDefaultSelections = (
     handleSelectionChange,
     isMultiSelect,
     options,
+    preferences,
     savePreferences,
   } = defaultSelectionProps;
 
