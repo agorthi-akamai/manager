@@ -169,7 +169,7 @@ export const Autocomplete = <
       }}
       PopperComponent={CustomPopper}
       clearOnBlur={clearOnBlur}
-      data-qa-autocomplete
+      data-qa-autocomplete={label}
       data-qa-autocomplete_title={label}
       defaultValue={defaultValue}
       disableCloseOnSelect={multiple}
