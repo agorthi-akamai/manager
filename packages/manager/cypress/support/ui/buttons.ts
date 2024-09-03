@@ -47,6 +47,14 @@ export const buttonGroup = {
   find: (): Cypress.Chainable => {
     return cy.get('[data-qa-buttons="true"]');
   },
+  /**
+   * Finds a refresh button  and returns the Cypress chainable.
+   *
+   * @returns Cypress chainable.
+   */
+  findRefreshIcon: (): Cypress.Chainable => {
+    return cy.get('[data-qa-refresh-button="true"]');
+  },
 
   /**
    * Finds a button within a button group by its title and returns the Cypress chainable.
@@ -61,4 +69,14 @@ export const buttonGroup = {
       .findByText(buttonTitle)
       .closest('button');
   },
+  /**
+   * Finds a button within a button group by its title and returns the Cypress chainable.
+   *
+   * @param buttonTitle - Title of button to find.
+   *
+   * @returns string.
+   */
+  findZoomButtonByTitle: (buttonTitle: string): string => {
+    return `[data-qa-zoomer="${buttonTitle}"]`;
+  }
 };

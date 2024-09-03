@@ -7,6 +7,6 @@ export enum aggregation {
 }
 
 export const aggregationConfig = {
-  basic: [aggregation.Max, aggregation.Min, aggregation.Avg],
-  all: [aggregation.Max, aggregation.Min, aggregation.Avg, aggregation.Sum],
+  basic: [aggregation.Avg, aggregation.Max, aggregation.Min],
+  all: [aggregation.Avg, aggregation.Max, aggregation.Min, aggregation.Sum],
 };

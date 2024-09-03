@@ -17,19 +17,18 @@ export const autocomplete = {
     options?: SelectorMatcherOptions
   ): Cypress.Chainable => {
     return cy
-      .get('[data-qa-autocomplete]')
-      .findByPlaceholderText(title, options);
+    .get("[data-qa-autocomplete] input[placeholder='" + title + "']");
   },
+
   /**
-   * Finds a autocomplete that has the given  data-test-id.
+   * Finds a autocomplete that has the given placehoder text.
    */
-  findByTestId: (
-    title: string,
-    options?: SelectorMatcherOptions
-  ): Cypress.Chainable => {
-    return cy.get('[data-testid='+title+']')
-    
+  findByTitleCustom: (title: string): Cypress.Chainable => {
+    return cy.get(
+      '[data-qa-autocomplete="' + title + '"]'
+    );
   },
+
 };
 
 /**
