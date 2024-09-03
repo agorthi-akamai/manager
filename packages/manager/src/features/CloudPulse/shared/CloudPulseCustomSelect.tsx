@@ -97,6 +97,9 @@ export interface CloudPulseCustomSelectProps {
    */
   placeholder?: string;
 
+  /**
+   * Last selected values from user preferences
+   */
   preferences?: AclpConfig;
 
   /**
@@ -109,6 +112,10 @@ export interface CloudPulseCustomSelectProps {
    */
   type: CloudPulseSelectTypes;
 
+  /**
+   * Function to update the user preference
+   * @param data Data to be updated in the preferences
+   */
   updatePreferences?: (data: {}) => void;
 }
 
