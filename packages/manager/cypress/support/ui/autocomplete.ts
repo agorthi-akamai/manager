@@ -9,6 +9,26 @@ export const autocomplete = {
   find: (): Cypress.Chainable => {
     return cy.get('[data-qa-autocomplete] input');
   },
+  /**
+   * Finds a autocomplete that has the given placehoder text.
+   */
+  findByPlaceholderCustom: (
+    title: string,
+    options?: SelectorMatcherOptions
+  ): Cypress.Chainable => {
+    return cy
+    .get("[data-qa-autocomplete] input[placeholder='" + title + "']");
+  },
+
+  /**
+   * Finds a autocomplete that has the given placehoder text.
+   */
+  findByTitleCustom: (title: string): Cypress.Chainable => {
+    return cy.get(
+      '[data-qa-autocomplete="' + title + '"]'
+    );
+  },
+
 };
 
 /**
