@@ -5,16 +5,17 @@ import * as React from 'react';
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
 import { Drawer } from 'src/components/Drawer';
 import { Notice } from 'src/components/Notice/Notice';
-import { useGrants, useProfile } from 'src/queries/profile';
-import { useCreateSubnetMutation, useVPCQuery } from 'src/queries/vpcs';
+import { useGrants, useProfile } from 'src/queries/profile/profile';
+import { useCreateSubnetMutation, useVPCQuery } from 'src/queries/vpcs/vpcs';
 import { getErrorMap } from 'src/utilities/errorUtils';
 import {
   DEFAULT_SUBNET_IPV4_VALUE,
-  SubnetFieldState,
   getRecommendedSubnetIPv4,
 } from 'src/utilities/subnets';
 
 import { SubnetNode } from '../VPCCreate/SubnetNode';
+
+import type { SubnetFieldState } from 'src/utilities/subnets';
 
 interface Props {
   onClose: () => void;
@@ -41,7 +42,7 @@ export const SubnetCreateDrawer = (props: Props) => {
   >({});
 
   const {
-    isLoading,
+    isPending,
     mutateAsync: createSubnet,
     reset,
   } = useCreateSubnetMutation(vpcId);
@@ -114,7 +115,7 @@ export const SubnetCreateDrawer = (props: Props) => {
             'data-testid': 'create-subnet-drawer-button',
             disabled: !dirty || userCannotAddSubnet,
             label: 'Create Subnet',
-            loading: isLoading,
+            loading: isPending,
             onClick: onCreateSubnet,
             type: 'submit',
           }}

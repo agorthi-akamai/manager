@@ -1,20 +1,28 @@
 import { useTheme } from '@mui/material/styles';
 import * as React from 'react';
+import { useLocation } from 'react-router-dom';
 
 import { Notice } from 'src/components/Notice/Notice';
 import { Paper } from 'src/components/Paper';
-import { TagsInput, TagsInputProps } from 'src/components/TagsInput/TagsInput';
-import { TextField, TextFieldProps } from 'src/components/TextField';
+import { TagsInput } from 'src/components/TagsInput/TagsInput';
+import { TextField } from 'src/components/TextField';
 import { Typography } from 'src/components/Typography';
 import { PlacementGroupsDetailPanel } from 'src/features/PlacementGroups/PlacementGroupsDetailPanel';
-import { useFlags } from 'src/hooks/useFlags';
+import { useIsPlacementGroupsEnabled } from 'src/features/PlacementGroups/utils';
+import { sendLinodeCreateFormInputEvent } from 'src/utilities/analytics/formEventAnalytics';
+import { getQueryParamsFromQueryString } from 'src/utilities/queryParams';
 
 import type { PlacementGroup } from '@linode/api-v4';
+import type { TagsInputProps } from 'src/components/TagsInput/TagsInput';
+import type { TextFieldProps } from 'src/components/TextField';
+import type { LinodeCreateType } from 'src/features/Linodes/LinodesCreate/types';
+import type { LinodeCreateFormEventOptions } from 'src/utilities/analytics/types';
 
 interface DetailsPanelProps {
   error?: string;
-  handlePlacementGroupChange: (selected: PlacementGroup) => void;
+  handlePlacementGroupChange: (selected: PlacementGroup | null) => void;
   labelFieldProps?: TextFieldProps;
+  selectedPlacementGroupId: null | number;
   selectedRegionId?: string;
   tagsInputProps?: TagsInputProps;
 }
@@ -24,13 +32,23 @@ export const DetailsPanel = (props: DetailsPanelProps) => {
     error,
     handlePlacementGroupChange,
     labelFieldProps,
+    selectedPlacementGroupId,
     selectedRegionId,
     tagsInputProps,
   } = props;
   const theme = useTheme();
-  const flags = useFlags();
+  const { isPlacementGroupsEnabled } = useIsPlacementGroupsEnabled();
+  const location = useLocation();
+  const queryParams = getQueryParamsFromQueryString(location.search);
 
-  const showPlacementGroups = Boolean(flags.placementGroups?.enabled);
+  const placementGroupFormEventOptions: LinodeCreateFormEventOptions = {
+    createType: (queryParams.type as LinodeCreateType) ?? 'OS',
+    headerName: 'Details',
+    interaction: 'change',
+    label: 'Placement Group',
+    subheaderName: 'Placement Groups in Region',
+    trackOnce: true,
+  };
 
   return (
     <Paper
@@ -61,9 +79,23 @@ export const DetailsPanel = (props: DetailsPanelProps) => {
 
       {tagsInputProps && <TagsInput {...tagsInputProps} />}
 
-      {showPlacementGroups && (
+      {isPlacementGroupsEnabled && (
         <PlacementGroupsDetailPanel
-          handlePlacementGroupChange={handlePlacementGroupChange}
+          handlePlacementGroupChange={(selected) => {
+            handlePlacementGroupChange(selected);
+            // Track clearing and changing the value once per page view, configured by inputValue in AA backend.
+            if (!selected) {
+              sendLinodeCreateFormInputEvent({
+                ...placementGroupFormEventOptions,
+                interaction: 'clear',
+              });
+            } else {
+              sendLinodeCreateFormInputEvent({
+                ...placementGroupFormEventOptions,
+              });
+            }
+          }}
+          selectedPlacementGroupId={selectedPlacementGroupId}
           selectedRegionId={selectedRegionId}
         />
       )}

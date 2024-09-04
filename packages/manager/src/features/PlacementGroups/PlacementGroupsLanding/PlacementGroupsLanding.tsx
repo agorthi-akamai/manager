@@ -1,8 +1,8 @@
 import CloseIcon from '@mui/icons-material/Close';
 import { useMediaQuery, useTheme } from '@mui/material';
 import * as React from 'react';
-import { useParams } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { CircleProgress } from 'src/components/CircleProgress';
 import { DebouncedSearchTextField } from 'src/components/DebouncedSearchTextField';
@@ -28,6 +28,7 @@ import { usePlacementGroupsQuery } from 'src/queries/placementGroups';
 import { useRegionsQuery } from 'src/queries/regions/regions';
 import { getAPIErrorOrDefault } from 'src/utilities/errorUtils';
 
+import { PLACEMENT_GROUPS_DOCS_LINK } from '../constants';
 import { PlacementGroupsCreateDrawer } from '../PlacementGroupsCreateDrawer';
 import { PlacementGroupsDeleteModal } from '../PlacementGroupsDeleteModal';
 import { PlacementGroupsEditDrawer } from '../PlacementGroupsEditDrawer';
@@ -35,7 +36,7 @@ import { getPlacementGroupLinodes } from '../utils';
 import { PlacementGroupsLandingEmptyState } from './PlacementGroupsLandingEmptyState';
 import { PlacementGroupsRow } from './PlacementGroupsRow';
 
-import type { PlacementGroup } from '@linode/api-v4';
+import type { Filter, PlacementGroup } from '@linode/api-v4';
 
 const preferenceKey = 'placement-groups';
 
@@ -54,14 +55,11 @@ export const PlacementGroupsLanding = React.memo(() => {
     `${preferenceKey}-order`
   );
 
-  const filter = {
+  const filter: Filter = {
     ['+order']: order,
     ['+order_by']: orderBy,
+    ...(query && { label: { '+contains': query } }),
   };
-
-  if (query) {
-    filter['label'] = { '+contains': query };
-  }
 
   const {
     data: placementGroups,
@@ -139,7 +137,6 @@ export const PlacementGroupsLanding = React.memo(() => {
           openCreatePlacementGroupDrawer={handleCreatePlacementGroup}
         />
         <PlacementGroupsCreateDrawer
-          allPlacementGroups={placementGroups.data}
           disabledPlacementGroupCreateButton={isLinodeReadOnly}
           onClose={onClosePlacementGroupDrawer}
           open={isPlacementGroupCreateDrawerOpen}
@@ -171,7 +168,7 @@ export const PlacementGroupsLanding = React.memo(() => {
         }}
         breadcrumbProps={{ pathname: '/placement-groups' }}
         disabledCreateButton={isLinodeReadOnly}
-        docsLink={'TODO VM_Placement: add doc link'}
+        docsLink={PLACEMENT_GROUPS_DOCS_LINK}
         entity="Placement Group"
         onButtonClick={handleCreatePlacementGroup}
         title="Placement Groups"
@@ -180,7 +177,7 @@ export const PlacementGroupsLanding = React.memo(() => {
         InputProps={{
           endAdornment: query && (
             <InputAdornment position="end">
-              {isFetching && <CircleProgress mini />}
+              {isFetching && <CircleProgress size="sm" />}
 
               <IconButton
                 aria-label="Clear"
@@ -195,9 +192,9 @@ export const PlacementGroupsLanding = React.memo(() => {
         }}
         debounceTime={250}
         hideLabel
-        label="Filter"
+        label="Search"
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Filter"
+        placeholder="Search Placement Groups"
         sx={{ mb: 4 }}
         value={query}
       />
@@ -215,23 +212,23 @@ export const PlacementGroupsLanding = React.memo(() => {
             </TableSortCell>
             <Hidden smDown>
               <TableSortCell
-                active={orderBy === 'affinity_type'}
+                active={orderBy === 'placement_group_type'}
                 direction={order}
                 handleClick={handleOrderChange}
-                label="affinity_type"
+                label="placement_group_type"
               >
-                Affinity Type
+                Placement Group Type
               </TableSortCell>
             </Hidden>
             <Hidden smDown>
               <TableSortCell
-                active={orderBy === 'is_strict'}
+                active={orderBy === 'placement_group_policy'}
                 direction={order}
                 handleClick={handleOrderChange}
-                label="is_strict"
+                label="placement_group_policy"
                 sx={{ width: '20%' }}
               >
-                Affinity Type Enforcement
+                Placement Group Policy
               </TableSortCell>
             </Hidden>
             <TableCell>Linodes</TableCell>
@@ -279,7 +276,6 @@ export const PlacementGroupsLanding = React.memo(() => {
         pageSize={pagination.pageSize}
       />
       <PlacementGroupsCreateDrawer
-        allPlacementGroups={placementGroups?.data ?? []}
         disabledPlacementGroupCreateButton={isLinodeReadOnly}
         onClose={onClosePlacementGroupDrawer}
         open={isPlacementGroupCreateDrawerOpen}

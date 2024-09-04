@@ -1,9 +1,7 @@
-import { Linode } from '@linode/api-v4';
 import { useTheme } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import sanitize from 'sanitize-html';
 
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
 import { Drawer } from 'src/components/Drawer';
@@ -11,14 +9,16 @@ import { Link } from 'src/components/Link';
 import { Notice } from 'src/components/Notice/Notice';
 import { SupportLink } from 'src/components/SupportLink';
 import { LinodeSelect } from 'src/features/Linodes/LinodeSelect/LinodeSelect';
-import { useFlags } from 'src/hooks/useFlags';
 import {
   useAddFirewallDeviceMutation,
   useAllFirewallsQuery,
 } from 'src/queries/firewalls';
-import { useGrants, useProfile } from 'src/queries/profile';
+import { useGrants, useProfile } from 'src/queries/profile/profile';
 import { getAPIErrorOrDefault } from 'src/utilities/errorUtils';
 import { getEntityIdsByPermission } from 'src/utilities/grants';
+import { sanitizeHTML } from 'src/utilities/sanitizeHTML';
+
+import type { Linode } from '@linode/api-v4';
 
 interface Props {
   helperText: string;
@@ -38,14 +38,13 @@ export const AddLinodeDrawer = (props: Props) => {
   const isRestrictedUser = Boolean(profile?.restricted);
 
   const { data, error, isLoading } = useAllFirewallsQuery();
-  const flags = useFlags();
 
   const firewall = data?.find((firewall) => firewall.id === Number(id));
 
   const theme = useTheme();
 
   const {
-    isLoading: addDeviceIsLoading,
+    isPending: addDeviceIsLoading,
     mutateAsync: addDevice,
   } = useAddFirewallDeviceMutation(Number(id));
 
@@ -94,10 +93,14 @@ export const AddLinodeDrawer = (props: Props) => {
   };
 
   const errorNotice = () => {
-    let errorMsg = sanitize(localError || '', {
-      allowedAttributes: {},
-      allowedTags: [], // Disallow all HTML tags,
-    });
+    let errorMsg = sanitizeHTML({
+      sanitizeOptions: {
+        ALLOWED_ATTR: [],
+        ALLOWED_TAGS: [], // Disallow all HTML tags,
+      },
+      sanitizingTier: 'strict',
+      text: localError || '',
+    }).toString();
     // match something like: Linode <linode_label> (ID <linode_id>)
 
     const linode = /Linode (.+?) \(ID ([^\)]+)\)/i.exec(errorMsg);
@@ -148,25 +151,17 @@ export const AddLinodeDrawer = (props: Props) => {
     ? getEntityIdsByPermission(grants, 'linode', 'read_only')
     : [];
 
-  const linodeOptionsFilter = (() => {
-    // When `firewallNodebalancer` feature flag is disabled, no filtering
-    // occurs. In this case, pass a filter callback that always returns `true`.
-    if (!flags.firewallNodebalancer) {
-      return () => true;
-    }
+  const assignedLinodes = data
+    ?.map((firewall) => firewall.entities)
+    .flat()
+    ?.filter((service) => service.type === 'linode');
 
-    const assignedLinodes = data
-      ?.map((firewall) => firewall.entities)
-      .flat()
-      ?.filter((service) => service.type === 'linode');
-
-    return (linode: Linode) => {
-      return (
-        !readOnlyLinodeIds.includes(linode.id) &&
-        !assignedLinodes?.some((service) => service.id === linode.id)
-      );
-    };
-  })();
+  const linodeOptionsFilter = (linode: Linode) => {
+    return (
+      !readOnlyLinodeIds.includes(linode.id) &&
+      !assignedLinodes?.some((service) => service.id === linode.id)
+    );
+  };
 
   React.useEffect(() => {
     if (error) {

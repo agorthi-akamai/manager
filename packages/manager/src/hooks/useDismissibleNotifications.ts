@@ -2,8 +2,12 @@ import { DateTime } from 'luxon';
 import md5 from 'md5';
 import { useState } from 'react';
 
-import { useMutatePreferences, usePreferences } from 'src/queries/preferences';
-import { DismissedNotification } from 'src/types/ManagerPreferences';
+import {
+  useMutatePreferences,
+  usePreferences,
+} from 'src/queries/profile/preferences';
+
+import type { DismissedNotification } from 'src/types/ManagerPreferences';
 
 /**
  * Handlers for dismissing notifications and checking if a notification has been dismissed.
@@ -108,7 +112,7 @@ export const updateDismissedNotifications = (
   notificationsToDismiss: unknown[],
   options: DismissibleNotificationOptions
 ) => {
-  const newNotifications = {};
+  const newNotifications: Record<string, DismissedNotification> = {};
   notificationsToDismiss.forEach((thisNotification) => {
     const hashKey = getHashKey(thisNotification, options.prefix);
     newNotifications[hashKey] = {
