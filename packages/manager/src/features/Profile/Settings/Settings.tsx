@@ -10,8 +10,11 @@ import { RadioGroup } from 'src/components/RadioGroup';
 import { Stack } from 'src/components/Stack';
 import { Toggle } from 'src/components/Toggle/Toggle';
 import { Typography } from 'src/components/Typography';
-import { useMutatePreferences, usePreferences } from 'src/queries/preferences';
-import { useMutateProfile, useProfile } from 'src/queries/profile';
+import {
+  useMutatePreferences,
+  usePreferences,
+} from 'src/queries/profile/preferences';
+import { useMutateProfile, useProfile } from 'src/queries/profile/profile';
 import { getQueryParamFromQueryString } from 'src/utilities/queryParams';
 import { ThemeChoice } from 'src/utilities/theme';
 import { isOSMac } from 'src/utilities/userAgent';
@@ -33,7 +36,7 @@ export const ProfileSettings = () => {
   };
 
   const { data: profile } = useProfile();
-  const { isLoading, mutateAsync: updateProfile } = useMutateProfile();
+  const { isPending, mutateAsync: updateProfile } = useMutateProfile();
 
   const { data: preferences } = usePreferences();
   const { mutateAsync: updatePreferences } = useMutatePreferences();
@@ -67,7 +70,7 @@ export const ProfileSettings = () => {
           label={`Email alerts for account activity are ${
             areEmailNotificationsEnabled ? 'enabled' : 'disabled'
           }`}
-          disabled={isLoading}
+          disabled={isPending}
         />
       </Paper>
       <Paper>

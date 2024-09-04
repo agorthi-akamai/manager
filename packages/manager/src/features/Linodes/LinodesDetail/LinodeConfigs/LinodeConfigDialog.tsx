@@ -1,24 +1,18 @@
-import {
-  Config,
-  Interface,
-  LinodeConfigCreationData,
-} from '@linode/api-v4/lib/linodes';
-import { APIError } from '@linode/api-v4/lib/types';
-import Grid from '@mui/material/Unstable_Grid2';
 import { useTheme } from '@mui/material/styles';
+import Grid from '@mui/material/Unstable_Grid2';
+import { useQueryClient } from '@tanstack/react-query';
 import { useFormik } from 'formik';
 import { useSnackbar } from 'notistack';
 import { equals, pathOr, repeat } from 'ramda';
 import * as React from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
+import { Autocomplete } from 'src/components/Autocomplete/Autocomplete';
 import { Box } from 'src/components/Box';
 import { Button } from 'src/components/Button/Button';
 import { CircleProgress } from 'src/components/CircleProgress';
 import { Dialog } from 'src/components/Dialog/Dialog';
 import { Divider } from 'src/components/Divider';
-import Select, { Item } from 'src/components/EnhancedSelect/Select';
 import { ErrorState } from 'src/components/ErrorState/ErrorState';
 import { FormControl } from 'src/components/FormControl';
 import { FormControlLabel } from 'src/components/FormControlLabel';
@@ -48,27 +42,20 @@ import {
   useLinodeQuery,
 } from 'src/queries/linodes/linodes';
 import { useRegionsQuery } from 'src/queries/regions/regions';
-import { queryKey as vlansQueryKey } from 'src/queries/vlans';
-import { useAllVolumesQuery } from 'src/queries/volumes';
-import { vpcQueryKey } from 'src/queries/vpcs';
-import {
-  DevicesAsStrings,
-  createDevicesFromStrings,
-} from 'src/utilities/createDevicesFromStrings';
+import { vlanQueries } from 'src/queries/vlans';
+import { useAllVolumesQuery } from 'src/queries/volumes/volumes';
+import { vpcQueries } from 'src/queries/vpcs/vpcs';
+import { createDevicesFromStrings } from 'src/utilities/createDevicesFromStrings';
 import { createStringsFromDevices } from 'src/utilities/createStringsFromDevices';
 import {
   handleFieldErrors,
   handleGeneralErrors,
 } from 'src/utilities/formikErrorUtils';
-import { getSelectedOptionFromGroupedOptions } from 'src/utilities/getSelectedOptionFromGroupedOptions';
-import { ExtendedIP } from 'src/utilities/ipUtils';
-import { scrollErrorIntoView } from 'src/utilities/scrollErrorIntoView';
+import { scrollErrorIntoViewV2 } from 'src/utilities/scrollErrorIntoViewV2';
 
-import {
-  ExtendedInterface,
-  InterfaceSelect,
-} from '../LinodeSettings/InterfaceSelect';
+import { InterfaceSelect } from '../LinodeSettings/InterfaceSelect';
 import { KernelSelect } from '../LinodeSettings/KernelSelect';
+import { getSelectedDeviceOption } from '../utilities';
 import {
   StyledDivider,
   StyledFormControl,
@@ -76,6 +63,16 @@ import {
   StyledFormGroup,
   StyledRadioGroup,
 } from './LinodeConfigDialog.styles';
+
+import type { ExtendedInterface } from '../LinodeSettings/InterfaceSelect';
+import type {
+  Config,
+  Interface,
+  LinodeConfigCreationData,
+} from '@linode/api-v4/lib/linodes';
+import type { APIError } from '@linode/api-v4/lib/types';
+import type { DevicesAsStrings } from 'src/utilities/createDevicesFromStrings';
+import type { ExtendedIP } from 'src/utilities/ipUtils';
 
 interface Helpers {
   devtmpfs_automount: boolean;
@@ -213,7 +210,18 @@ const interfacesToPayload = (
     return [];
   }
 
-  if (equals(interfaces, defaultInterfaceList)) {
+  const filteredInterfaces = interfaces.filter(
+    (thisInterface) => thisInterface.purpose !== 'none'
+  );
+
+  if (
+    equals(
+      filteredInterfaces,
+      defaultInterfaceList.filter(
+        (thisInterface) => thisInterface.purpose !== 'none'
+      )
+    )
+  ) {
     // In this case, where eth0 is set to public interface
     // and no other interfaces are specified, the API prefers
     // to receive an empty array.
@@ -221,12 +229,12 @@ const interfacesToPayload = (
   }
 
   if (primaryInterfaceIndex !== undefined) {
-    interfaces[primaryInterfaceIndex].primary = true;
+    interfaces.forEach(
+      (iface, i) => (iface.primary = i === primaryInterfaceIndex)
+    );
   }
 
-  return interfaces.filter(
-    (thisInterface) => thisInterface.purpose !== 'none'
-  ) as Interface[];
+  return filteredInterfaces as Interface[];
 };
 
 const deviceSlots = ['sda', 'sdb', 'sdc', 'sdd', 'sde', 'sdf', 'sdg', 'sdh'];
@@ -236,6 +244,7 @@ const deviceCounterDefault = 1;
 const finnixDiskID = 25669;
 
 export const LinodeConfigDialog = (props: Props) => {
+  const formContainerRef = React.useRef<HTMLDivElement>(null);
   const { config, isReadOnly, linodeId, onClose, open } = props;
 
   const { data: linode } = useLinodeQuery(linodeId, open);
@@ -295,7 +304,10 @@ export const LinodeConfigDialog = (props: Props) => {
   const { resetForm, setFieldValue, values, ...formik } = useFormik({
     initialValues: defaultFieldsValues,
     onSubmit: (values) => onSubmit(values),
-    validate: (values) => onValidate(values),
+    validate: (values) => {
+      onValidate(values);
+      scrollErrorIntoViewV2(formContainerRef);
+    },
     validateOnChange: false,
     validateOnMount: false,
   });
@@ -386,23 +398,32 @@ export const LinodeConfigDialog = (props: Props) => {
     const actionType = Boolean(config) ? 'updated' : 'created';
     const handleSuccess = () => {
       formik.setSubmitting(false);
-      queryClient.invalidateQueries(['linode', 'configs', props.linodeId]);
       // If there's any chance a VLAN changed here, make sure our query data is up to date
       if (
         configData.interfaces?.some(
           (thisInterface) => thisInterface.purpose === 'vlan'
         )
       ) {
-        queryClient.invalidateQueries([vlansQueryKey]);
+        queryClient.invalidateQueries({
+          queryKey: vlanQueries._def,
+        });
       }
 
       // Ensure VPC query data is up-to-date
-      if (
-        configData.interfaces?.some(
-          (thisInterface) => thisInterface.purpose === 'vpc'
-        )
-      ) {
-        queryClient.invalidateQueries([vpcQueryKey]);
+      const vpcId = configData.interfaces?.find(
+        (thisInterface) => thisInterface.purpose === 'vpc'
+      )?.vpc_id;
+
+      if (vpcId) {
+        queryClient.invalidateQueries({
+          queryKey: vpcQueries.all.queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: vpcQueries.paginated._def,
+        });
+        queryClient.invalidateQueries({
+          queryKey: vpcQueries.vpc(vpcId).queryKey,
+        });
       }
 
       enqueueSnackbar(
@@ -438,7 +459,6 @@ export const LinodeConfigDialog = (props: Props) => {
         error,
         'An unexpected error occurred.'
       );
-      scrollErrorIntoView('linode-config-dialog');
     };
 
     /** Editing */
@@ -452,9 +472,6 @@ export const LinodeConfigDialog = (props: Props) => {
 
   React.useEffect(() => {
     if (open) {
-      // Ensure VLANs are fresh.
-      queryClient.invalidateQueries([vlansQueryKey]);
-
       /**
        * If config is defined, we're editing. Set the state
        * to the values of the config.
@@ -567,29 +584,32 @@ export const LinodeConfigDialog = (props: Props) => {
     disks: initrdDisks,
   };
 
-  const categorizedInitrdOptions = Object.entries(initrdDisksObject).map(
-    ([category, items]) => {
+  const categorizedInitrdOptions = Object.entries(initrdDisksObject).reduce(
+    (acc, [category, items]) => {
       const categoryTitle = titlecase(category);
-      return {
-        label: categoryTitle,
-        options: [
-          ...items.map(({ id, label }) => {
-            return {
-              label,
-              value: String(id) as null | number | string,
-            };
-          }),
-          { label: 'Recovery – Finnix (initrd)', value: String(finnixDiskID) },
-        ],
-        value: category,
-      };
-    }
+      const options = [
+        ...items.map(({ id, label }) => {
+          return {
+            deviceType: categoryTitle,
+            label,
+            value: String(id) as null | number | string,
+          };
+        }),
+        {
+          deviceType: categoryTitle,
+          label: 'Recovery – Finnix (initrd)',
+          value: String(finnixDiskID),
+        },
+      ];
+      return [...acc, ...options];
+    },
+    []
   );
 
   categorizedInitrdOptions.unshift({
-    label: '',
-    options: [{ label: 'None', value: null }],
-    value: '',
+    deviceType: '',
+    label: 'None',
+    value: null,
   });
 
   const getPrimaryInterfaceOptions = (interfaces: ExtendedInterface[]) => {
@@ -603,8 +623,8 @@ export const LinodeConfigDialog = (props: Props) => {
 
   const primaryInterfaceOptions = getPrimaryInterfaceOptions(values.interfaces);
 
-  const handlePrimaryInterfaceChange = (selected: Item<number>) => {
-    setPrimaryInterfaceIndex(selected.value);
+  const handlePrimaryInterfaceChange = (selectedValue: number) => {
+    setPrimaryInterfaceIndex(selectedValue);
   };
 
   /**
@@ -613,8 +633,8 @@ export const LinodeConfigDialog = (props: Props) => {
    */
 
   const handleChangeKernel = React.useCallback(
-    (selected: Item<string>) => {
-      setFieldValue('kernel', selected?.value ?? '');
+    (selectedValue: string) => {
+      setFieldValue('kernel', selectedValue);
     },
     [setFieldValue]
   );
@@ -628,7 +648,7 @@ export const LinodeConfigDialog = (props: Props) => {
   );
 
   const handleInterfaceChange = React.useCallback(
-    (slot: number, updatedInterface: Interface) => {
+    (slot: number, updatedInterface: ExtendedInterface) => {
       setFieldValue(`interfaces[${slot}]`, updatedInterface);
     },
     [setFieldValue]
@@ -646,15 +666,15 @@ export const LinodeConfigDialog = (props: Props) => {
   );
 
   const handleRootDeviceChange = React.useCallback(
-    (selected: Item<string>) => {
-      setFieldValue('root_device', selected.value);
+    (selectedValue: string) => {
+      setFieldValue('root_device', selectedValue);
     },
     [setFieldValue]
   );
 
   const handleInitrdChange = React.useCallback(
-    (selectedDisk: Item<string>) => {
-      setFieldValue('initrd', selectedDisk.value);
+    (selectedDiskValue: string) => {
+      setFieldValue('initrd', selectedDiskValue);
     },
     [setFieldValue]
   );
@@ -679,7 +699,7 @@ export const LinodeConfigDialog = (props: Props) => {
       open={open}
       title={`${config ? 'Edit' : 'Add'} Configuration`}
     >
-      <Grid container direction="row">
+      <Grid container direction="row" ref={formContainerRef}>
         <DialogContent errors={kernelsError} loading={kernelsLoading}>
           <React.Fragment>
             {generalError && (
@@ -865,19 +885,26 @@ export const LinodeConfigDialog = (props: Props) => {
                 slots={deviceSlots}
               />
               <FormControl fullWidth>
-                <Select
-                  defaultValue={getSelectedOptionFromGroupedOptions(
+                <Autocomplete
+                  defaultValue={getSelectedDeviceOption(
                     initrdFromConfig,
                     categorizedInitrdOptions
                   )}
-                  value={getSelectedOptionFromGroupedOptions(
+                  isOptionEqualToValue={(option, value) =>
+                    option.label === value.label
+                  }
+                  onChange={(_, selected) =>
+                    handleInitrdChange(selected?.value)
+                  }
+                  value={getSelectedDeviceOption(
                     values.initrd,
                     categorizedInitrdOptions
                   )}
-                  isClearable={false}
+                  autoHighlight
+                  clearIcon={null}
+                  groupBy={(option) => option.deviceType}
                   label="initrd"
                   noMarginTop
-                  onChange={handleInitrdChange}
                   options={categorizedInitrdOptions}
                   placeholder="None"
                 />
@@ -908,17 +935,19 @@ export const LinodeConfigDialog = (props: Props) => {
                   name="useCustomRoot"
                 />
                 {!useCustomRoot ? (
-                  <Select
+                  <Autocomplete
+                    onChange={(_, selected) =>
+                      handleRootDeviceChange(selected?.value)
+                    }
                     value={pathsOptions.find(
                       (device) => device.value === values.root_device
                     )}
+                    autoHighlight
+                    disableClearable
                     disabled={isReadOnly}
                     errorText={formik.errors.root_device}
                     id="root_device"
-                    isClearable={false}
                     label="Root Device"
-                    name="root_device"
-                    onChange={handleRootDeviceChange}
                     options={pathsOptions}
                     placeholder="None"
                   />
@@ -948,7 +977,6 @@ export const LinodeConfigDialog = (props: Props) => {
                     paddingBottom: 0,
                     paddingTop: 0,
                   }}
-                  interactive
                   status="help"
                   sx={{ tooltip: { maxWidth: 350 } }}
                   text={networkInterfacesHelperText}
@@ -961,16 +989,20 @@ export const LinodeConfigDialog = (props: Props) => {
                 />
               )}
               <>
-                <Select
-                  defaultValue={
-                    primaryInterfaceOptions[primaryInterfaceIndex ?? 0]
+                <Autocomplete
+                  isOptionEqualToValue={(option, value) =>
+                    option.value === value.value
                   }
+                  onChange={(_, selected) =>
+                    handlePrimaryInterfaceChange(selected?.value)
+                  }
+                  autoHighlight
                   data-testid="primary-interface-dropdown"
+                  disableClearable
                   disabled={isReadOnly}
-                  isClearable={false}
                   label="Primary Interface (Default Route)"
-                  onChange={handlePrimaryInterfaceChange}
                   options={getPrimaryInterfaceOptions(values.interfaces)}
+                  value={primaryInterfaceOptions[primaryInterfaceIndex ?? 0]}
                 />
                 <Divider
                   sx={{
@@ -986,11 +1018,13 @@ export const LinodeConfigDialog = (props: Props) => {
                   thisInterface.ip_ranges ?? []
                 ).map((ip_range, index) => {
                   // Display a more user-friendly error to the user as opposed to, for example, "interfaces[1].ip_ranges[1] is invalid"
+                  // @ts-expect-error this form intentionally breaks formik's error type
                   const errorString: string = formik.errors[
                     `interfaces[${idx}].ip_ranges[${index}]`
                   ]?.includes('is invalid')
                     ? 'Invalid IP range'
-                    : formik.errors[`interfaces[${idx}].ip_ranges[${index}]`];
+                    : // @ts-expect-error this form intentionally breaks formik's error type
+                      formik.errors[`interfaces[${idx}].ip_ranges[${index}]`];
 
                   return {
                     address: ip_range,
@@ -1009,28 +1043,38 @@ export const LinodeConfigDialog = (props: Props) => {
                     <InterfaceSelect
                       errors={{
                         ipRangeError:
+                          // @ts-expect-error this form intentionally breaks formik's error type
                           formik.errors[`interfaces[${idx}].ip_ranges`],
                         ipamError:
+                          // @ts-expect-error this form intentionally breaks formik's error type
                           formik.errors[`interfaces[${idx}].ipam_address`],
+                        // @ts-expect-error this form intentionally breaks formik's error type
                         labelError: formik.errors[`interfaces[${idx}].label`],
                         primaryError:
+                          // @ts-expect-error this form intentionally breaks formik's error type
                           formik.errors[`interfaces[${idx}].primary`],
                         publicIPv4Error:
+                          // @ts-expect-error this form intentionally breaks formik's error type
                           formik.errors[`interfaces[${idx}].ipv4.nat_1_1`],
                         subnetError:
+                          // @ts-expect-error this form intentionally breaks formik's error type
                           formik.errors[`interfaces[${idx}].subnet_id`],
+                        // @ts-expect-error this form intentionally breaks formik's error type
                         vpcError: formik.errors[`interfaces[${idx}].vpc_id`],
                         vpcIPv4Error:
+                          // @ts-expect-error this form intentionally breaks formik's error type
                           formik.errors[`interfaces[${idx}].ipv4.vpc`],
                       }}
-                      handleChange={(newInterface: Interface) =>
-                        handleInterfaceChange(idx, newInterface)
+                      handleChange={(newInterface: ExtendedInterface) => {
+                        handleInterfaceChange(idx, newInterface);
+                      }}
+                      nattedIPv4Address={
+                        thisInterface.ipv4?.nat_1_1 ?? undefined
                       }
                       additionalIPv4RangesForVPC={thisInterfaceIPRanges}
                       ipamAddress={thisInterface.ipam_address}
                       key={`eth${idx}-interface`}
                       label={thisInterface.label}
-                      nattedIPv4Address={thisInterface.ipv4?.nat_1_1}
                       purpose={thisInterface.purpose}
                       readOnly={isReadOnly}
                       region={linode?.region}
@@ -1038,7 +1082,7 @@ export const LinodeConfigDialog = (props: Props) => {
                       regionHasVPCs={regionHasVPCs}
                       slotNumber={idx}
                       subnetId={thisInterface.subnet_id}
-                      vpcIPv4={thisInterface.ipv4?.vpc}
+                      vpcIPv4={thisInterface.ipv4?.vpc ?? undefined}
                       vpcId={thisInterface.vpc_id}
                     />
                   </React.Fragment>
@@ -1115,7 +1159,6 @@ export const LinodeConfigDialog = (props: Props) => {
                         }
                         checked={values.helpers.network}
                         disabled={isReadOnly}
-                        interactive={true}
                         onChange={formik.handleChange}
                       />
                     }

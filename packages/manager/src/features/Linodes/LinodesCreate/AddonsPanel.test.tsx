@@ -1,11 +1,13 @@
 import React from 'react';
 
 import { imageFactory, linodeTypeFactory } from 'src/factories';
-import { http, HttpResponse, server } from 'src/mocks/testServer';
+import { HttpResponse, http, server } from 'src/mocks/testServer';
 import { getMonthlyBackupsPrice } from 'src/utilities/pricing/backups';
 import { renderWithTheme, wrapWithTheme } from 'src/utilities/testHelpers';
 
-import { AddonsPanel, AddonsPanelProps } from './AddonsPanel';
+import { AddonsPanel } from './AddonsPanel';
+
+import type { AddonsPanelProps } from './AddonsPanel';
 
 const type = linodeTypeFactory.build({
   addons: {
@@ -31,6 +33,7 @@ const props: AddonsPanelProps = {
   changeBackups: vi.fn(),
   createType: 'fromLinode',
   disabled: false,
+  diskEncryptionEnabled: false,
   handleVLANChange: vi.fn(),
   ipamAddress: 'ipadAddress',
   ipamError: 'test ipad error',
@@ -61,13 +64,15 @@ const props: AddonsPanelProps = {
       ipv4: ['45.56.75.98'],
       ipv6: '2600:3c00::f03c:93ff:fe85:576d/128',
       label: 'test_instance',
+      lke_cluster_id: null,
       placement_group: {
-        affinity_type: 'anti_affinity:local',
         id: 1,
-        is_strict: true,
         label: 'test',
+        placement_group_policy: 'strict',
+        placement_group_type: 'anti_affinity:local',
       },
       region: 'us-central',
+      site_type: 'core',
       specs: {
         disk: 51200,
         gpus: 0,
@@ -106,13 +111,15 @@ const props: AddonsPanelProps = {
       ipv4: ['192.168.139.183', '139.144.17.202'],
       ipv6: '2600:3c04::f03c:93ff:fe75:0612/128',
       label: 'debian-ca-central',
+      lke_cluster_id: null,
       placement_group: {
-        affinity_type: 'anti_affinity:local',
         id: 1,
-        is_strict: true,
         label: 'test',
+        placement_group_policy: 'strict',
+        placement_group_type: 'anti_affinity:local',
       },
       region: 'ca-central',
+      site_type: 'core',
       specs: {
         disk: 25600,
         gpus: 0,
@@ -150,13 +157,15 @@ const props: AddonsPanelProps = {
       ipv4: ['45.79.74.95'],
       ipv6: '2600:3c01::f03c:93ff:fe75:e4f9/128',
       label: 'almalinux-us-west',
+      lke_cluster_id: null,
       placement_group: {
-        affinity_type: 'anti_affinity:local',
         id: 1,
-        is_strict: true,
         label: 'test',
+        placement_group_policy: 'strict',
+        placement_group_type: 'anti_affinity:local',
       },
       region: 'us-west',
+      site_type: 'core',
       specs: {
         disk: 25600,
         gpus: 0,
@@ -268,25 +277,25 @@ describe('AddonsPanel', () => {
     expect(getByText(/\$3.57/)).toBeInTheDocument();
   });
 
-  it('should render a warning notice if isEdgeRegionSelected is true and disable backups and private ip checkbox', () => {
-    const propsWithEdgeRegionSelected = {
+  it('should render a warning notice if isDistributedRegionSelected is true and disable backups and private ip checkbox', () => {
+    const propsWithDistributedRegionSelected = {
       ...props,
-      isEdgeRegionSelected: true,
+      isDistributedRegionSelected: true,
     };
     const { getByTestId } = renderWithTheme(
-      <AddonsPanel {...propsWithEdgeRegionSelected} />
+      <AddonsPanel {...propsWithDistributedRegionSelected} />
     );
     expect(getByTestId('notice-warning')).toBeInTheDocument();
     expect(getByTestId('private_ip')).toHaveAttribute('aria-disabled', 'true');
     expect(getByTestId('backups')).toHaveAttribute('aria-disabled', 'true');
   });
-  it('should not render a warning notice if isEdgeRegionSelected is false', () => {
-    const propsWithEdgeRegionNotSelected = {
+  it('should not render a warning notice if isDistributedRegionSelected is false', () => {
+    const propsWithDistributedRegionNotSelected = {
       ...props,
-      isEdgeRegionSelected: false,
+      isDistributedRegionSelected: false,
     };
     const { queryByTestId } = renderWithTheme(
-      <AddonsPanel {...propsWithEdgeRegionNotSelected} />
+      <AddonsPanel {...propsWithDistributedRegionNotSelected} />
     );
     expect(queryByTestId('notice-warning')).not.toBeInTheDocument();
   });

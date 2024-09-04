@@ -9,8 +9,8 @@ import { ConfirmationDialog } from 'src/components/ConfirmationDialog/Confirmati
 import { Link } from 'src/components/Link';
 import { Notice } from 'src/components/Notice/Notice';
 import { Typography } from 'src/components/Typography';
-import { useSMSOptOutMutation } from 'src/queries/profile';
-import { useProfile } from 'src/queries/profile';
+import { useSMSOptOutMutation } from 'src/queries/profile/profile';
+import { useProfile } from 'src/queries/profile/profile';
 
 import { getFormattedNumber } from './PhoneVerification/helpers';
 
@@ -19,7 +19,7 @@ export const SMSMessaging = () => {
   const { data: profile } = useProfile();
   const {
     error,
-    isLoading,
+    isPending,
     mutateAsync: optOut,
     reset,
   } = useSMSOptOutMutation();
@@ -80,7 +80,7 @@ export const SMSMessaging = () => {
           <ActionsPanel
             primaryButtonProps={{
               label: 'Opt Out',
-              loading: isLoading,
+              loading: isPending,
               onClick: onOptOut,
             }}
             secondaryButtonProps={{ label: 'Cancel', onClick: onClose }}

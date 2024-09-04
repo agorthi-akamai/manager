@@ -1,4 +1,7 @@
-import { AFFINITY_TYPES } from '@linode/api-v4';
+import {
+  PLACEMENT_GROUP_TYPES,
+  PLACEMENT_GROUP_POLICIES,
+} from '@linode/api-v4';
 import { updatePlacementGroupSchema } from '@linode/validation';
 import { useFormik } from 'formik';
 import { useSnackbar } from 'notistack';
@@ -7,13 +10,13 @@ import { useParams } from 'react-router-dom';
 
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
 import { CircleProgress } from 'src/components/CircleProgress';
+import { DescriptionList } from 'src/components/DescriptionList/DescriptionList';
 import { Divider } from 'src/components/Divider';
 import { Drawer } from 'src/components/Drawer';
 import { NotFound } from 'src/components/NotFound';
 import { Notice } from 'src/components/Notice/Notice';
 import { Stack } from 'src/components/Stack';
 import { TextField } from 'src/components/TextField';
-import { Typography } from 'src/components/Typography';
 import { useFormValidateOnChange } from 'src/hooks/useFormValidateOnChange';
 import {
   useMutatePlacementGroup,
@@ -21,8 +24,6 @@ import {
 } from 'src/queries/placementGroups';
 import { getFormikErrorsFromAPIErrors } from 'src/utilities/formikErrorUtils';
 import { scrollErrorIntoView } from 'src/utilities/scrollErrorIntoView';
-
-import { getAffinityTypeEnforcement } from './utils';
 
 import type { PlacementGroupsEditDrawerProps } from './types';
 import type { UpdatePlacementGroupPayload } from '@linode/api-v4';
@@ -85,7 +86,7 @@ export const PlacementGroupsEditDrawer = (
     try {
       const response = await mutateAsync(values);
 
-      enqueueSnackbar(`Placement Group ${values.label} successfully updated`, {
+      enqueueSnackbar(`Placement Group ${values.label} successfully updated.`, {
         variant: 'success',
       });
 
@@ -124,9 +125,7 @@ export const PlacementGroupsEditDrawer = (
     <Drawer
       title={
         placementGroup
-          ? `Edit Placement Group ${placementGroup.label} (${
-              AFFINITY_TYPES[placementGroup.affinity_type]
-            })`
+          ? `Edit Placement Group ${placementGroup.label}`
           : 'Edit Placement Group'
       }
       onClose={handleClose}
@@ -135,14 +134,31 @@ export const PlacementGroupsEditDrawer = (
       {generalError && <Notice text={generalError} variant="error" />}
       {placementGroup ? (
         <>
-          <Typography mb={1} mt={4}>
-            <strong>Region: </strong>
-            {region ? `${region.label} (${region.id})` : 'Unknown'}
-          </Typography>
-          <Typography mb={4}>
-            <strong>Affinity Enforcement: </strong>
-            {getAffinityTypeEnforcement(placementGroup.is_strict)}
-          </Typography>
+          <DescriptionList
+            items={[
+              {
+                description: region
+                  ? `${region.label} (${region.id})`
+                  : 'Unknown',
+                title: 'Region',
+              },
+              {
+                description:
+                  PLACEMENT_GROUP_TYPES[placementGroup.placement_group_type],
+                title: 'Placement Group Type',
+              },
+              {
+                description:
+                  PLACEMENT_GROUP_POLICIES[
+                    placementGroup.placement_group_policy
+                  ],
+                title: 'Placement Group Policy',
+              },
+            ]}
+            sx={{
+              my: 2,
+            }}
+          />
           <Divider />
           <form onSubmit={handleSubmit}>
             <Stack spacing={1}>

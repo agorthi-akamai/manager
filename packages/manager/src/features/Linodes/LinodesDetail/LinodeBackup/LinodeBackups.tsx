@@ -1,4 +1,3 @@
-import { LinodeBackup, PriceObject } from '@linode/api-v4/lib/linodes';
 import { Box, Stack } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import * as React from 'react';
@@ -8,7 +7,7 @@ import { Button } from 'src/components/Button/Button';
 import { CircleProgress } from 'src/components/CircleProgress';
 import { ErrorState } from 'src/components/ErrorState/ErrorState';
 import { Paper } from 'src/components/Paper';
-import { getIsEdgeRegion } from 'src/components/RegionSelect/RegionSelect.utils';
+import { getIsDistributedRegion } from 'src/components/RegionSelect/RegionSelect.utils';
 import { Table } from 'src/components/Table';
 import { TableBody } from 'src/components/TableBody';
 import { TableCell } from 'src/components/TableCell';
@@ -18,17 +17,19 @@ import { TableRowEmpty } from 'src/components/TableRowEmpty/TableRowEmpty';
 import { Typography } from 'src/components/Typography';
 import { useLinodeBackupsQuery } from 'src/queries/linodes/backups';
 import { useLinodeQuery } from 'src/queries/linodes/linodes';
-import { useGrants, useProfile } from 'src/queries/profile';
+import { useGrants, useProfile } from 'src/queries/profile/profile';
 import { useRegionsQuery } from 'src/queries/regions/regions';
 import { useTypeQuery } from 'src/queries/types';
 import { getMonthlyBackupsPrice } from 'src/utilities/pricing/backups';
 
-import { BackupTableRow } from './BackupTableRow';
 import { BackupsPlaceholder } from './BackupsPlaceholder';
+import { BackupTableRow } from './BackupTableRow';
 import { CancelBackupsDialog } from './CancelBackupsDialog';
 import { CaptureSnapshot } from './CaptureSnapshot';
 import { RestoreToLinodeDrawer } from './RestoreToLinodeDrawer';
 import { ScheduleSettings } from './ScheduleSettings';
+
+import type { LinodeBackup, PriceObject } from '@linode/api-v4/lib/linodes';
 
 export const LinodeBackups = () => {
   const { linodeId } = useParams<{ linodeId: string }>();
@@ -64,7 +65,7 @@ export const LinodeBackups = () => {
 
   const [selectedBackup, setSelectedBackup] = React.useState<LinodeBackup>();
 
-  const linodeIsInEdgeRegion = getIsEdgeRegion(
+  const linodeIsInDistributedRegion = getIsDistributedRegion(
     regions ?? [],
     linode?.region ?? ''
   );
@@ -94,7 +95,7 @@ export const LinodeBackups = () => {
         backupsMonthlyPrice={backupsMonthlyPrice}
         disabled={doesNotHavePermission}
         linodeId={id}
-        linodeIsInEdgeRegion={linodeIsInEdgeRegion}
+        linodeIsInDistributedRegion={linodeIsInDistributedRegion}
       />
     );
   }

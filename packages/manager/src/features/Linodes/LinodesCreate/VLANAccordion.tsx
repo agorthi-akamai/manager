@@ -1,6 +1,4 @@
-import { Interface } from '@linode/api-v4/lib/linodes';
 import * as React from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 
 import { Accordion } from 'src/components/Accordion';
 import { Box } from 'src/components/Box';
@@ -8,11 +6,12 @@ import { Link } from 'src/components/Link';
 import { TooltipIcon } from 'src/components/TooltipIcon';
 import { Typography } from 'src/components/Typography';
 import { useRegionsQuery } from 'src/queries/regions/regions';
-import { queryKey as vlansQueryKey } from 'src/queries/vlans';
 import { doesRegionSupportFeature } from 'src/utilities/doesRegionSupportFeature';
 
 import { InterfaceSelect } from '../LinodesDetail/LinodeSettings/InterfaceSelect';
 import { VLANAvailabilityNotice } from './VLANAvailabilityNotice';
+
+import type { Interface } from '@linode/api-v4/lib/linodes';
 
 export interface VLANAccordionProps {
   handleVLANChange: (updatedInterface: Interface) => void;
@@ -36,13 +35,6 @@ export const VLANAccordion = React.memo((props: VLANAccordionProps) => {
     region,
     vlanLabel,
   } = props;
-
-  const queryClient = useQueryClient();
-
-  React.useEffect(() => {
-    // Ensure VLANs are fresh.
-    queryClient.invalidateQueries([vlansQueryKey]);
-  }, []);
 
   const regions = useRegionsQuery().data ?? [];
   const selectedRegion = region || '';

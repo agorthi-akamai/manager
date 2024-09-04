@@ -1,5 +1,9 @@
-import { RegionalNetworkUtilization } from '@linode/api-v4/lib/account';
-import {
+import Factory from 'src/factories/factoryProxy';
+
+import { placementGroupFactory } from './placementGroups';
+
+import type { RegionalNetworkUtilization } from '@linode/api-v4/lib/account';
+import type {
   CreateLinodeRequest,
   Linode,
   LinodeAlerts,
@@ -12,9 +16,6 @@ import {
   Stats,
   StatsData,
 } from '@linode/api-v4/lib/linodes/types';
-import * as Factory from 'factory.ts';
-
-import { placementGroupFactory } from './placementGroups';
 
 export const linodeAlertsFactory = Factory.Sync.makeFactory<LinodeAlerts>({
   cpu: 10,
@@ -114,6 +115,20 @@ export const linodeIPFactory = Factory.Sync.makeFactory<LinodeIPsResponse>({
       type: 'ipv6',
     },
   },
+});
+
+export const linodeBackupFactory = Factory.Sync.makeFactory<LinodeBackup>({
+  available: true,
+  configs: ['My Alpine 3.17 Disk Profile'],
+  created: '2020-01-01',
+  disks: [],
+  finished: '2020-01-01',
+  id: Factory.each((i) => i),
+  label: Factory.each((i) => `Backup ${i}`),
+  region: 'us-east',
+  status: 'successful',
+  type: 'auto',
+  updated: '2020-01-01',
 });
 
 export const linodeBackupsFactory = Factory.Sync.makeFactory<LinodeBackups>({
@@ -255,6 +270,7 @@ export const linodeFactory = Factory.Sync.makeFactory<Linode>({
   alerts: linodeAlertsFactory.build(),
   backups: linodeBackupsFactory.build(),
   created: '2020-01-01',
+  disk_encryption: 'enabled',
   group: '',
   hypervisor: 'kvm',
   id: Factory.each((i) => i),
@@ -262,12 +278,14 @@ export const linodeFactory = Factory.Sync.makeFactory<Linode>({
   ipv4: ['50.116.6.212', '192.168.203.1'],
   ipv6: '2600:3c00::f03c:92ff:fee2:6c40/64',
   label: Factory.each((i) => `linode-${i}`),
+  lke_cluster_id: null,
   placement_group: placementGroupFactory.build({
-    affinity_type: 'anti_affinity:local',
     id: 1,
     label: 'pg-1',
+    placement_group_type: 'anti_affinity:local',
   }),
   region: 'us-east',
+  site_type: 'core',
   specs: linodeSpecsFactory.build(),
   status: 'running',
   tags: [],

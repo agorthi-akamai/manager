@@ -1,9 +1,11 @@
-import type { Region } from '../regions';
+import type { Region, RegionSite } from '../regions';
 import type { IPAddress, IPRange } from '../networking/types';
 import type { SSHKey } from '../profile/types';
 import type { PlacementGroupPayload } from '../placement-groups/types';
 
 export type Hypervisor = 'kvm' | 'zen';
+
+export type EncryptionStatus = 'enabled' | 'disabled';
 
 export interface LinodeSpecs {
   disk: number;
@@ -17,13 +19,16 @@ export interface Linode {
   id: number;
   alerts: LinodeAlerts;
   backups: LinodeBackups;
+  bs_encryption_supported?: boolean; // @TODO BSE: Remove optionality once BSE is fully rolled out
   created: string;
+  disk_encryption?: EncryptionStatus; // @TODO LDE: Remove optionality once LDE is fully rolled out
   region: string;
   image: string | null;
   group: string;
   ipv4: string[];
   ipv6: string | null;
   label: string;
+  lke_cluster_id: number | null;
   placement_group?: PlacementGroupPayload; // If not in a placement group, this will be excluded from the response.
   type: string | null;
   status: LinodeStatus;
@@ -32,6 +37,7 @@ export interface Linode {
   specs: LinodeSpecs;
   watchdog_enabled: boolean;
   tags: string[];
+  site_type: RegionSite;
 }
 
 export interface LinodeAlerts {
@@ -153,12 +159,12 @@ export type LinodeStatus =
 export type InterfacePurpose = 'public' | 'vlan' | 'vpc';
 
 export interface ConfigInterfaceIPv4 {
-  vpc?: string;
-  nat_1_1?: string;
+  vpc?: string | null;
+  nat_1_1?: string | null;
 }
 
 export interface ConfigInterfaceIPv6 {
-  vpc?: string;
+  vpc?: string | null;
 }
 
 export interface Interface {
@@ -267,6 +273,7 @@ export interface Disk {
   filesystem: Filesystem;
   created: string;
   updated: string;
+  disk_encryption?: EncryptionStatus; // @TODO LDE: remove optionality once LDE is fully rolled out
 }
 
 export type DiskStatus = 'ready' | 'not ready' | 'deleting';
@@ -328,7 +335,8 @@ export type LinodeTypeClass =
   | 'gpu'
   | 'metal'
   | 'prodedicated'
-  | 'premium';
+  | 'premium'
+  | 'edge';
 
 export interface IPAllocationRequest {
   type: 'ipv4';
@@ -363,7 +371,7 @@ export interface CreateLinodeRequest {
    *
    * This field cannot be used when deploying from a Backup or a Private Image.
    */
-  stackscript_id?: number;
+  stackscript_id?: number | null;
   /**
    * A Backup ID from another Linode’s available backups.
    *
@@ -373,7 +381,7 @@ export interface CreateLinodeRequest {
    *
    * This field and the image field are mutually exclusive.
    */
-  backup_id?: number;
+  backup_id?: number | null;
   /**
    * When deploying from an Image, this field is optional, otherwise it is ignored.
    * This is used to set the swap disk size for the newly-created Linode.
@@ -446,9 +454,22 @@ export interface CreateLinodeRequest {
    */
   firewall_id?: number | null;
   /**
-   * An object that assigns this the Linode to a placment group upon creation.
+   * An object that assigns this the Linode to a placement group upon creation.
    */
   placement_group?: CreateLinodePlacementGroupPayload;
+  /**
+   * A property with a string literal type indicating whether the Linode is encrypted or unencrypted.
+   * @default 'enabled' (if the region supports LDE)
+   */
+  disk_encryption?: EncryptionStatus;
+}
+
+export interface MigrateLinodeRequest {
+  placement_group?: {
+    id: number;
+    compliant_only?: boolean;
+  };
+  region: string;
 }
 
 export type RescueRequestObject = Pick<
@@ -476,6 +497,7 @@ export interface RebuildRequest {
   stackscript_id?: number;
   stackscript_data?: any;
   booted?: boolean;
+  disk_encryption?: EncryptionStatus;
 }
 
 export interface LinodeDiskCreationData {
@@ -505,4 +527,11 @@ export interface DeleteLinodeConfigInterfacePayload {
   linodeId: number;
   configId: number;
   interfaceId: number;
+}
+
+export interface LinodeLishData {
+  weblish_url: string;
+  glish_url: string;
+  monitor_url: string;
+  ws_protocols: string[];
 }

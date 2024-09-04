@@ -9,15 +9,15 @@ import { connect } from 'react-redux';
 import { Link, RouteComponentProps } from 'react-router-dom';
 import { compose } from 'recompose';
 
+import { Autocomplete } from 'src/components/Autocomplete/Autocomplete';
 import { DebouncedSearchTextField } from 'src/components/DebouncedSearchTextField';
 import { DocumentTitleSegment } from 'src/components/DocumentTitle';
-import Select, { Item } from 'src/components/EnhancedSelect/Select';
 import { Typography } from 'src/components/Typography';
 import withLongviewClients, {
   Props as LongviewProps,
 } from 'src/containers/longview.container';
 import { useAccountSettings } from 'src/queries/account/settings';
-import { useGrants, useProfile } from 'src/queries/profile';
+import { useGrants, useProfile } from 'src/queries/profile/profile';
 import { State as StatsState } from 'src/store/longviewStats/longviewStats.reducer';
 import { MapState } from 'src/store/types';
 
@@ -40,6 +40,11 @@ interface Props {
   activeSubscription: ActiveLongviewPlan;
   handleAddClient: () => void;
   newClientLoading: boolean;
+}
+
+interface SortOption {
+  label: string;
+  value: SortKey;
 }
 
 export type LongviewClientsCombinedProps = Props &
@@ -70,8 +75,7 @@ export const LongviewClients = (props: LongviewClientsCombinedProps) => {
   const [selectedClientLabel, setClientLabel] = React.useState<string>('');
 
   /** Handlers/tracking variables for sorting by different client attributes */
-
-  const sortOptions: Item<string>[] = [
+  const sortOptions: SortOption[] = [
     {
       label: 'Client Name',
       value: 'name',
@@ -172,8 +176,8 @@ export const LongviewClients = (props: LongviewClientsCombinedProps) => {
     setQuery(newQuery);
   };
 
-  const handleSortKeyChange = (selected: Item<string>) => {
-    setSortKey(selected.value as SortKey);
+  const handleSortKeyChange = (selected: SortOption) => {
+    setSortKey(selected.value);
   };
 
   // If this value is defined they're not on the free plan
@@ -208,16 +212,21 @@ export const LongviewClients = (props: LongviewClientsCombinedProps) => {
         </StyledSearchbarGrid>
         <StyledSortSelectGrid>
           <Typography sx={{ minWidth: '65px' }}>Sort by: </Typography>
-          <Select
+          <Autocomplete
+            disableClearable
+            fullWidth
+            label="Sort by"
+            options={sortOptions}
+            onChange={(_, value) => {
+              handleSortKeyChange(value);
+            }}
+            size="small"
+            textFieldProps={{
+              hideLabel: true,
+            }}
             value={sortOptions.find(
               (thisOption) => thisOption.value === sortKey
             )}
-            hideLabel
-            isClearable={false}
-            label="Sort by"
-            onChange={handleSortKeyChange}
-            options={sortOptions}
-            small
           />
         </StyledSortSelectGrid>
       </StyledHeadingGrid>

@@ -27,18 +27,22 @@ interface Props {
 export const PlacementGroupsUnassignModal = (props: Props) => {
   const { onClose, onExited, open, selectedLinode } = props;
   const { enqueueSnackbar } = useSnackbar();
+
   const { id: placementGroupId, linodeId } = useParams<{
     id: string;
     linodeId: string;
   }>();
+
   const [linode, setLinode] = React.useState<Linode | undefined>(
     selectedLinode
   );
+
   const {
     error,
-    isLoading,
+    isPending,
     mutateAsync: unassignLinodes,
   } = useUnassignLinodesFromPlacementGroup(+placementGroupId ?? -1);
+
   const { data: linodeFromQuery, isFetching } = useLinodeQuery(
     +linodeId ?? -1,
     open && selectedLinode === undefined
@@ -56,7 +60,9 @@ export const PlacementGroupsUnassignModal = (props: Props) => {
 
   const onUnassign = async () => {
     await unassignLinodes(payload);
-    const toastMessage = 'Linode successfully unassigned';
+    const toastMessage = linode
+      ? `Linode ${linode?.label} successfully unassigned.`
+      : 'Linode successfully unassigned.';
     enqueueSnackbar(toastMessage, {
       variant: 'success',
     });
@@ -72,9 +78,9 @@ export const PlacementGroupsUnassignModal = (props: Props) => {
   const actions = (
     <ActionsPanel
       primaryButtonProps={{
-        disabled: isLoading || isLinodeReadOnly,
+        disabled: isPending || isLinodeReadOnly,
         label: 'Unassign',
-        loading: isLoading,
+        loading: isPending,
         onClick: onUnassign,
       }}
       secondaryButtonProps={{
@@ -123,7 +129,7 @@ export const PlacementGroupsUnassignModal = (props: Props) => {
           variant="error"
         />
       )}
-      <Typography>Are you sure you want to remove this Linode?</Typography>
+      <Typography>Are you sure you want to unassign this Linode?</Typography>
     </ConfirmationDialog>
   );
 };

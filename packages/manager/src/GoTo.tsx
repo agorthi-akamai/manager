@@ -1,14 +1,17 @@
 import Dialog from '@mui/material/Dialog';
-import { Theme } from '@mui/material/styles';
 import * as React from 'react';
 import { useHistory } from 'react-router-dom';
 import { makeStyles } from 'tss-react/mui';
 
-import EnhancedSelect, { Item } from 'src/components/EnhancedSelect/Select';
+import EnhancedSelect from 'src/components/EnhancedSelect/Select';
 
-import { useIsACLBEnabled } from './features/LoadBalancers/utils';
+import { useIsDatabasesEnabled } from './features/Databases/utilities';
+import { useIsPlacementGroupsEnabled } from './features/PlacementGroups/utils';
 import { useAccountManagement } from './hooks/useAccountManagement';
 import { useGlobalKeyboardListener } from './hooks/useGlobalKeyboardListener';
+
+import type { Theme } from '@mui/material/styles';
+import type { Item } from 'src/components/EnhancedSelect/Select';
 
 const useStyles = makeStyles()((theme: Theme) => ({
   input: {
@@ -59,7 +62,8 @@ export const GoTo = React.memo(() => {
   const routerHistory = useHistory();
   const { _hasAccountAccess, _isManagedAccount } = useAccountManagement();
 
-  const { isACLBEnabled } = useIsACLBEnabled();
+  const { isPlacementGroupsEnabled } = useIsPlacementGroupsEnabled();
+  const { isDatabasesEnabled } = useIsDatabasesEnabled();
   const { goToOpen, setGoToOpen } = useGlobalKeyboardListener();
 
   const onClose = () => {
@@ -88,11 +92,6 @@ export const GoTo = React.memo(() => {
         href: '/volumes',
       },
       {
-        display: 'Load Balancers',
-        hide: !isACLBEnabled,
-        href: '/loadbalancers',
-      },
-      {
         display: 'VPC',
         href: '/vpcs',
       },
@@ -112,6 +111,16 @@ export const GoTo = React.memo(() => {
       {
         display: 'Images',
         href: '/images',
+      },
+      {
+        display: 'Placement Groups',
+        hide: !isPlacementGroupsEnabled,
+        href: '/placement-groups',
+      },
+      {
+        display: 'Databases',
+        hide: !isDatabasesEnabled,
+        href: '/databases',
       },
       {
         display: 'Domains',
@@ -149,7 +158,7 @@ export const GoTo = React.memo(() => {
         href: '/profile/display',
       },
     ],
-    [_hasAccountAccess, _isManagedAccount, isACLBEnabled]
+    [_hasAccountAccess, _isManagedAccount, isPlacementGroupsEnabled]
   );
 
   const options: Item[] = React.useMemo(

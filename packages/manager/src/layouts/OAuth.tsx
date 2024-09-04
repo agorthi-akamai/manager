@@ -1,15 +1,18 @@
 import { Component } from 'react';
-import { MapDispatchToProps, connect } from 'react-redux';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { compose } from 'recompose';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
 
 import { handleStartSession } from 'src/store/authentication/authentication.actions';
 import { getQueryParamsFromQueryString } from 'src/utilities/queryParams';
 import { authentication } from 'src/utilities/storage';
 
+import type { MapDispatchToProps } from 'react-redux';
+import type { RouteComponentProps } from 'react-router-dom';
+import type { BaseQueryParams } from 'src/utilities/queryParams';
+
 interface OAuthCallbackPageProps extends DispatchProps, RouteComponentProps {}
 
-interface OAuthQueryParams {
+export interface OAuthQueryParams extends BaseQueryParams {
   access_token: string; // token for auth
   expires_in: string; // amount of time (in seconds) the token has before expiry
   return: string;
@@ -50,9 +53,9 @@ export class OAuthCallbackPage extends Component<OAuthCallbackPageProps> {
       return history.push('/');
     }
 
-    const hashParams = (getQueryParamsFromQueryString(
+    const hashParams = getQueryParamsFromQueryString<OAuthQueryParams>(
       location.hash.substr(1)
-    ) as unknown) as OAuthQueryParams;
+    );
 
     const {
       access_token: accessToken,
@@ -143,7 +146,4 @@ const mapDispatchToProps: MapDispatchToProps<DispatchProps, {}> = (
 
 const connected = connect(undefined, mapDispatchToProps);
 
-export default compose<OAuthCallbackPageProps, {}>(
-  connected,
-  withRouter
-)(OAuthCallbackPage);
+export default connected(withRouter(OAuthCallbackPage));

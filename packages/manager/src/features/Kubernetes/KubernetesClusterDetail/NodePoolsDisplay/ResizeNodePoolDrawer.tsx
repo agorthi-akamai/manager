@@ -1,5 +1,3 @@
-import { KubeNodePoolResponse, Region } from '@linode/api-v4';
-import { Theme } from '@mui/material/styles';
 import * as React from 'react';
 import { makeStyles } from 'tss-react/mui';
 
@@ -12,6 +10,7 @@ import { Typography } from 'src/components/Typography';
 import { useUpdateNodePoolMutation } from 'src/queries/kubernetes';
 import { useSpecificTypes } from 'src/queries/types';
 import { extendType } from 'src/utilities/extendType';
+import { isNumber } from 'src/utilities/isNumber';
 import { pluralize } from 'src/utilities/pluralize';
 import { PRICES_RELOAD_ERROR_NOTICE_TEXT } from 'src/utilities/pricing/constants';
 import { renderMonthlyPriceToCorrectDecimalPlace } from 'src/utilities/pricing/dynamicPricing';
@@ -20,7 +19,9 @@ import { getLinodeRegionPrice } from 'src/utilities/pricing/linodes';
 
 import { nodeWarning } from '../../kubeUtils';
 import { hasInvalidNodePoolPrice } from './utils';
-import { isNumber } from 'lodash';
+
+import type { KubeNodePoolResponse, Region } from '@linode/api-v4';
+import type { Theme } from '@mui/material/styles';
 
 const useStyles = makeStyles()((theme: Theme) => ({
   helperText: {
@@ -64,7 +65,7 @@ export const ResizeNodePoolDrawer = (props: Props) => {
 
   const {
     error,
-    isLoading,
+    isPending,
     mutateAsync: updateNodePool,
   } = useUpdateNodePoolMutation(kubernetesClusterId, nodePool?.id ?? -1);
 
@@ -186,7 +187,7 @@ export const ResizeNodePoolDrawer = (props: Props) => {
               'data-testid': 'submit',
               disabled: updatedCount === nodePool.count || hasInvalidPrice,
               label: 'Save Changes',
-              loading: isLoading,
+              loading: isPending,
               onClick: handleSubmit,
             }}
           />

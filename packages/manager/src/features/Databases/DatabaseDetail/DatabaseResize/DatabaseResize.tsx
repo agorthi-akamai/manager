@@ -1,25 +1,18 @@
-import {
-  Database,
-  DatabaseClusterSizeObject,
-  DatabasePriceObject,
-  DatabaseType,
-  Engine,
-} from '@linode/api-v4/lib/databases/types';
 import { useSnackbar } from 'notistack';
 import * as React from 'react';
 import { useHistory } from 'react-router-dom';
+
 import { Box } from 'src/components/Box';
 import { CircleProgress } from 'src/components/CircleProgress';
 import { ErrorState } from 'src/components/ErrorState/ErrorState';
 import { Notice } from 'src/components/Notice/Notice';
 import { Paper } from 'src/components/Paper';
+import { TypeToConfirmDialog } from 'src/components/TypeToConfirmDialog/TypeToConfirmDialog';
 import { Typography } from 'src/components/Typography';
 import { typeLabelDetails } from 'src/features/Linodes/presentation';
-import { PlanSelectionType } from 'src/features/components/PlansPanel/types';
-import { useDatabaseTypesQuery } from 'src/queries/databases';
-import { useDatabaseMutation } from 'src/queries/databases';
+import { useDatabaseTypesQuery } from 'src/queries/databases/databases';
+import { useDatabaseMutation } from 'src/queries/databases/databases';
 import { formatStorageUnits } from 'src/utilities/formatStorageUnits';
-import { TypeToConfirmDialog } from 'src/components/TypeToConfirmDialog/TypeToConfirmDialog';
 
 import {
   StyledGrid,
@@ -28,6 +21,15 @@ import {
   StyledResizeButton,
 } from './DatabaseResize.style';
 import { DatabaseResizeCurrentConfiguration } from './DatabaseResizeCurrentConfiguration';
+
+import type {
+  Database,
+  DatabaseClusterSizeObject,
+  DatabasePriceObject,
+  DatabaseType,
+  Engine,
+} from '@linode/api-v4';
+import type { PlanSelectionType } from 'src/features/components/PlansPanel/types';
 
 interface Props {
   database: Database;
@@ -56,7 +58,7 @@ export const DatabaseResize = ({ database }: Props) => {
 
   const {
     error: resizeError,
-    isLoading: submitInProgress,
+    isPending: submitInProgress,
     mutateAsync: updateDatabase,
   } = useDatabaseMutation(database.engine, database.id);
 
@@ -201,12 +203,13 @@ export const DatabaseResize = ({ database }: Props) => {
   }, [database.cluster_size, dbTypes, selectedEngine]);
 
   const currentPlan = displayTypes?.find((type) => type.id === database.type);
-
-  const disabledPlans = displayTypes?.filter(
-    (type) =>
-      type.disk < (currentPlan ? currentPlan.disk : 0) ||
-      (currentPlan?.class === 'dedicated' && type.disk === currentPlan?.disk)
+  const currentPlanDisk = currentPlan ? currentPlan.disk : 0;
+  const disabledPlans = displayTypes?.filter((type) =>
+    type.class === 'dedicated'
+      ? type.disk < currentPlanDisk
+      : type.disk <= currentPlanDisk
   );
+
   if (typesLoading) {
     return <CircleProgress />;
   }
@@ -226,8 +229,7 @@ export const DatabaseResize = ({ database }: Props) => {
         <StyledPlansPanel
           currentPlanHeading={currentPlan?.heading}
           data-qa-select-plan
-          disabledPlanTypes={disabledPlans}
-          disabledPlanTypesToolTipText="Resizing to smaller plans is not supported."
+          disabledSmallerPlans={disabledPlans}
           header="Choose a Plan"
           onSelect={(selected: string) => setPlanSelected(selected)}
           selectedId={planSelected}
