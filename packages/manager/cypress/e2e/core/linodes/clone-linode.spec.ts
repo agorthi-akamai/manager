@@ -42,7 +42,7 @@ describe('clone linode', () => {
    * - Confirms Linode Clone flow via the Linode details page.
    * - Confirms that Linode can be cloned successfully.
    */
-  it.only('can clone a Linode from Linode details page', () => {
+  it('can clone a Linode from Linode details page', () => {
     const linodeRegion = chooseRegion();
     const linodePayload = createLinodeRequestFactory.build({
       label: randomLabel(),

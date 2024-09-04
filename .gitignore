@@ -22,8 +22,8 @@ lib
 restart.sh
 
 # dotenv environment variables file
-#.env*
-#*env.
+.env*
+*env.
 
 npm-debug.log*
 yarn-debug.log*
@@ -90,7 +90,7 @@ tsconfig.tsbuildinfo
 .yarn-integrity
 
 # dotenv environment variables file
-#.env
+.env
 
 # next.js build output
 .next
