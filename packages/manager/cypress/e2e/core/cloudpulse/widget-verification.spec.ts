@@ -15,12 +15,18 @@ import {
   import { widgets } from 'support/constants/widgets';
   import { timeUnit } from 'support/constants/time';
 import { interceptMetricsRequests } from 'support/intercepts/cloudpulseAPIHandler';
-import { timeRange } from 'support/constants/timeRange';
+import { timeRange } from 'support/constants/timerange';
 export const actualRelativeTimeDuration = timeRange.Last30Minutes;
 
    /**
-     * Verifies that the title of each widget matches the expected title.
      * This test ensures that widget titles are displayed correctly on the dashboard.
+     * This test suite is dedicated to verifying the functionality and display of widgets on the Cloudpulse dashboard.
+     *  It includes:
+     * Validating that widgets are correctly loaded and displayed.
+     * Ensuring that widget titles and data match the expected values.
+     * Verifying that widget settings, such as granularity and aggregation, are applied correctly.
+      * Testing widget interactions, including zooming and filtering, to ensure proper behavior.
+     * Each test ensures that widgets on the dashboard operate correctly and display accurate information.
      */
   
   describe('Dashboard Widget Verification Tests', () => {

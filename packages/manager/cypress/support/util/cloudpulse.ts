@@ -7,7 +7,7 @@ import { makeFeatureFlagData } from 'support/util/feature-flags';
 import 'cypress-wait-until';
 import { granularity } from 'support/constants/granularity';
 import { aggregation,aggregationConfig } from 'support/constants/aggregation';
-import { timeRange } from 'support/constants/timeRange';
+import { timeRange } from 'support/constants/timerange';
 
 
 
