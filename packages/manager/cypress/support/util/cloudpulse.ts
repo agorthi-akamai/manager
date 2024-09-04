@@ -142,7 +142,6 @@ export const selectAndVerifyServiceName = (service: string) => {
   const resourceInput = ui.autocomplete.findByTitleCustom('Select Resources')
   resourceInput.findByTitle('Open').click();
   resourceInput.click().type(`${service}{enter}`);
-  resourceInput.findByTitle('Close').click();
 };
 /**
  * Asserts that the selected options match the expected values.

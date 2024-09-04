@@ -30,23 +30,23 @@ describe('Standard Dashboard Filter Application and Configuration Tests', () => 
     navigateToCloudpulse();
    });
 
-it('should verify cloud view availability when feature flag is set to false', () => {
+it('should verify cloudpulse availability when feature flag is set to false', () => {
     visitCloudPulseWithFeatureFlagsDisabled();
 });
 
 it('should clear the preferences of the dashboard', () => {
   verifyZerothPage(dashboardName);
 });
-it.only('should set and verify dashboard name', () => {
+it('should set and verify dashboard name', () => {
     selectServiceName(dashboardName);
     assertSelections(dashboardName);
   });
-  it.only('should set and verify time range', () => {
+  it('should set and verify time range', () => {
     selectTimeRange(actualRelativeTimeDuration);
     assertSelections(actualRelativeTimeDuration);
   });
 
-  it.only('should set and verify region', () => {
+  it('should set and verify region', () => {
     selectRegion(region);
     assertSelections(region);
   });
