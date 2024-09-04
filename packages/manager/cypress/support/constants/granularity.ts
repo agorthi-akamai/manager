@@ -1,16 +1,13 @@
-
-
 export enum granularity {
   Auto = 'Auto',
-  Min1 = '1 min',
-  Min5 = '5 min',
-  Hr1 = '1 hr',
-  Day1 = '1 day',
+  Day1 = '1 min',
+  Hr1 = '5 min',
+  Min1 = '1 hr',
+  Min5 = '1 day',
 }
 
-
 export enum timeUnit {
-  Min = 'min',
-  Hr = 'hr',
   Day = 'day',
+  Hr = 'hr',
+  Min = 'min',
 }

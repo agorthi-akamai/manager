@@ -1,4 +1,3 @@
-
 import {
     navigateToCloudpulse,
     selectTimeRange,
@@ -9,14 +8,13 @@ import {
     verifyGranularity,
     verifyAggregation,
     verifyZoomInOut,
-    applyGlobalRefresh,
-
-  } from 'support/util/cloudpulse';
-  import { widgets } from 'support/constants/widgets';
+    applyGlobalRefresh,  
+ } from 'support/util/cloudpulse';
   import { timeUnit } from 'support/constants/time';
-import { interceptMetricsRequests } from 'support/intercepts/cloudpulseAPIHandler';
-import { timeRange } from 'support/constants/timerange';
-export const actualRelativeTimeDuration = timeRange.Last30Minutes;
+  import { interceptMetricsRequests } from 'support/intercepts/cloudpulseAPIHandler';
+  import { timeRange } from 'support/constants/timerange';
+  export const actualRelativeTimeDuration = timeRange.Last30Minutes;
+  
 
    /**
      * This test ensures that widget titles are displayed correctly on the dashboard.
@@ -38,33 +36,33 @@ export const actualRelativeTimeDuration = timeRange.Last30Minutes;
   
      it(`should verify the title of the  widget`, () => {
         cloudpulseTestData.forEach((testData) => {
-        validateWidgetTitle(widgets[testData.name]);
+        validateWidgetTitle(testData.title);
       });
     });
     it(`should set available granularity of the all the widget`, () => {
         cloudpulseTestData.forEach((testData) => {
-        setGranularity(widgets[testData.name],testData.expectedGranularity);
+        setGranularity(testData.title,testData.expectedGranularity);
       });
     });
     it(`should set available aggregation of the all the widget`, () => {
         cloudpulseTestData.forEach((testData) => {
-        setAggregation(widgets[testData.name],testData.expectedAggregation);
+        setAggregation(testData.title,testData.expectedAggregation);
       });
     });
     it(`should verify available granularity  of the widget`, () => {
         cloudpulseTestData.forEach((testData) => {
-       verifyGranularity(widgets[testData.name], testData.expectedGranularityArray);
+       verifyGranularity(testData.title, testData.expectedGranularityArray);
       });
     });
     
-    it(`should verify available Aggregation  of the widget`, () => {
+    it(`should verify available aggregation  of the widget`, () => {
       cloudpulseTestData.forEach((testData) => {
-     verifyAggregation(widgets[testData.name], testData.expectedAggregationArray);
+     verifyAggregation(testData.title, testData.expectedAggregationArray);
     });
   });
-  it(`should zoom in and out of  the all the widget`, () => {
+  it(`should zoom in and out of the all the widget`, () => {
     cloudpulseTestData.forEach((testData) => {
-      verifyZoomInOut(widgets[testData.name]);
+      verifyZoomInOut(testData.title);
   });
 });
 it('should apply global refresh button and verify network calls', () => {
