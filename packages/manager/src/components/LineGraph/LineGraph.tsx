@@ -359,6 +359,7 @@ export const LineGraph = (props: LineGraphProps) => {
         <StyledContainer>
           <StyledTable
             aria-label={`Controls for ${ariaLabel || 'Stats and metrics'}`}
+            data-qa-table-id={ariaLabel}
             noBorder
           >
             <StyledTableHead>
