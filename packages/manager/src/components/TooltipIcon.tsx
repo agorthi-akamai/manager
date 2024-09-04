@@ -3,14 +3,16 @@ import SuccessOutline from '@mui/icons-material/CheckCircleOutlined';
 import ErrorOutline from '@mui/icons-material/ErrorOutline';
 import HelpOutline from '@mui/icons-material/HelpOutline';
 import InfoOutline from '@mui/icons-material/InfoOutlined';
-import WarningOutline from '@mui/icons-material/WarningAmberOutlined';
+import WarningSolid from '@mui/icons-material/Warning';
 import { useTheme } from '@mui/material/styles';
-import { SxProps } from '@mui/system';
 import * as React from 'react';
 
 import { IconButton } from 'src/components/IconButton';
-import { Tooltip, TooltipProps, tooltipClasses } from 'src/components/Tooltip';
+import { Tooltip, tooltipClasses } from 'src/components/Tooltip';
 import { omittedProps } from 'src/utilities/omittedProps';
+
+import type { SxProps } from '@mui/system';
+import type { TooltipProps } from 'src/components/Tooltip';
 
 type TooltipIconStatus =
   | 'error'
@@ -25,7 +27,10 @@ interface EnhancedTooltipProps extends TooltipProps {
 }
 
 export interface TooltipIconProps
-  extends Omit<TooltipProps, 'children' | 'leaveDelay' | 'title'> {
+  extends Omit<
+    TooltipProps,
+    'children' | 'disableInteractive' | 'leaveDelay' | 'title'
+  > {
   /**
    * An optional className that does absolutely nothing
    */
@@ -35,11 +40,6 @@ export interface TooltipIconProps
    * @todo this seems like a flaw... passing an icon should not require `status` to be `other`
    */
   icon?: JSX.Element;
-  /**
-   * Makes the tooltip interactive (stays open when cursor is over tooltip)
-   * @default false
-   */
-  interactive?: boolean;
   /**
    * Enables a leaveDelay of 3000ms
    * @default false
@@ -92,7 +92,6 @@ export const TooltipIcon = (props: TooltipIconProps) => {
   const {
     classes,
     icon,
-    interactive,
     leaveDelay,
     status,
     sx,
@@ -113,16 +112,16 @@ export const TooltipIcon = (props: TooltipIconProps) => {
 
   const sxRootStyle = {
     '&&': {
-      fill: '#888f91',
-      stroke: '#888f91',
+      fill: theme.color.grey4,
+      stroke: theme.color.grey4,
       strokeWidth: 0,
     },
     '&:hover': {
-      color: '#3683dc',
-      fill: '#3683dc',
-      stroke: '#3683dc',
+      color: theme.palette.primary.main,
+      fill: theme.palette.primary.main,
+      stroke: theme.palette.primary.main,
     },
-    color: '#888f91',
+    color: theme.color.grey4,
     height: 20,
     width: 20,
   };
@@ -135,7 +134,7 @@ export const TooltipIcon = (props: TooltipIconProps) => {
       renderIcon = <ErrorOutline style={{ color: theme.color.red }} />;
       break;
     case 'warning':
-      renderIcon = <WarningOutline style={{ color: theme.color.yellow }} />;
+      renderIcon = <WarningSolid style={{ color: theme.color.orange }} />;
       break;
     case 'info':
       renderIcon = <InfoOutline style={{ color: theme.color.black }} />;
@@ -155,7 +154,6 @@ export const TooltipIcon = (props: TooltipIconProps) => {
       classes={classes}
       componentsProps={props.componentsProps}
       data-qa-help-tooltip
-      disableInteractive={!interactive}
       enterTouchDelay={0}
       leaveDelay={leaveDelay ? 3000 : undefined}
       leaveTouchDelay={5000}

@@ -4,9 +4,16 @@
 
 import 'cypress-file-upload';
 import { createBucket } from '@linode/api-v4/lib/object-storage';
-import { objectStorageBucketFactory } from 'src/factories';
+import {
+  accountFactory,
+  createObjectStorageBucketFactoryLegacy,
+  createObjectStorageBucketFactoryGen1,
+} from 'src/factories';
 import { authenticate } from 'support/api/authentication';
-import { interceptGetNetworkUtilization } from 'support/intercepts/account';
+import {
+  interceptGetNetworkUtilization,
+  mockGetAccount,
+} from 'support/intercepts/account';
 import {
   interceptCreateBucket,
   interceptDeleteBucket,
@@ -47,13 +54,63 @@ const getNonEmptyBucketMessage = (bucketLabel: string) => {
 /**
  * Create a bucket with the given label and cluster.
  *
+ * This function assumes that OBJ Multicluster is not enabled. Use
+ * `setUpBucketMulticluster` to set up OBJ buckets when Multicluster is enabled.
+ *
  * @param label - Bucket label.
  * @param cluster - Bucket cluster.
+ * @param cors_enabled - Enable CORS on the bucket: defaults to true for Gen1 and false for Gen2.
  *
  * @returns Promise that resolves to created Bucket.
  */
-const setUpBucket = (label: string, cluster: string) => {
-  return createBucket(objectStorageBucketFactory.build({ label, cluster }));
+const setUpBucket = (
+  label: string,
+  cluster: string,
+  cors_enabled: boolean = true
+) => {
+  return createBucket(
+    createObjectStorageBucketFactoryLegacy.build({
+      label,
+      cluster,
+      cors_enabled,
+
+      // API accepts either `cluster` or `region`, but not both. Our factory
+      // populates both fields, so we have to manually set `region` to `undefined`
+      // to avoid 400 responses from the API.
+      region: undefined,
+    })
+  );
+};
+
+/**
+ * Create a bucket with the given label and cluster.
+ *
+ * This function assumes that OBJ Multicluster is enabled. Use
+ * `setUpBucket` to set up OBJ buckets when Multicluster is disabled.
+ *
+ * @param label - Bucket label.
+ * @param regionId - ID of Bucket region.
+ * @param cors_enabled - Enable CORS on the bucket: defaults to true for Gen1 and false for Gen2.
+ *
+ * @returns Promise that resolves to created Bucket.
+ */
+const setUpBucketMulticluster = (
+  label: string,
+  regionId: string,
+  cors_enabled: boolean = true
+) => {
+  return createBucket(
+    createObjectStorageBucketFactoryGen1.build({
+      label,
+      region: regionId,
+      cors_enabled,
+
+      // API accepts either `cluster` or `region`, but not both. Our factory
+      // populates both fields, so we have to manually set `cluster` to `undefined`
+      // to avoid 400 responses from the API.
+      cluster: undefined,
+    })
+  );
 };
 
 /**
@@ -115,8 +172,10 @@ describe('object storage end-to-end tests', () => {
    * - Confirms that deleted buckets are no longer listed on landing page.
    */
   it('can create and delete object storage buckets', () => {
+    cy.tag('purpose:syntheticTesting');
+
     const bucketLabel = randomLabel();
-    const bucketRegion = 'Atlanta, GA';
+    const bucketRegion = 'US, Atlanta, GA';
     const bucketCluster = 'us-southeast-1';
     const bucketHostname = `${bucketLabel}.${bucketCluster}.linodeobjects.com`;
 
@@ -125,6 +184,7 @@ describe('object storage end-to-end tests', () => {
     interceptDeleteBucket(bucketLabel, bucketCluster).as('deleteBucket');
     interceptGetNetworkUtilization().as('getNetworkUtilization');
 
+    mockGetAccount(accountFactory.build({ capabilities: [] }));
     mockAppendFeatureFlags({
       objMultiCluster: makeFeatureFlagData(false),
     }).as('getFeatureFlags');
@@ -200,7 +260,8 @@ describe('object storage end-to-end tests', () => {
   it('can upload, access, and delete objects', () => {
     const bucketLabel = randomLabel();
     const bucketCluster = 'us-southeast-1';
-    const bucketPage = `/object-storage/buckets/${bucketCluster}/${bucketLabel}/objects`;
+    const bucketRegionId = 'us-southeast';
+    const bucketPage = `/object-storage/buckets/${bucketRegionId}/${bucketLabel}/objects`;
     const bucketFolderName = randomLabel();
 
     const bucketFiles = [
@@ -209,7 +270,7 @@ describe('object storage end-to-end tests', () => {
     ];
 
     cy.defer(
-      setUpBucket(bucketLabel, bucketCluster),
+      () => setUpBucketMulticluster(bucketLabel, bucketRegionId),
       'creating Object Storage bucket'
     ).then(() => {
       interceptUploadBucketObjectS3(
@@ -230,7 +291,7 @@ describe('object storage end-to-end tests', () => {
       cy.wait('@uploadObject');
       cy.reload();
 
-      cy.findByLabelText(bucketFiles[0].name).should('be.visible');
+      cy.findByText(bucketFiles[0].name).should('be.visible');
       ui.button.findByTitle('Delete').should('be.visible').click();
 
       ui.dialog
@@ -343,8 +404,10 @@ describe('object storage end-to-end tests', () => {
           assertStatusForUrlAtAlias('@bucketObjectUrl', 403);
 
           // Make object public, confirm it can be accessed, then close drawer.
-          cy.findByText('Access Control List (ACL)')
+          cy.findByLabelText('Access Control List (ACL)')
             .should('be.visible')
+            .should('not.have.value', 'Loading access...')
+            .should('have.value', 'Private')
             .click()
             .type('Public Read');
 
@@ -400,7 +463,7 @@ describe('object storage end-to-end tests', () => {
     const bucketAccessPage = `/object-storage/buckets/${bucketCluster}/${bucketLabel}/access`;
 
     cy.defer(
-      setUpBucket(bucketLabel, bucketCluster),
+      () => setUpBucket(bucketLabel, bucketCluster),
       'creating Object Storage bucket'
     ).then(() => {
       interceptGetBucketAccess(bucketLabel, bucketCluster).as(
@@ -417,8 +480,10 @@ describe('object storage end-to-end tests', () => {
     cy.wait('@getBucketAccess');
 
     // Make object public, confirm it can be accessed.
-    cy.findByText('Access Control List (ACL)')
+    cy.findByLabelText('Access Control List (ACL)')
       .should('be.visible')
+      .should('not.have.value', 'Loading access...')
+      .should('have.value', 'Private')
       .click()
       .type('Public Read');
 

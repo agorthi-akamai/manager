@@ -11,7 +11,7 @@ import {
   useLinodeQuery,
   useLinodeUpdateMutation,
 } from 'src/queries/linodes/linodes';
-import { sendUpdateLinodeLabelEvent } from 'src/utilities/analytics';
+import { sendUpdateLinodeLabelEvent } from 'src/utilities/analytics/customEventAnalytics';
 import { getErrorMap } from 'src/utilities/errorUtils';
 
 interface Props {
@@ -27,7 +27,7 @@ export const LinodeSettingsLabelPanel = (props: Props) => {
 
   const {
     error,
-    isLoading,
+    isPending,
     mutateAsync: updateLinode,
   } = useLinodeUpdateMutation(linodeId);
 
@@ -57,7 +57,7 @@ export const LinodeSettingsLabelPanel = (props: Props) => {
             'data-testid': 'label-save',
             disabled: isReadOnly || !formik.dirty,
             label: 'Save',
-            loading: isLoading,
+            loading: isPending,
             onClick: () => formik.handleSubmit(),
           }}
         />

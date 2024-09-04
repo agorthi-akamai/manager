@@ -9,8 +9,10 @@ import { Typography } from 'src/components/Typography';
 import { VolumeUpgradeCopy } from 'src/features/Volumes/UpgradeVolumeDialog';
 import { getUpgradeableVolumeIds } from 'src/features/Volumes/utils';
 import { useNotificationsQuery } from 'src/queries/account/notifications';
-import { useLinodeVolumesQuery } from 'src/queries/volumes';
-import { useVolumesMigrateMutation } from 'src/queries/volumesMigrations';
+import {
+  useLinodeVolumesQuery,
+  useVolumesMigrateMutation,
+} from 'src/queries/volumes/volumes';
 import { getAPIErrorOrDefault } from 'src/utilities/errorUtils';
 
 import type { Linode } from '@linode/api-v4';
@@ -27,7 +29,7 @@ export const UpgradeVolumesDialog = (props: Props) => {
 
   const {
     error,
-    isLoading,
+    isPending,
     mutateAsync: migrateVolumes,
   } = useVolumesMigrateMutation();
 
@@ -56,7 +58,7 @@ export const UpgradeVolumesDialog = (props: Props) => {
       <Button buttonType="secondary" onClick={onClose}>
         Cancel
       </Button>
-      <Button buttonType="primary" loading={isLoading} onClick={onSubmit}>
+      <Button buttonType="primary" loading={isPending} onClick={onSubmit}>
         Enter Upgrade Queue
       </Button>
     </Stack>

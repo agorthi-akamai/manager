@@ -1,15 +1,4 @@
-import {
-  ClusterSize,
-  ComprehensiveReplicationType,
-  CreateDatabasePayload,
-  DatabaseClusterSizeObject,
-  DatabaseEngine,
-  DatabasePriceObject,
-  Engine,
-} from '@linode/api-v4/lib/databases/types';
-import { APIError } from '@linode/api-v4/lib/types';
 import { createDatabaseSchema } from '@linode/validation/lib/databases.schema';
-import { Theme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
 import { useFormik } from 'formik';
 import { groupBy } from 'ramda';
@@ -25,7 +14,8 @@ import { Button } from 'src/components/Button/Button';
 import { CircleProgress } from 'src/components/CircleProgress';
 import { Divider } from 'src/components/Divider';
 import { _SingleValue } from 'src/components/EnhancedSelect/components/SingleValue';
-import Select, { Item } from 'src/components/EnhancedSelect/Select';
+import Select from 'src/components/EnhancedSelect/Select';
+import { ErrorMessage } from 'src/components/ErrorMessage';
 import { ErrorState } from 'src/components/ErrorState/ErrorState';
 import { FormControl } from 'src/components/FormControl';
 import { FormControlLabel } from 'src/components/FormControlLabel';
@@ -50,19 +40,28 @@ import {
   useCreateDatabaseMutation,
   useDatabaseEnginesQuery,
   useDatabaseTypesQuery,
-} from 'src/queries/databases';
+} from 'src/queries/databases/databases';
 import { useRegionsQuery } from 'src/queries/regions/regions';
 import { formatStorageUnits } from 'src/utilities/formatStorageUnits';
 import { handleAPIErrors } from 'src/utilities/formikErrorUtils';
 import { getSelectedOptionFromGroupedOptions } from 'src/utilities/getSelectedOptionFromGroupedOptions';
-import {
-  ExtendedIP,
-  ipFieldPlaceholder,
-  validateIPs,
-} from 'src/utilities/ipUtils';
-import { scrollErrorIntoView } from 'src/utilities/scrollErrorIntoView';
+import { ipFieldPlaceholder, validateIPs } from 'src/utilities/ipUtils';
+import { scrollErrorIntoViewV2 } from 'src/utilities/scrollErrorIntoViewV2';
 
+import type {
+  ClusterSize,
+  ComprehensiveReplicationType,
+  CreateDatabasePayload,
+  DatabaseClusterSizeObject,
+  DatabaseEngine,
+  DatabasePriceObject,
+  Engine,
+} from '@linode/api-v4/lib/databases/types';
+import type { APIError } from '@linode/api-v4/lib/types';
+import type { Theme } from '@mui/material/styles';
+import type { Item } from 'src/components/EnhancedSelect/Select';
 import type { PlanSelectionType } from 'src/features/components/PlansPanel/types';
+import type { ExtendedIP } from 'src/utilities/ipUtils';
 
 const useStyles = makeStyles()((theme: Theme) => ({
   btnCtn: {
@@ -77,6 +76,7 @@ const useStyles = makeStyles()((theme: Theme) => ({
     },
   },
   chip: {
+    marginLeft: 6,
     marginTop: 4,
   },
   createBtn: {
@@ -138,6 +138,7 @@ const engineIcons = {
   mongodb: <MongoDBIcon height="24" width="24" />,
   mysql: <MySQLIcon height="24" width="24" />,
   postgresql: <PostgreSQLIcon height="24" width="24" />,
+  redis: null,
 };
 
 const getEngineOptions = (engines: DatabaseEngine[]) => {
@@ -213,6 +214,7 @@ const DatabaseCreate = () => {
     isLoading: typesLoading,
   } = useDatabaseTypesQuery();
 
+  const formRef = React.useRef<HTMLFormElement>(null);
   const { mutateAsync: createDatabase } = useCreateDatabaseMutation();
 
   const [nodePricing, setNodePricing] = React.useState<NodePricing>();
@@ -316,7 +318,10 @@ const DatabaseCreate = () => {
       type: '',
     },
     onSubmit: submitForm,
-    validate: handleIPValidation,
+    validate: () => {
+      handleIPValidation();
+      scrollErrorIntoViewV2(formRef);
+    },
     validateOnChange: false,
     validationSchema: createDatabaseSchema,
   });
@@ -350,12 +355,6 @@ const DatabaseCreate = () => {
       };
     });
   }, [dbtypes, selectedEngine]);
-
-  React.useEffect(() => {
-    if (errors || createError) {
-      scrollErrorIntoView();
-    }
-  }, [errors, createError]);
 
   const labelToolTip = (
     <div className={classes.labelToolTipCtn}>
@@ -409,7 +408,7 @@ const DatabaseCreate = () => {
       return;
     }
 
-    const engineType = values.engine.split('/')[0];
+    const engineType = values.engine.split('/')[0] as Engine;
 
     setNodePricing({
       multi: type.engines[engineType].find(
@@ -444,7 +443,7 @@ const DatabaseCreate = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} ref={formRef}>
       <LandingHeader
         breadcrumbProps={{
           crumbOverrides: [
@@ -454,7 +453,7 @@ const DatabaseCreate = () => {
             },
           ],
           labelOptions: {
-            suffixComponent: flags.databaseBeta ? (
+            suffixComponent: flags.dbaasV2?.beta ? (
               <BetaChip className={classes.chip} component="span" />
             ) : null,
           },
@@ -463,7 +462,14 @@ const DatabaseCreate = () => {
         title="Create"
       />
       <Paper>
-        {createError ? <Notice text={createError} variant="error" /> : null}
+        {createError && (
+          <Notice variant="error">
+            <ErrorMessage
+              entity={{ type: 'database_id' }}
+              message={createError}
+            />
+          </Notice>
+        )}
         <Grid>
           <Typography variant="h2">Name Your Cluster</Typography>
           <TextField
@@ -498,13 +504,12 @@ const DatabaseCreate = () => {
         </Grid>
         <Grid>
           <RegionSelect
-            handleSelection={(selected: string) =>
-              setFieldValue('region', selected)
-            }
             currentCapability="Managed Databases"
+            disableClearable
             errorText={errors.region}
+            onChange={(e, region) => setFieldValue('region', region.id)}
             regions={regionsData}
-            selectedId={values.region}
+            value={values.region}
           />
           <RegionHelperText mt={1} />
         </Grid>
@@ -563,21 +568,6 @@ const DatabaseCreate = () => {
               ))}
             </RadioGroup>
           </FormControl>
-          <Grid md={8} xs={12}>
-            {flags.databaseBeta ? (
-              <Notice className={classes.notice} variant="info">
-                <strong>
-                  Notice: There is no charge for database clusters during beta.
-                </strong>{' '}
-                Database clusters will be subject to charges when the beta
-                period ends on May 2nd, 2022.{' '}
-                <Link to="https://www.linode.com/pricing/#databases">
-                  View pricing
-                </Link>
-                .
-              </Notice>
-            ) : undefined}
-          </Grid>
         </Grid>
         <Divider spacingBottom={12} spacingTop={26} />
         <Grid>

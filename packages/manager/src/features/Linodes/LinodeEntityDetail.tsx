@@ -2,28 +2,28 @@ import * as React from 'react';
 
 import { EntityDetail } from 'src/components/EntityDetail/EntityDetail';
 import { Notice } from 'src/components/Notice/Notice';
-import { getIsEdgeRegion } from 'src/components/RegionSelect/RegionSelect.utils';
+import { getIsDistributedRegion } from 'src/components/RegionSelect/RegionSelect.utils';
 import { getRestrictedResourceText } from 'src/features/Account/utils';
-import { notificationContext as _notificationContext } from 'src/features/NotificationCenter/NotificationContext';
+import { notificationCenterContext as _notificationContext } from 'src/features/NotificationCenter/NotificationCenterContext';
 import { useIsResourceRestricted } from 'src/hooks/useIsResourceRestricted';
 import { useVPCConfigInterface } from 'src/hooks/useVPCConfigInterface';
 import { useInProgressEvents } from 'src/queries/events/events';
 import { useAllImagesQuery } from 'src/queries/images';
 import { useRegionsQuery } from 'src/queries/regions/regions';
 import { useTypeQuery } from 'src/queries/types';
-import { useLinodeVolumesQuery } from 'src/queries/volumes';
+import { useLinodeVolumesQuery } from 'src/queries/volumes/volumes';
 import { formatStorageUnits } from 'src/utilities/formatStorageUnits';
 
 import { LinodeEntityDetailBody } from './LinodeEntityDetailBody';
 import { LinodeEntityDetailFooter } from './LinodeEntityDetailFooter';
 import { LinodeEntityDetailHeader } from './LinodeEntityDetailHeader';
-import { LinodeHandlers } from './LinodesLanding/LinodesLanding';
 import {
   transitionText as _transitionText,
   getProgressOrDefault,
   isEventWithSecondaryLinodeStatus,
 } from './transitions';
 
+import type { LinodeHandlers } from './LinodesLanding/LinodesLanding';
 import type { Linode } from '@linode/api-v4/lib/linodes/types';
 import type { TypographyProps } from 'src/components/Typography';
 
@@ -31,7 +31,6 @@ interface LinodeEntityDetailProps {
   id: number;
   isSummaryView?: boolean;
   linode: Linode;
-  openTagDrawer: (tags: string[]) => void;
   variant?: TypographyProps['variant'];
 }
 
@@ -40,7 +39,7 @@ export interface Props extends LinodeEntityDetailProps {
 }
 
 export const LinodeEntityDetail = (props: Props) => {
-  const { handlers, isSummaryView, linode, openTagDrawer, variant } = props;
+  const { handlers, isSummaryView, linode, variant } = props;
 
   const notificationContext = React.useContext(_notificationContext);
 
@@ -81,7 +80,10 @@ export const LinodeEntityDetail = (props: Props) => {
   const linodeRegionDisplay =
     regions?.find((r) => r.id === linode.region)?.label ?? linode.region;
 
-  const linodeIsInEdgeRegion = getIsEdgeRegion(regions ?? [], linode.region);
+  const linodeIsInDistributedRegion = getIsDistributedRegion(
+    regions ?? [],
+    linode.region
+  );
 
   let progress;
   let transitionText;
@@ -108,13 +110,15 @@ export const LinodeEntityDetail = (props: Props) => {
         body={
           <LinodeEntityDetailBody
             configInterfaceWithVPC={configInterfaceWithVPC}
+            encryptionStatus={linode.disk_encryption}
             gbRAM={linode.specs.memory / 1024}
             gbStorage={linode.specs.disk / 1024}
             ipv4={linode.ipv4}
             ipv6={trimmedIPv6}
+            isLKELinode={Boolean(linode.lke_cluster_id)}
             isVPCOnlyLinode={isVPCOnlyLinode}
             linodeId={linode.id}
-            linodeIsInEdgeRegion={linodeIsInEdgeRegion}
+            linodeIsInDistributedRegion={linodeIsInDistributedRegion}
             linodeLabel={linode.label}
             numCPUs={linode.specs.vcpus}
             numVolumes={numberOfVolumes}
@@ -131,7 +135,6 @@ export const LinodeEntityDetail = (props: Props) => {
             linodePlan={linodePlan}
             linodeRegionDisplay={linodeRegionDisplay}
             linodeTags={linode.tags}
-            openTagDrawer={openTagDrawer}
           />
         }
         header={

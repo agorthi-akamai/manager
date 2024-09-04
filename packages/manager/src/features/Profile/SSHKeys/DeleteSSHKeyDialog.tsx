@@ -3,7 +3,7 @@ import * as React from 'react';
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
 import { ConfirmationDialog } from 'src/components/ConfirmationDialog/ConfirmationDialog';
 import { Typography } from 'src/components/Typography';
-import { useDeleteSSHKeyMutation } from 'src/queries/profile';
+import { useDeleteSSHKeyMutation } from 'src/queries/profile/profile';
 
 interface Props {
   id: number;
@@ -13,7 +13,7 @@ interface Props {
 }
 
 const DeleteSSHKeyDialog = ({ id, label, onClose, open }: Props) => {
-  const { error, isLoading, mutateAsync } = useDeleteSSHKeyMutation(id);
+  const { error, isPending, mutateAsync } = useDeleteSSHKeyMutation(id);
 
   const onDelete = async () => {
     await mutateAsync();
@@ -27,7 +27,7 @@ const DeleteSSHKeyDialog = ({ id, label, onClose, open }: Props) => {
           primaryButtonProps={{
             'data-testid': 'confirm-delete',
             label: 'Delete',
-            loading: isLoading,
+            loading: isPending,
             onClick: onDelete,
           }}
           secondaryButtonProps={{

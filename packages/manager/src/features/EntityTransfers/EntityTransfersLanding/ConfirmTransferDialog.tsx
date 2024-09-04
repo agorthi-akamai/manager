@@ -17,8 +17,8 @@ import {
   queryKey,
   useTransferQuery,
 } from 'src/queries/entityTransfers';
-import { useProfile } from 'src/queries/profile';
-import { sendEntityTransferReceiveEvent } from 'src/utilities/analytics';
+import { useProfile } from 'src/queries/profile/profile';
+import { sendEntityTransferReceiveEvent } from 'src/utilities/analytics/customEventAnalytics';
 import { capitalize } from 'src/utilities/capitalize';
 import { parseAPIDate } from 'src/utilities/date';
 import { getAPIErrorOrDefault } from 'src/utilities/errorUtils';
@@ -219,24 +219,26 @@ export const DialogContent = React.memo((props: ContentProps) => {
           This transfer contains:
         </StyledSummaryTypography>
         <StyledUl>
-          {Object.keys(entities).map((thisEntityType) => {
-            // According to spec, all entity names are plural and lowercase
-            // (NB: This may cause problems for NodeBalancers if/when they are added to the payload)
-            const entityName = capitalize(thisEntityType).slice(0, -1);
-            return (
-              <li key={thisEntityType}>
-                <StyledEntityTypography>
-                  <strong>
-                    {pluralize(
-                      entityName,
-                      entityName + 's',
-                      entities[thisEntityType].length
-                    )}
-                  </strong>
-                </StyledEntityTypography>
-              </li>
-            );
-          })}
+          {Object.keys(entities).map(
+            (thisEntityType: keyof TransferEntities) => {
+              // According to spec, all entity names are plural and lowercase
+              // (NB: This may cause problems for NodeBalancers if/when they are added to the payload)
+              const entityName = capitalize(thisEntityType).slice(0, -1);
+              return (
+                <li key={thisEntityType}>
+                  <StyledEntityTypography>
+                    <strong>
+                      {pluralize(
+                        entityName,
+                        entityName + 's',
+                        entities[thisEntityType].length
+                      )}
+                    </strong>
+                  </StyledEntityTypography>
+                </li>
+              );
+            }
+          )}
         </StyledUl>
       </StyledDiv>
       {timeRemaining ? (

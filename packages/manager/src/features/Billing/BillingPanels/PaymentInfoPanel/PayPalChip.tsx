@@ -115,7 +115,9 @@ export const PayPalChip = (props: Props) => {
       type: 'payment_method_nonce',
     })
       .then(() => {
-        queryClient.invalidateQueries(accountQueries.paymentMethods.queryKey);
+        queryClient.invalidateQueries({
+          queryKey: accountQueries.paymentMethods.queryKey,
+        });
 
         onClose();
 
@@ -161,7 +163,7 @@ export const PayPalChip = (props: Props) => {
   if (isLoading || isPending || !options['data-client-token']) {
     return (
       <Grid>
-        <CircleProgress mini />
+        <CircleProgress size="sm" />
       </Grid>
     );
   }

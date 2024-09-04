@@ -60,12 +60,12 @@ export const readableBytes = (
 
   // If we've been given custom unit labels, make the substitution here.
   if (options.unitLabels) {
-    Object.keys(options.unitLabels).forEach((originalLabel) => {
-      const idx = storageUnits.indexOf(originalLabel as StorageSymbol);
+    Object.keys(options.unitLabels).forEach((originalLabel: StorageSymbol) => {
+      const idx = storageUnits.indexOf(originalLabel);
       if (idx > -1) {
         // The TS compiler wasn't aware of the null check above, so I added
         // the non-null assertion operator on options.unitLabels.
-        storageUnits[idx] = options.unitLabels![originalLabel];
+        storageUnits[idx] = options.unitLabels![originalLabel] as StorageSymbol;
       }
     });
   }
@@ -90,14 +90,17 @@ export const readableBytes = (
     num = -num;
   }
 
-  const power = determinePower(num, storageUnits, options);
+  // If no maxUnit is provided, default to the highest unit
+  const power = determinePower(num, storageUnits, {
+    ...options,
+    maxUnit: options.maxUnit ?? storageUnits[storageUnits.length - 1],
+  });
 
   const multiplier = options.base10 ? 1000 : 1024;
 
   // Some other magic to get the human-readable version
   const result = num / Math.max(Math.pow(multiplier, power), 1);
   const unit = storageUnits[power] || storageUnits[0];
-
   const decimalPlaces = determineDecimalPlaces(result, unit, options);
 
   const value = parseFloat(result.toFixed(decimalPlaces));
@@ -119,7 +122,7 @@ export const readableBytes = (
 };
 
 // `power` corresponds to storageUnits.indexOf(<UNIT WE WANT TO USE>)
-const determinePower = (
+export const determinePower = (
   num: number,
   storageUnits: StorageSymbol[],
   options: ReadableBytesOptions
