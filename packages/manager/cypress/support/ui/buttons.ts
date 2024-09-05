@@ -47,6 +47,7 @@ export const buttonGroup = {
   find: (): Cypress.Chainable => {
     return cy.get('[data-qa-buttons="true"]');
   },
+
   /**
    * Finds a button within a button group by its title and returns the Cypress chainable.
    *
