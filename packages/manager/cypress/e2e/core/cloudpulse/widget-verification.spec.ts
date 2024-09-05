@@ -67,29 +67,34 @@ import {
 });
 it('should apply global refresh button and verify network calls', () => {
   applyGlobalRefresh();
+
   interceptMetricsRequests().then((xhrArray) => {
     xhrArray.forEach((xhr) => {
-         const requestPayload = xhr.request.body;
-         const metricIndex = cloudpulseTestData.findIndex( (testdata) => testdata.name === requestPayload['metric'] );
-         if (metricIndex !== -1) {
-          const currentGranularity =requestPayload['time_granularity']?.value + requestPayload['time_granularity']?.unit;
-          const relativeTimeDurationUnit = requestPayload.relative_time_duration.unit.toLowerCase();
-          const currentRelativeTimeDuration = 'Last' +requestPayload['relative_time_duration']?.value +
-          timeUnit[relativeTimeDurationUnit as keyof typeof timeUnit];
-          if (relativeTimeDurationUnit &&relativeTimeDurationUnit in timeUnit ) {
-          expect(requestPayload.aggregate_function).to.equal(cloudpulseTestData[metricIndex].expectedAggregation);
-          expect(currentRelativeTimeDuration).to.containIgnoreSpaces(actualRelativeTimeDuration);
-          expect(currentGranularity).to.containIgnoreSpaces(cloudpulseTestData[metricIndex].expectedGranularity );
-          expect(requestPayload['metric']).to.containIgnoreSpaces(cloudpulseTestData[metricIndex].name );
-         }
-         else {
-          throw new Error(`Unknown query: ${requestPayload.query}`);
-        }
-        }
-         
+      const { body: requestPayload } = xhr.request;
+      const metric = requestPayload.metric;
+      const metricData = cloudpulseTestData.find(data => data.name === metric);
+
+      if (!metricData) {
+        throw new Error(`Unknown metric: ${metric}`);
+      }
+
+      const granularity = requestPayload['time_granularity'];
+      const currentGranularity = granularity ? granularity.value + granularity.unit : '';
       
+      const durationUnit = requestPayload.relative_time_duration.unit.toLowerCase();
+      const durationValue = requestPayload.relative_time_duration.value;
+      const currentRelativeTimeDuration = (durationUnit in timeUnit)
+        ? 'Last' + durationValue + timeUnit[durationUnit as keyof typeof timeUnit]
+        : '';
+
+      // Assertions
+      expect(requestPayload.aggregate_function).to.equal(metricData.expectedAggregation);
+      expect(currentRelativeTimeDuration).to.containIgnoreSpaces(actualRelativeTimeDuration);
+      expect(currentGranularity).to.containIgnoreSpaces(metricData.expectedGranularity);
+      expect(requestPayload.metric).to.containIgnoreSpaces(metricData.name);
     });
   });
 });
+
   });
   

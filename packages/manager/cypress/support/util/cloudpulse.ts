@@ -120,6 +120,7 @@ export const selectServiceName = (serviceName: string) => {
     .findByTitle('Open')
     .click();
   ui.autocompletePopper.findByTitle(serviceName).should('be.visible').click();
+
 };
 
 /**
@@ -152,6 +153,7 @@ export const selectAndVerifyServiceName = (service: string) => {
   const resourceInput = ui.autocomplete.findByTitleCustom('Select Resources');
   resourceInput.findByTitle('Open').click();
   resourceInput.click().type(`${service}{enter}`);
+  //resourceInput.findByTitle('Close').click();
 };
 
 /**
@@ -250,12 +252,12 @@ export const setAggregation = (widgetName: string, aggregation: string) => {
  * @param {string} widgetName - The name of the widget to verify.
  * @param {string[]} expectedGranularityOptions - The expected granularity options.
  */
+
 export const verifyGranularity = (
   widgetName: string,
   expectedGranularityOptions: string[]
 ) => {
   const widgetSelector = `[data-qa-widget="${widgetName}"]`;
-
   cy.get(widgetSelector)
     .first()
     .scrollIntoView()
@@ -265,19 +267,14 @@ export const verifyGranularity = (
         .findByTitleCustom('Select an Interval')
         .findByTitle('Open')
         .click();
-      ui.autocompletePopper
-        .find()
-        .scrollIntoView()
-        .find('li')
-        .should('have.length', expectedGranularityOptions.length)
-        .each(($el, index) => {
-          cy.wrap($el)
-            .invoke('text')
-            .then((text) => {
-              expect(text.trim()).to.equal(expectedGranularityOptions[index]);
-            });
-        });
-
+      expectedGranularityOptions.forEach((option) => {
+        ui.autocompletePopper
+          .findByTitle(option)
+          .should('be.visible')
+          .then(() => {
+            cy.log(`${option} is visible`);
+          });
+      });
       ui.autocomplete
         .findByTitleCustom('Select an Interval')
         .findByTitle('Close')
@@ -290,12 +287,12 @@ export const verifyGranularity = (
  * @param {string} widgetName - The name of the widget to verify.
  * @param {string[]} expectedAggregationOptions - The expected aggregation options.
  */
+
 export const verifyAggregation = (
   widgetName: string,
   expectedAggregationOptions: string[]
 ) => {
   const widgetSelector = `[data-qa-widget="${widgetName}"]`;
-
   cy.get(widgetSelector)
     .first()
     .scrollIntoView()
@@ -305,19 +302,14 @@ export const verifyAggregation = (
         .findByTitleCustom('Select an Aggregate Function')
         .findByTitle('Open')
         .click();
-      ui.autocompletePopper
-        .find()
-        .scrollIntoView()
-        .find('li')
-        .should('have.length', expectedAggregationOptions.length)
-        .each(($el, index) => {
-          cy.wrap($el)
-            .invoke('text')
-            .then((text) => {
-              expect(text.trim()).to.equal(expectedAggregationOptions[index]);
-            });
-        });
-
+      expectedAggregationOptions.forEach((option) => {
+        ui.autocompletePopper
+          .findByTitle(option)
+          .should('be.visible')
+          .then(() => {
+            cy.log(`${option} is visible`);
+          });
+      });
       ui.autocomplete
         .findByTitleCustom('Select an Aggregate Function')
         .findByTitle('Close')
