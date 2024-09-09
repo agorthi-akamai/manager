@@ -4,8 +4,6 @@ import React from 'react';
 import { Autocomplete } from 'src/components/Autocomplete/Autocomplete';
 import { useResourcesQuery } from 'src/queries/cloudpulse/resources';
 
-import { RESOURCES } from '../Utils/constants';
-
 import type { AclpConfig, Filter } from '@linode/api-v4';
 
 export interface CloudPulseResources {
@@ -16,13 +14,15 @@ export interface CloudPulseResources {
 
 export interface CloudPulseResourcesSelectProps {
   disabled?: boolean;
-  handleResourcesSelection: (resources: CloudPulseResources[]) => void;
+  handleResourcesSelection: (
+    resources: CloudPulseResources[],
+    savePref?: boolean
+  ) => void;
   placeholder?: string;
   preferences?: AclpConfig;
   region?: string;
   resourceType: string | undefined;
   savePreferences?: boolean;
-  updatePreferences?: (data: {}) => void;
   xFilter?: Filter;
 }
 
@@ -36,7 +36,6 @@ export const CloudPulseResourcesSelect = React.memo(
       region,
       resourceType,
       savePreferences,
-      updatePreferences,
       xFilter,
     } = props;
 
@@ -62,7 +61,7 @@ export const CloudPulseResourcesSelect = React.memo(
         ? saveResources.map((resourceId) => String(resourceId))
         : undefined;
       if (resources) {
-        if (defaultResources) {
+        if (defaultResources && !selectedResources) {
           const resource = getResourcesList().filter((resource) =>
             defaultResources.includes(String(resource.id))
           );
@@ -83,15 +82,8 @@ export const CloudPulseResourcesSelect = React.memo(
     return (
       <Autocomplete
         onChange={(_: any, resourceSelections: CloudPulseResources[]) => {
-          if (savePreferences && updatePreferences) {
-            updatePreferences({
-              [RESOURCES]: resourceSelections.map((resource: { id: string }) =>
-                String(resource.id)
-              ),
-            });
-          }
           setSelectedResources(resourceSelections);
-          handleResourcesSelection(resourceSelections);
+          handleResourcesSelection(resourceSelections, savePreferences);
         }}
         textFieldProps={{
           InputProps: {

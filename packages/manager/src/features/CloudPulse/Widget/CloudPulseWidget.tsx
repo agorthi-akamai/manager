@@ -117,10 +117,7 @@ export interface LegendRow {
 }
 
 export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
-  const {
-    preferences,
-    updateWidgetPreference: updatePreferences,
-  } = useAclpPreference();
+  const { updateWidgetPreference: updatePreferences } = useAclpPreference();
   const { data: profile } = useProfile();
   const timezone = profile?.timezone ?? DateTime.local().zoneName;
 
@@ -208,13 +205,6 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
     []
   );
 
-  /**
-   *
-   * @param value number value for the tool tip
-   * @param unit string unit for the tool tip
-   * @returns formatted string using @value & @unit
-   */
-
   const {
     data: metricsList,
     error,
@@ -266,7 +256,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
   }
 
   return (
-    <Grid item lg={widget.size} xs={12} >
+    <Grid item lg={widget.size} xs={12}>
       <Paper data-qa-widget={convertStringToCamelCasesWithSpaces(widget.label)}>
         <Stack spacing={2}>
           <Stack
@@ -302,14 +292,14 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
               {Boolean(
                 availableMetrics?.available_aggregate_functions?.length
               ) && (
-                  <CloudPulseAggregateFunction
-                    availableAggregateFunctions={
-                      availableMetrics!.available_aggregate_functions
-                    }
-                    defaultAggregateFunction={widgetProp?.aggregate_function}
-                    onAggregateFuncChange={handleAggregateFunctionChange}
-                  />
-                )}
+                <CloudPulseAggregateFunction
+                  availableAggregateFunctions={
+                    availableMetrics!.available_aggregate_functions
+                  }
+                  defaultAggregateFunction={widgetProp?.aggregate_function}
+                  onAggregateFuncChange={handleAggregateFunctionChange}
+                />
+              )}
               <Box sx={{ display: { lg: 'flex', xs: 'none' } }}>
                 <ZoomIcon
                   handleZoomToggle={handleZoomToggle}
