@@ -111,12 +111,6 @@ export interface CloudPulseCustomSelectProps {
    * The cloud pulse select types, it can be static or dynamic depending on the use case
    */
   type: CloudPulseSelectTypes;
-
-  /**
-   * Function to update the user preference
-   * @param data Data to be updated in the preferences
-   */
-  updatePreferences?: (data: {}) => void;
 }
 
 export enum CloudPulseSelectTypes {
@@ -142,7 +136,6 @@ export const CloudPulseCustomSelect = React.memo(
       preferences,
       savePreferences,
       type,
-      updatePreferences,
     } = props;
 
     const [selectedResource, setResource] = React.useState<

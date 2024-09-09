@@ -76,12 +76,6 @@ interface CloudPulseCustomSelectionChangeProps
   savePreferences?: boolean;
 
   /**
-   * Function to update the user preference
-   * @param data Data to be updated in the preferences
-   */
-  updatePreferences?: (data: {}) => void;
-
-  /**
    * The listed options in the custom select component
    */
   value:

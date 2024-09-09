@@ -165,7 +165,6 @@ export const getCustomSelectProperties = (
     type: options
       ? CloudPulseSelectTypes.static
       : CloudPulseSelectTypes.dynamic,
-    updatePreferences,
   };
 };
 

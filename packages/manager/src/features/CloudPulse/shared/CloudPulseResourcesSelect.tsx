@@ -23,7 +23,6 @@ export interface CloudPulseResourcesSelectProps {
   region?: string;
   resourceType: string | undefined;
   savePreferences?: boolean;
-  updatePreferences?: (data: {}) => void;
   xFilter?: Filter;
 }
 
