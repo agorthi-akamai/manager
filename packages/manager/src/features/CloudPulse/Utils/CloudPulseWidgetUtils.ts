@@ -259,9 +259,9 @@ export const getCloudPulseMetricRequest = (
       widget.time_granularity.unit === 'Auto'
         ? undefined
         : {
-            unit: widget.time_granularity.unit,
-            value: widget.time_granularity.value,
-          },
+          unit: widget.time_granularity.unit,
+          value: widget.time_granularity.value,
+        },
   };
 };
 
@@ -292,7 +292,11 @@ export const getDimensionName = (props: DimensionNameProperties): string => {
   const { flag, metric, resources } = props;
   return Object.entries(metric)
     .map(([key, value]) => {
-      if (key === flag?.dimensionKey) {
+      if (key === flag?.dimensionKey || key === 'cluster_id') {
+        resources.push({
+          id: '11145',
+          label: 'test1'
+        })
         return mapResourceIdToName(value, resources);
       }
 

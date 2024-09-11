@@ -77,6 +77,10 @@ export const fetchCloudPulseMetrics = (
   serviceType: string,
   requestData: CloudPulseMetricsRequest
 ) => {
+  if (serviceType === 'dbaas') {
+    requestData.resource_ids = [11145];
+  }
+
   const config: AxiosRequestConfig = {
     data: requestData,
     headers: {
