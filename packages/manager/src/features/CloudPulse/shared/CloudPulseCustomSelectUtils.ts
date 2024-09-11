@@ -38,49 +38,7 @@ interface CloudPulseCustomSelectDefaultValueProps
    * Default selected value from the drop down
    */
   defaultValue?: FilterValue;
-
   /**
-<<<<<<< HEAD
-   * Last selected values from user preference
-   */
-  preferences?: AclpConfig;
-
-  /**
-   * boolean variable to check whether preferences should be saved or not
-   */
-  savePreferences?: boolean;
-
-}
-
-/**
- * The interface for selecting the default value from the user preferences
- */
-interface CloudPulseCustomSelectDefaultValueProps
-  extends CloudPulseCustomSelectProps {
-  /**
-   * Default selected value from the drop down
-   */
-  defaultValue?: FilterValue;
-
-  /**
-   * Last selected values from user preference
-   */
-  preferences?: AclpConfig;
-
-  /**
-   * boolean variable to check whether preferences should be saved or not
-   */
-  savePreferences?: boolean;
-}
-
-/**
- * The interface for selecting the default value from the user preferences
- */
-interface CloudPulseCustomSelectDefaultValueProps
-  extends CloudPulseCustomSelectProps {
-  /**
-=======
->>>>>>> 0341fa9bb (upcoming: [DI-20360] - Passing default values to components instead of full preference object)
    * Indicates whether we need multiselect for the component or not
    */
   isMultiSelect: boolean;
@@ -105,9 +63,6 @@ interface CloudPulseCustomSelectionChangeProps
    * The maximum number of selections that needs to be allowed
    */
   maxSelections?: number;
-
-  preferences?: AclpConfig;
-  savePreferences?: boolean;
 
   /**
    * The listed options in the custom select component
