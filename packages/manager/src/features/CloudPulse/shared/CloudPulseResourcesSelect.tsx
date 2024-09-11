@@ -81,7 +81,7 @@ export const CloudPulseResourcesSelect = React.memo(
 
     return (
       <Autocomplete
-        onChange={(_: any, resourceSelections: CloudPulseResources[]) => {
+        onChange={(e, resourceSelections: CloudPulseResources[]) => {
           setSelectedResources(resourceSelections);
           handleResourcesSelection(resourceSelections, savePreferences);
         }}

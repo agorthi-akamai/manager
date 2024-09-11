@@ -19,8 +19,6 @@ export const useAclpPreference = () => {
 
   const { mutateAsync: updateFunction } = useMutatePreferences();
 
-  // const preferenceRef = useRef({ ...(preferences?.aclpPreference ?? {}) });
-
   /**
    *
    * @param data AclpConfig data to be updated in preferences

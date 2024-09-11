@@ -2,14 +2,12 @@ import type { FilterValueType } from '../Dashboard/CloudPulseDashboardLanding';
 import type { CloudPulseServiceTypeFiltersOptions } from '../Utils/models';
 import type { AclpConfig } from '@linode/api-v4';
 
-/**
- * The interface for selecting the default value from the user preferences
- */
-interface CloudPulseCustomSelectDefaultValueProps {
+interface CloudPulseCustomSelectProps {
   /**
-   * The filter Key of the current rendered custom select component
+   * The current filter key of the rendered custom select component
    */
   filterKey: string;
+
   /**
    * The callback for the selection changes happening in the custom select component
    */
@@ -20,6 +18,22 @@ interface CloudPulseCustomSelectDefaultValueProps {
     updatedPreferenceData?: {}
   ) => void;
 
+  /**
+   * Last selected values from user preference
+   */
+  preferences?: AclpConfig;
+
+  /**
+   * boolean variable to check whether preferences should be saved or not
+   */
+  savePreferences?: boolean;
+}
+
+/**
+ * The interface for selecting the default value from the user preferences
+ */
+interface CloudPulseCustomSelectDefaultValueProps
+  extends CloudPulseCustomSelectProps {
   /**
    * Indicates whether we need multiselect for the component or not
    */
@@ -29,44 +43,22 @@ interface CloudPulseCustomSelectDefaultValueProps {
    * The current listed options in the custom select component
    */
   options: CloudPulseServiceTypeFiltersOptions[];
-
-  preferences?: AclpConfig;
-
-  /**
-   * Indicates whether we need to save preferences or not
-   */
-  savePreferences?: boolean;
 }
 
 /**
  * The interface of publishing the selection change and updating the user preferences accordingly
  */
-interface CloudPulseCustomSelectionChangeProps {
+interface CloudPulseCustomSelectionChangeProps
+  extends CloudPulseCustomSelectProps {
   /**
    * The list of filters needs to be cleared on selections
    */
   clearSelections: string[];
-  /**
-   * The current filter key of the rendered custom select component
-   */
-  filterKey: string;
-  /**
-   * The callback for the selection changes happening in the custom select component
-   */
-  handleSelectionChange: (
-    filterKey: string,
-    value: FilterValueType,
-    savePref?: boolean,
-    updatedPreferenceData?: {}
-  ) => void;
 
   /**
    * The maximum number of selections that needs to be allowed
    */
   maxSelections?: number;
-
-  preferences?: AclpConfig;
-  savePreferences?: boolean;
 
   /**
    * The listed options in the custom select component
