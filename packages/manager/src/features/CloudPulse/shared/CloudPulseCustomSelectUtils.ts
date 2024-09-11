@@ -1,6 +1,6 @@
 import type { FilterValueType } from '../Dashboard/CloudPulseDashboardLanding';
 import type { CloudPulseServiceTypeFiltersOptions } from '../Utils/models';
-import type { AclpConfig } from '@linode/api-v4';
+import type { AclpConfig, FilterValue } from '@linode/api-v4';
 
 interface CloudPulseCustomSelectProps {
   /**
@@ -40,6 +40,44 @@ interface CloudPulseCustomSelectDefaultValueProps
   defaultValue?: FilterValue;
 
   /**
+   * Last selected values from user preference
+   */
+  preferences?: AclpConfig;
+
+  /**
+   * boolean variable to check whether preferences should be saved or not
+   */
+  savePreferences?: boolean;
+
+}
+
+/**
+ * The interface for selecting the default value from the user preferences
+ */
+interface CloudPulseCustomSelectDefaultValueProps
+  extends CloudPulseCustomSelectProps {
+  /**
+   * Default selected value from the drop down
+   */
+  defaultValue?: FilterValue;
+
+  /**
+   * Last selected values from user preference
+   */
+  preferences?: AclpConfig;
+
+  /**
+   * boolean variable to check whether preferences should be saved or not
+   */
+  savePreferences?: boolean;
+}
+
+/**
+ * The interface for selecting the default value from the user preferences
+ */
+interface CloudPulseCustomSelectDefaultValueProps
+  extends CloudPulseCustomSelectProps {
+  /**
    * Indicates whether we need multiselect for the component or not
    */
   isMultiSelect: boolean;
@@ -64,16 +102,6 @@ interface CloudPulseCustomSelectionChangeProps
    * The maximum number of selections that needs to be allowed
    */
   maxSelections?: number;
-
-  /**
-   * Last selected values from user preference
-   */
-  preferences?: AclpConfig;
-
-  /**
-   * boolean variable to check whether preferences should be saved or not
-   */
-  savePreferences?: boolean;
 
   /**
    * The listed options in the custom select component
