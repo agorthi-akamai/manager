@@ -98,11 +98,6 @@ export interface CloudPulseCustomSelectProps {
   placeholder?: string;
 
   /**
-   * Last selected values from user preferences
-   */
-  preferences?: AclpConfig;
-
-  /**
    * This property controls whether to save the preferences or not
    */
   savePreferences?: boolean;
@@ -133,7 +128,6 @@ export const CloudPulseCustomSelect = React.memo(
       maxSelections,
       options,
       placeholder,
-      preferences,
       savePreferences,
       type,
     } = props;

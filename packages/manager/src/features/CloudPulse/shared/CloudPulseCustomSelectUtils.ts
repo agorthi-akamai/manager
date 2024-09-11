@@ -40,6 +40,7 @@ interface CloudPulseCustomSelectDefaultValueProps
   defaultValue?: FilterValue;
 
   /**
+<<<<<<< HEAD
    * Last selected values from user preference
    */
   preferences?: AclpConfig;
@@ -78,6 +79,8 @@ interface CloudPulseCustomSelectDefaultValueProps
 interface CloudPulseCustomSelectDefaultValueProps
   extends CloudPulseCustomSelectProps {
   /**
+=======
+>>>>>>> 0341fa9bb (upcoming: [DI-20360] - Passing default values to components instead of full preference object)
    * Indicates whether we need multiselect for the component or not
    */
   isMultiSelect: boolean;
@@ -128,7 +131,6 @@ export const getInitialDefaultSelections = (
     handleSelectionChange,
     isMultiSelect,
     options,
-    preferences,
     savePreferences,
   } = defaultSelectionProps;
 
