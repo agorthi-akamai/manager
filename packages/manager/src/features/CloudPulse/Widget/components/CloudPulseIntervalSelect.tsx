@@ -1,8 +1,14 @@
 import React from 'react';
 
-import { Autocomplete } from 'src/components/Autocomplete/Autocomplete';
+import { StyledWidgetAutocomplete } from '../../Utils/CloudPulseWidgetUtils';
 
 import type { TimeGranularity } from '@linode/api-v4';
+
+interface IntervalOptions {
+  label: string;
+  unit: string;
+  value: number;
+}
 
 export interface IntervalSelectProperties {
   /**
@@ -39,7 +45,7 @@ export const getInSeconds = (interval: string) => {
 };
 
 // Intervals must be in ascending order here
-export const all_interval_options = [
+export const all_interval_options: IntervalOptions[] = [
   {
     label: '1 min',
     unit: 'min',
@@ -62,7 +68,7 @@ export const all_interval_options = [
   },
 ];
 
-const autoIntervalOption = {
+const autoIntervalOption: IntervalOptions = {
   label: 'Auto',
   unit: 'Auto',
   value: -1,
@@ -113,16 +119,22 @@ export const CloudPulseIntervalSelect = React.memo(
     );
 
     return (
-      <Autocomplete
-        isOptionEqualToValue={(option, value) => {
+      <StyledWidgetAutocomplete
+        isOptionEqualToValue={(
+          option: IntervalOptions,
+          value: IntervalOptions
+        ) => {
           return option?.value === value?.value && option?.unit === value?.unit;
         }}
-        onChange={(_: any, selectedInterval: any) => {
-          setSelectedInterval(selectedInterval);
-          onIntervalChange({
+        onChange={(
+          _: React.SyntheticEvent,
+          selectedInterval: IntervalOptions
+        ) => {
+          props.onIntervalChange({
             unit: selectedInterval?.unit,
             value: selectedInterval?.value,
           });
+          setSelectedInterval(selectedInterval);
         }}
         textFieldProps={{
           hideLabel: true,

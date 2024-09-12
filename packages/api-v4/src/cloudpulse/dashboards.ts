@@ -6,7 +6,7 @@ import { Dashboard } from './types';
 export const getDashboards = (serviceType: string) =>
   Request<ResourcePage<Dashboard>>(
     setURL(
-      `https://blr-lhv95n.bangalore.corp.akamai.com:9000/v4beta/monitor/services/${encodeURIComponent(
+      `https://blr-lhvm1i.bangalore.corp.akamai.com:9000/v4beta/monitor/services/${encodeURIComponent(
         serviceType
       )}/dashboards`
     ),
@@ -19,7 +19,7 @@ export const getDashboards = (serviceType: string) =>
 export const getDashboardById = (dashboardId: number) =>
   Request<Dashboard>(
     setURL(
-      `https://blr-lhv95n.bangalore.corp.akamai.com:9000/v4beta/monitor/dashboards/${encodeURIComponent(
+      `https://blr-lhvm1i.bangalore.corp.akamai.com:9000/v4beta/monitor/dashboards/${encodeURIComponent(
         dashboardId!
       )}`
     ),

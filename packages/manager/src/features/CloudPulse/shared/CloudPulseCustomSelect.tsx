@@ -189,7 +189,6 @@ export const CloudPulseCustomSelect = React.memo(
     };
 
     let staticErrorText = '';
-
     // check for input prop errors
     if (
       (CloudPulseSelectTypes.static === type &&
@@ -219,6 +218,12 @@ export const CloudPulseCustomSelect = React.memo(
             ? options ?? []
             : queriedResources ?? []
         }
+        placeholder={
+          selectedResource &&
+          (!Array.isArray(selectedResource) || selectedResource.length)
+            ? ''
+            : placeholder || 'Select a Value'
+        }
         textFieldProps={{
           hideLabel: true,
         }}
@@ -228,7 +233,6 @@ export const CloudPulseCustomSelect = React.memo(
         label="Select a Value"
         multiple={isMultiSelect}
         onChange={handleChange}
-        placeholder={placeholder ?? 'Select a Value'}
         value={selectedResource ?? (isMultiSelect ? [] : null)}
       />
     );

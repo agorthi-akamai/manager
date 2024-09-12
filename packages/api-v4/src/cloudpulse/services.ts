@@ -10,7 +10,7 @@ import { ResourcePage as Page } from 'src/types';
 export const getMetricDefinitionsByServiceType = (serviceType: string) => {
   return Request<Page<MetricDefinitions>>(
     setURL(
-      `https://blr-lhv95n.bangalore.corp.akamai.com:9000/v4beta/monitor/services/${encodeURIComponent(
+      `https://blr-lhvm1i.bangalore.corp.akamai.com:9000/v4beta/monitor/services/${encodeURIComponent(
         serviceType
       )}/metric-definitions`
     ),
@@ -24,7 +24,7 @@ export const getMetricDefinitionsByServiceType = (serviceType: string) => {
 export const getJWEToken = (data: JWETokenPayLoad, serviceType: string) =>
   Request<JWEToken>(
     setURL(
-      `https://blr-lhv95n.bangalore.corp.akamai.com:9000/v4beta/monitor/services/${encodeURIComponent(
+      `https://blr-lhvm1i.bangalore.corp.akamai.com:9000/v4beta/monitor/services/${encodeURIComponent(
         serviceType
       )}/token`
     ),
@@ -39,7 +39,7 @@ export const getJWEToken = (data: JWETokenPayLoad, serviceType: string) =>
 export const getCloudPulseServiceTypes = () =>
   Request<ServiceTypesList>(
     setURL(
-      `https://blr-lhv95n.bangalore.corp.akamai.com:9000/v4beta/monitor/services`
+      `https://blr-lhvm1i.bangalore.corp.akamai.com:9000/v4beta/monitor/services`
     ),
     setMethod('GET'),
     setHeaders({

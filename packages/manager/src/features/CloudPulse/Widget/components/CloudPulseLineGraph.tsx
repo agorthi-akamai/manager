@@ -46,8 +46,11 @@ export const CloudPulseLineGraph = React.memo((props: CloudPulseLineGraph) => {
             '& .MuiTable-root': {
               border: 0,
             },
+            maxHeight: '106px',
+            overflow: 'auto',
           }}
           ariaLabel={ariaLabel}
+          // chartHeight={208}
           data={data}
           isLegendsFullSize={true}
           legendRows={legendRows}

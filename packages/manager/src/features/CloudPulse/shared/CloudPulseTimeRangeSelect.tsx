@@ -78,6 +78,7 @@ export const CloudPulseTimeRangeSelect = React.memo(
           savePreferences
         );
       }
+      setSelectedTimeRange(item); // update the state variable to retain latest selections
     };
     return (
       <Autocomplete
