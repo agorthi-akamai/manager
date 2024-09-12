@@ -12,7 +12,7 @@ import {
   useGetCloudPulseMetricDefinitionsByServiceType,
 } from 'src/queries/cloudpulse/services';
 
-import { getUserPreferenceObject } from '../Utils/UserPreference';
+import { useAclpPreference } from '../Utils/UserPreference';
 import { createObjectCopy } from '../Utils/utils';
 import { CloudPulseWidget } from '../Widget/CloudPulseWidget';
 import {
@@ -80,6 +80,8 @@ export const CloudPulseDashboard = (props: DashboardProperties) => {
     savePref,
   } = props;
 
+  const { preferences } = useAclpPreference();
+
   const getJweTokenPayload = (): JWETokenPayLoad => {
     return {
       resource_ids: resourceList?.map((resource) => Number(resource.id)) ?? [],
@@ -110,13 +112,25 @@ export const CloudPulseDashboard = (props: DashboardProperties) => {
   };
 
   const setPreferredWidgetPlan = (widgetObj: Widgets) => {
-    const widgetPreferences = getUserPreferenceObject().widgets;
+    const widgetPreferences = preferences.widgets;
     const pref = widgetPreferences?.[widgetObj.label];
     if (pref) {
       Object.assign(widgetObj, {
-        aggregate_function: pref.aggregateFunction,
+        aggregate_function:
+          pref.aggregateFunction ?? widgetObj.aggregate_function,
         size: pref.size ?? widgetObj.size,
-        time_granularity: { ...pref.timeGranularity },
+        time_granularity: {
+          ...(pref.timeGranularity ?? widgetObj.time_granularity),
+        },
+      });
+    } else {
+      Object.assign(widgetObj, {
+        ...widgetObj,
+        time_granularity: {
+          label: 'Auto',
+          unit: 'Auto',
+          value: -1,
+        },
       });
     }
   };
@@ -203,7 +217,7 @@ export const CloudPulseDashboard = (props: DashboardProperties) => {
     // maintain a copy
     const newDashboard: Dashboard = createObjectCopy(dashboard)!;
     return (
-      <Grid columnSpacing={1} container gap={0} item rowSpacing={1} xs={12}>
+      <Grid columnSpacing={1} container item rowSpacing={2} xs={12}>
         {{ ...newDashboard }.widgets.map((widget, index) => {
           // check if widget metric definition is available or not
           if (widget) {
@@ -243,11 +257,11 @@ export const CloudPulseDashboard = (props: DashboardProperties) => {
     );
   };
 
-  const renderPlaceHolder = (title: string) => {
+  const renderPlaceHolder = (subtitle: string) => {
     return (
       <Grid item xs>
         <Paper>
-          <Placeholder icon={CloudPulseIcon} isEntity title={title} />
+          <Placeholder icon={CloudPulseIcon} subtitle={subtitle} title="" />
         </Paper>
       </Grid>
     );

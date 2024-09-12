@@ -202,9 +202,9 @@ export const LineGraph = (props: LineGraphProps) => {
       },
       legend: {
         display: _nativeLegend,
-        onClick: (_e, legendItem) => {
-          if (legendItem && legendItem.datasetIndex !== undefined) {
-            handleLegendClick(legendItem.datasetIndex); // when we click on native legend, also call the handle legend click function
+        onClick: (e, legendItem) => {
+          if (legendItem) {
+            handleLegendClick(legendItem.datasetIndex!);
           }
         },
         position: _nativeLegend ? 'bottom' : undefined,
@@ -383,6 +383,7 @@ export const LineGraph = (props: LineGraphProps) => {
               width: isLegendsFullSize ? '100%' : '85%',
             }} // this sx is added because styled table forcing the legends to be 85% width & 600px max width
             aria-label={`Controls for ${ariaLabel || 'Stats and metrics'}`}
+            data-qa-table-id={ariaLabel}
             noBorder
           >
             <StyledTableHead>
@@ -422,9 +423,8 @@ export const LineGraph = (props: LineGraphProps) => {
             </StyledTableHead>
             <StyledTableBody>
               {legendRows?.map((_tick: any, idx: number) => {
-                const bgColor =
-                  data[data.length === 1 ? 0 : idx].backgroundColor;
-                const title = data[data.length === 1 ? 0 : idx].label;
+                const bgColor = data[idx].backgroundColor;
+                const title = data[idx].label;
                 const hidden = hiddenDatasets.includes(idx);
                 const { data: metricsData, format } = legendRows[idx];
                 return (

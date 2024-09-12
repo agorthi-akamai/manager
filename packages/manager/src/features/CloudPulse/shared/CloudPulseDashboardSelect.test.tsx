@@ -89,10 +89,13 @@ describe('CloudPulse Dashboard select', () => {
       );
     }),
     it('Should select the default value from preferences', () => {
-      const mockFunction = vi.spyOn(preferences, 'getUserPreferenceObject');
-      mockFunction.mockReturnValue({ [DASHBOARD_ID]: 1 } as AclpConfig);
-
-      renderWithTheme(<CloudPulseDashboardSelect {...props} />);
+      renderWithTheme(
+        <CloudPulseDashboardSelect
+          {...props}
+          defaultValue={1}
+          savePreferences
+        />
+      );
 
       expect(screen.getByRole('combobox')).toHaveAttribute(
         'value',

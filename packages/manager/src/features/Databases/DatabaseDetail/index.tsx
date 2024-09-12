@@ -1,5 +1,3 @@
-import { Engine } from '@linode/api-v4/lib/databases/types';
-import { APIError } from '@linode/api-v4/lib/types';
 import * as React from 'react';
 import { matchPath, useHistory, useParams } from 'react-router-dom';
 
@@ -12,6 +10,7 @@ import { SafeTabPanel } from 'src/components/Tabs/SafeTabPanel';
 import { TabLinkList } from 'src/components/Tabs/TabLinkList';
 import { TabPanels } from 'src/components/Tabs/TabPanels';
 import { Tabs } from 'src/components/Tabs/Tabs';
+import { CloudPulseDashboardWithFilters } from 'src/features/CloudPulse/Dashboard/CloudPulseDashboardWithFilters';
 import { useEditableLabelState } from 'src/hooks/useEditableLabelState';
 import { useFlags } from 'src/hooks/useFlags';
 import { useIsResourceRestricted } from 'src/hooks/useIsResourceRestricted';
@@ -21,6 +20,9 @@ import {
   useDatabaseTypesQuery,
 } from 'src/queries/databases/databases';
 import { getAPIErrorOrDefault } from 'src/utilities/errorUtils';
+
+import type { Engine } from '@linode/api-v4/lib/databases/types';
+import type { APIError } from '@linode/api-v4/lib/types';
 
 const DatabaseSummary = React.lazy(() => import('./DatabaseSummary'));
 const DatabaseBackups = React.lazy(() => import('./DatabaseBackups'));
@@ -98,6 +100,11 @@ export const DatabaseDetail = () => {
       title: 'Resize',
     });
   }
+
+  tabs.push({
+    routeName: `/databases/${engine}/${id}/monitor`,
+    title: 'Monitor',
+  });
 
   const getTabIndex = () => {
     const tabChoice = tabs.findIndex((tab) =>
@@ -196,6 +203,13 @@ export const DatabaseDetail = () => {
               database={database}
               disabled={isDatabasesGrantReadOnly}
             />
+          </SafeTabPanel>
+          <SafeTabPanel index={flags.databaseResize ? 4 : 3}>
+            <CloudPulseDashboardWithFilters
+              dashboardId={2}
+              resource={database.id}
+              key={'save'}
+            ></CloudPulseDashboardWithFilters>
           </SafeTabPanel>
         </TabPanels>
       </Tabs>

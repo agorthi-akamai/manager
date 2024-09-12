@@ -1,23 +1,43 @@
-import {
-  getUserPreferenceObject,
-  updateGlobalFilterPreference,
-} from '../Utils/UserPreference';
-
 import type { FilterValueType } from '../Dashboard/CloudPulseDashboardLanding';
 import type { CloudPulseServiceTypeFiltersOptions } from '../Utils/models';
+import type { AclpConfig, FilterValue } from '@linode/api-v4';
+
+interface CloudPulseCustomSelectProps {
+  /**
+   * The current filter key of the rendered custom select component
+   */
+  filterKey: string;
+
+  /**
+   * The callback for the selection changes happening in the custom select component
+   */
+  handleSelectionChange: (
+    filterKey: string,
+    value: FilterValueType,
+    savePref?: boolean,
+    updatedPreferenceData?: {}
+  ) => void;
+
+  /**
+   * Last selected values from user preference
+   */
+  preferences?: AclpConfig;
+
+  /**
+   * boolean variable to check whether preferences should be saved or not
+   */
+  savePreferences?: boolean;
+}
 
 /**
  * The interface for selecting the default value from the user preferences
  */
-interface CloudPulseCustomSelectDefaultValueProps {
+interface CloudPulseCustomSelectDefaultValueProps
+  extends CloudPulseCustomSelectProps {
   /**
-   * The filter Key of the current rendered custom select component
+   * Default selected value from the drop down
    */
-  filterKey: string;
-  /**
-   * The callback for the selection changes happening in the custom select component
-   */
-  handleSelectionChange: (filterKey: string, value: FilterValueType) => void;
+  defaultValue?: FilterValue;
 
   /**
    * Indicates whether we need multiselect for the component or not
@@ -28,29 +48,17 @@ interface CloudPulseCustomSelectDefaultValueProps {
    * The current listed options in the custom select component
    */
   options: CloudPulseServiceTypeFiltersOptions[];
-
-  /**
-   * Indicates whether we need to save preferences or not
-   */
-  savePreferences: boolean;
 }
 
 /**
  * The interface of publishing the selection change and updating the user preferences accordingly
  */
-interface CloudPulseCustomSelectionChangeProps {
+interface CloudPulseCustomSelectionChangeProps
+  extends CloudPulseCustomSelectProps {
   /**
    * The list of filters needs to be cleared on selections
    */
   clearSelections: string[];
-  /**
-   * The current filter key of the rendered custom select component
-   */
-  filterKey: string;
-  /**
-   * The callback for the selection changes happening in the custom select component
-   */
-  handleSelectionChange: (filterKey: string, value: FilterValueType) => void;
 
   /**
    * The maximum number of selections that needs to be allowed
@@ -77,6 +85,7 @@ export const getInitialDefaultSelections = (
   | CloudPulseServiceTypeFiltersOptions[]
   | undefined => {
   const {
+    defaultValue,
     filterKey,
     handleSelectionChange,
     isMultiSelect,
@@ -84,9 +93,6 @@ export const getInitialDefaultSelections = (
     savePreferences,
   } = defaultSelectionProps;
 
-  const defaultValue = savePreferences
-    ? getUserPreferenceObject()[filterKey]
-    : undefined;
   if (!options || options.length === 0) {
     return isMultiSelect ? [] : undefined;
   }
@@ -138,6 +144,7 @@ export const handleCustomSelectionChange = (
     filterKey,
     handleSelectionChange,
     maxSelections,
+    savePreferences,
   } = selectionChangeProps;
 
   let { value } = selectionChangeProps;
@@ -152,20 +159,29 @@ export const handleCustomSelectionChange = (
       : String(value.id)
     : undefined;
 
-  // publish the selection change
-  handleSelectionChange(filterKey, result);
+  let updatedPreferenceData: AclpConfig = {};
 
   // update the preferences
-  updateGlobalFilterPreference({
-    [filterKey]: result,
-  });
-
-  // update the clear selections in the preference
-  if (clearSelections) {
-    clearSelections.forEach((selection) =>
-      updateGlobalFilterPreference({ [selection]: undefined })
-    );
+  if (savePreferences) {
+    updatedPreferenceData = { [filterKey]: result };
   }
 
+  // update the clear selections in the preference
+  if (clearSelections && savePreferences) {
+    clearSelections.forEach(
+      (selection) =>
+        (updatedPreferenceData = {
+          ...updatedPreferenceData,
+          [selection]: undefined,
+        })
+    );
+  }
+  // publish the selection change
+  handleSelectionChange(
+    filterKey,
+    result,
+    savePreferences,
+    updatedPreferenceData
+  );
   return value;
 };
