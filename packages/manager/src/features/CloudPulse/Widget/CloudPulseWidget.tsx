@@ -1,4 +1,4 @@
-import { Box, Grid, Paper, Stack, Typography } from '@mui/material';
+import { Box, Grid, Paper, Stack, Typography, useTheme } from '@mui/material';
 import { DateTime } from 'luxon';
 import React from 'react';
 
@@ -6,6 +6,7 @@ import { Divider } from 'src/components/Divider';
 import { useFlags } from 'src/hooks/useFlags';
 import { useCloudPulseMetricsQuery } from 'src/queries/cloudpulse/metrics';
 import { useProfile } from 'src/queries/profile/profile';
+import { themes } from 'src/utilities/theme';
 
 import {
   generateGraphData,
@@ -23,12 +24,12 @@ import { ZoomIcon } from './components/Zoomer';
 
 import type { FilterValueType } from '../Dashboard/CloudPulseDashboardLanding';
 import type { CloudPulseResources } from '../shared/CloudPulseResourcesSelect';
-import type { Widgets } from '@linode/api-v4';
 import type {
   AvailableMetrics,
   TimeDuration,
   TimeGranularity,
 } from '@linode/api-v4';
+import type { Widgets } from '@linode/api-v4';
 import type { DataSet } from 'src/components/LineGraph/LineGraph';
 import type { Metrics } from 'src/utilities/statMetrics';
 
@@ -258,9 +259,14 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
     currentUnit = generatedData.unit;
   }
 
+  const metricsApiCallError = error?.[0]?.reason;
   return (
-    <Grid item lg={widget.size} xs={12}>
-      <Paper data-qa-widget={convertStringToCamelCasesWithSpaces(widget.label)}>
+    <Grid height={'521px'} item lg={widget.size} xs={12}>
+      <Paper
+        sx={{
+          height: '513px',
+        }}
+      >
         <Stack spacing={2}>
           <Stack
             alignItems={'center'}
@@ -273,7 +279,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
               data-qa-widget={convertStringToCamelCasesWithSpaces(widget.label)}
               fontSize={{ sm: '1.5rem', xs: '2rem' }}
               marginLeft={1}
-              variant="h1"
+              variant="h2"
             >
               {convertStringToCamelCasesWithSpaces(widget.label)}{' '}
               {!isLoading &&
@@ -282,7 +288,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
             <Stack
               alignItems={'center'}
               direction={{ sm: 'row' }}
-              gap={1}
+              gap={{ md: 2, xs: 1 }}
               width={{ sm: 'inherit', xs: '100%' }}
             >
               {availableMetrics?.scrape_interval && (
@@ -311,12 +317,12 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
               </Box>
             </Stack>
           </Stack>
-          <Divider />
 
           <CloudPulseLineGraph
             error={
-              status === 'error' && error?.[0]?.reason !== jweTokenExpiryError // show the error only if the error is not related to token expiration
-                ? error?.[0]?.reason ?? 'Error while rendering graph'
+              (status === 'error' && metricsApiCallError !== jweTokenExpiryError) 
+              // || widget.label.includes('CPU') // show the error only if the error is not related to token expiration
+                ? metricsApiCallError ?? 'Error while rendering graph'
                 : undefined
             }
             legendRows={
@@ -327,8 +333,8 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
             formatData={(data: number) => convertValueToUnit(data, currentUnit)}
             formatTooltip={(value: number) => formatToolTip(value, unit)}
             gridSize={widget.size}
-            loading={isLoading || error?.[0]?.reason === jweTokenExpiryError} // keep loading until we fetch the refresh token
-            nativeLegend
+            loading={isLoading || metricsApiCallError === jweTokenExpiryError} // keep loading until we fetch the refresh token
+            // nativeLegend
             showToday={today}
             timezone={timezone}
             title={widget.label}

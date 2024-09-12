@@ -98,8 +98,24 @@ describe('CloudPulseDashboardWithFilters component tests', () => {
 
     expect(screen.getByTestId('CloseIcon')).toBeDefined();
 
-    const inputBox = screen.getByPlaceholderText(customNodeTypePlaceholder);
-    fireEvent.change(inputBox, { target: { value: '' } }); // clear the value
+    fireEvent.click(screen.getByTitle('Clear')); // clear the value
     expect(screen.getByText(mandatoryFiltersError)).toBeDefined();
+  });
+
+  it('renders a CloudPulseDashboardWithFilters component with no filters configured error', () => {
+    queryMocks.useCloudPulseDashboardByIdQuery.mockReturnValue({
+      data: { ...mockDashboard, service_type: 'xyz' },
+      error: false,
+      isError: false,
+      isLoading: false,
+    });
+
+    const screen = renderWithTheme(
+      <CloudPulseDashboardWithFilters dashboardId={1} resource={1} />
+    );
+
+    expect(
+      screen.getByText('No Filters Configured for Service Type - xyz')
+    ).toBeDefined();
   });
 });
