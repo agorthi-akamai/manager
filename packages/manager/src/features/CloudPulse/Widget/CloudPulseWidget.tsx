@@ -1,4 +1,4 @@
-import { Box, Grid, Paper, Stack, Typography } from '@mui/material';
+import { Box, Grid, Paper, Stack, Typography, useTheme } from '@mui/material';
 import { DateTime } from 'luxon';
 import React from 'react';
 
@@ -6,6 +6,7 @@ import { Divider } from 'src/components/Divider';
 import { useFlags } from 'src/hooks/useFlags';
 import { useCloudPulseMetricsQuery } from 'src/queries/cloudpulse/metrics';
 import { useProfile } from 'src/queries/profile/profile';
+import { themes } from 'src/utilities/theme';
 
 import {
   generateGraphData,
@@ -26,12 +27,12 @@ import { ZoomIcon } from './components/Zoomer';
 
 import type { FilterValueType } from '../Dashboard/CloudPulseDashboardLanding';
 import type { CloudPulseResources } from '../shared/CloudPulseResourcesSelect';
-import type { Widgets } from '@linode/api-v4';
 import type {
   AvailableMetrics,
   TimeDuration,
   TimeGranularity,
 } from '@linode/api-v4';
+import type { Widgets } from '@linode/api-v4';
 import type { DataSet } from 'src/components/LineGraph/LineGraph';
 import type { Metrics } from 'src/utilities/statMetrics';
 
@@ -282,14 +283,23 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
 
     data = generatedData.dimensions;
     legendRows = generatedData.legendRowsData;
+    legendRows.push(generatedData.legendRowsData[0]);
+    legendRows.push(generatedData.legendRowsData[0]);
+    legendRows.push(generatedData.legendRowsData[0]);
     today = generatedData.today;
     currentUnit = generatedData.unit;
   }
 
   const metricsApiCallError = error?.[0]?.reason;
+
+  const theme = useTheme();
   return (
-    <Grid item lg={widget.size} xs={12}>
-      <Paper>
+    <Grid height={'521px'} item lg={widget.size} xs={12}>
+      <Paper
+        sx={{
+          height: '513px',
+        }}
+      >
         <Stack spacing={2}>
           <Stack
             alignItems={'center'}
@@ -298,11 +308,13 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
             justifyContent={{ sm: 'space-between' }}
             padding={1}
           >
-            <Typography marginLeft={1} variant="h2">
-              {convertStringToCamelCasesWithSpaces(widget.label)}{' '}
-              {!isLoading &&
-                `(${currentUnit}${unit.endsWith('ps') ? '/s' : ''})`}
-            </Typography>
+            <Stack alignItems={'center'} direction={{ xs: 'row' }} gap={0}>
+              <Typography marginLeft={1} variant="h2">
+                {convertStringToCamelCasesWithSpaces(widget.label)}{' '}
+                {!isLoading &&
+                  `(${currentUnit}${unit.endsWith('ps') ? '/s' : ''})`}
+              </Typography>
+            </Stack>
             <Stack
               alignItems={'center'}
               direction={{ sm: 'row' }}
@@ -338,7 +350,8 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
 
           <CloudPulseLineGraph
             error={
-              status === 'error' && metricsApiCallError !== jweTokenExpiryError // show the error only if the error is not related to token expiration
+              (status === 'error' && metricsApiCallError !== jweTokenExpiryError) 
+              // || widget.label.includes('CPU') // show the error only if the error is not related to token expiration
                 ? metricsApiCallError ?? 'Error while rendering graph'
                 : undefined
             }
@@ -351,7 +364,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
             formatTooltip={(value: number) => formatToolTip(value, unit)}
             gridSize={widget.size}
             loading={isLoading || metricsApiCallError === jweTokenExpiryError} // keep loading until we fetch the refresh token
-            nativeLegend
+            // nativeLegend
             showToday={today}
             timezone={timezone}
             title={widget.label}

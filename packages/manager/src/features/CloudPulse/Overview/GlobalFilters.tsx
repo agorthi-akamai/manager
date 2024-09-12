@@ -3,7 +3,7 @@ import { Grid } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import * as React from 'react';
 
-import Reload from 'src/assets/icons/reload.svg';
+import Reload from 'src/assets/icons/cloudpulse_reload.svg';
 import { Divider } from 'src/components/Divider';
 
 import { CloudPulseDashboardFilterBuilder } from '../shared/CloudPulseDashboardFilterBuilder';
@@ -82,6 +82,7 @@ export const GlobalFilters = React.memo((props: GlobalFilterProperties) => {
         px={2}
         rowGap={2}
         xs={12}
+        marginBottom={1}
       >
         <Grid display={'flex'} item md={4} sm={5} xs={12}>
           <CloudPulseDashboardSelect
@@ -106,9 +107,11 @@ export const GlobalFilters = React.memo((props: GlobalFilterProperties) => {
           </IconButton>
         </Grid>
       </Grid>
-      <Grid item xs={12}>
-        <Divider />
-      </Grid>
+      {selectedDashboard && (
+        <Grid item xs={12}>
+          <Divider />
+        </Grid>
+      )}
       {selectedDashboard && (
         <CloudPulseDashboardFilterBuilder
           dashboard={selectedDashboard}

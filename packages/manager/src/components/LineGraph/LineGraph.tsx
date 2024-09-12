@@ -422,8 +422,9 @@ export const LineGraph = (props: LineGraphProps) => {
             </StyledTableHead>
             <StyledTableBody>
               {legendRows?.map((_tick: any, idx: number) => {
-                const bgColor = data[idx].backgroundColor;
-                const title = data[idx].label;
+                const bgColor =
+                  data[data.length === 1 ? 0 : idx].backgroundColor;
+                const title = data[data.length === 1 ? 0 : idx].label;
                 const hidden = hiddenDatasets.includes(idx);
                 const { data: metricsData, format } = legendRows[idx];
                 return (
