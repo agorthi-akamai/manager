@@ -255,16 +255,11 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
 
     data = generatedData.dimensions;
     legendRows = generatedData.legendRowsData;
-    legendRows.push(generatedData.legendRowsData[0]);
-    legendRows.push(generatedData.legendRowsData[0]);
-    legendRows.push(generatedData.legendRowsData[0]);
     today = generatedData.today;
     currentUnit = generatedData.unit;
   }
 
   const metricsApiCallError = error?.[0]?.reason;
-
-  const theme = useTheme();
   return (
     <Grid height={'521px'} item lg={widget.size} xs={12}>
       <Paper
@@ -293,7 +288,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
             <Stack
               alignItems={'center'}
               direction={{ sm: 'row' }}
-              gap={{ md: 0, xs: 1 }}
+              gap={{ md: 2, xs: 1 }}
               width={{ sm: 'inherit', xs: '100%' }}
             >
               {availableMetrics?.scrape_interval && (
