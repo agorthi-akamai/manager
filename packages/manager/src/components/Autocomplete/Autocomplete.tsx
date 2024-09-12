@@ -26,7 +26,7 @@ export interface EnhancedAutocompleteProps<
     AutocompleteProps<T, Multiple, DisableClearable, FreeSolo>,
     'renderInput'
   > {
-  /** Removes "select all" option for mutliselect */
+  /** Removes "select all" option for multiselect */
   disableSelectAll?: boolean;
   /** Provides a hint with error styling to assist users. */
   errorText?: string;
@@ -104,11 +104,6 @@ export const Autocomplete = <
 
   return (
     <MuiAutocomplete
-      ChipProps={{
-        deleteIcon: (
-          <CloseIcon data-qa-autocomplete-close={label + '_' + 'close'} />
-        ),
-      }}
       options={
         multiple && !disableSelectAll && options.length > 0
           ? optionsWithSelectAll
@@ -167,10 +162,10 @@ export const Autocomplete = <
           </ListItem>
         );
       }}
+      ChipProps={{ deleteIcon: <CloseIcon /> }}
       PopperComponent={CustomPopper}
       clearOnBlur={clearOnBlur}
-      data-qa-autocomplete={label}
-      data-qa-autocomplete_title={label}
+      data-qa-autocomplete
       defaultValue={defaultValue}
       disableCloseOnSelect={multiple}
       disablePortal={disablePortal}
