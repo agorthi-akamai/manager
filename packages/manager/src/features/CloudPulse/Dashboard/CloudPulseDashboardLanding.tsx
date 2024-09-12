@@ -5,7 +5,7 @@ import CloudPulseIcon from 'src/assets/icons/entityIcons/monitor.svg';
 import { StyledPlaceholder } from 'src/features/StackScripts/StackScriptBase/StackScriptBase.styles';
 
 import { GlobalFilters } from '../Overview/GlobalFilters';
-import { REGION, RESOURCE_ID } from '../Utils/constants';
+import { REFRESH, REGION, RESOURCE_ID } from '../Utils/constants';
 import {
   checkIfAllMandatoryFiltersAreSelected,
   getMetricsCallCustomFilters,
@@ -38,7 +38,6 @@ export const CloudPulseDashboardLanding = () => {
   const onDashboardChange = React.useCallback((dashboardObj: Dashboard) => {
     setDashboard(dashboardObj);
     setFilterValue({}); // clear the filter values on dashboard change
-
   }, []);
   const onTimeDurationChange = React.useCallback(
     (timeDurationObj: TimeDuration) => {
@@ -100,9 +99,8 @@ export const CloudPulseDashboardLanding = () => {
           dashboard.service_type
         )}
         manualRefreshTimeStamp={
-          filterValue['timestamp'] &&
-          typeof filterValue['timestamp'] === 'number'
-            ? filterValue['timestamp']
+          filterValue[REFRESH] && typeof filterValue[REFRESH] === 'number'
+            ? filterValue[REFRESH]
             : undefined
         }
         region={

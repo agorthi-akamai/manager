@@ -14,7 +14,7 @@ import type {
   CloudPulseServiceTypeFiltersOptions,
   QueryFunctionAndKey,
 } from '../Utils/models';
-import type { AclpConfig } from '@linode/api-v4';
+import type { FilterValue } from '@linode/api-v4';
 
 /**
  * These are the properties requires for CloudPulseCustomSelect Components
@@ -42,6 +42,11 @@ export interface CloudPulseCustomSelectProps {
   clearDependentSelections?: string[];
 
   /**
+   * Last selected values from user preferences
+   */
+  defaultValue?: FilterValue;
+
+  /**
    * This property says, whether or not to disable the selection component
    */
   disabled?: boolean;
@@ -60,7 +65,6 @@ export interface CloudPulseCustomSelectProps {
    * The type of the filter like string, number etc.,
    */
   filterType: string;
-
   /**
    * The callback function , that will be called on a filter change
    * @param filterKey - The filterKey of the component
@@ -72,6 +76,7 @@ export interface CloudPulseCustomSelectProps {
     savePref?: boolean,
     updatedPreferenceData?: {}
   ) => void;
+
   /**
    * If true, multiselect is allowed, otherwise false
    */
@@ -91,8 +96,6 @@ export interface CloudPulseCustomSelectProps {
    * The placeholder that needs to displayed
    */
   placeholder?: string;
-
-  preferences?: AclpConfig;
 
   /**
    * This property controls whether to save the preferences or not
@@ -117,6 +120,7 @@ export const CloudPulseCustomSelect = React.memo(
       apiResponseLabelField,
       apiV4QueryKey,
       clearDependentSelections,
+      defaultValue,
       disabled,
       filterKey,
       handleSelectionChange,
@@ -124,7 +128,6 @@ export const CloudPulseCustomSelect = React.memo(
       maxSelections,
       options,
       placeholder,
-      preferences,
       savePreferences,
       type,
     } = props;
@@ -151,15 +154,11 @@ export const CloudPulseCustomSelect = React.memo(
       if (!selectedResource) {
         setResource(
           getInitialDefaultSelections({
+            defaultValue,
             filterKey,
             handleSelectionChange,
             isMultiSelect: isMultiSelect ?? false,
-            options: options
-              ? options
-              : queriedResources
-              ? queriedResources
-              : [],
-            preferences,
+            options: options || queriedResources || [],
             savePreferences: savePreferences ?? false,
           })
         );
