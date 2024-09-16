@@ -68,6 +68,7 @@ export const CloudPulseResourcesSelect = React.memo(
         handleResourcesSelection(resource);
         setSelectedResources(resource);
       } else {
+        setSelectedResources([]);
         handleResourcesSelection([]);
       }
 
