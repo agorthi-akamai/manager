@@ -2,6 +2,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/ArrowDropDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/ArrowRight';
 import { Grid, Typography } from '@mui/material';
 import * as React from 'react';
+import deepEqual from 'fast-deep-equal';
 
 import InfoIcon from 'src/assets/icons/info.svg';
 import { Button } from 'src/components/Button/Button';
@@ -304,5 +305,6 @@ function compareProps(
   oldProps: CloudPulseDashboardFilterBuilderProps,
   newProps: CloudPulseDashboardFilterBuilderProps
 ) {
-  return oldProps.dashboard?.id === newProps.dashboard?.id;
+  return oldProps.dashboard?.id === newProps.dashboard?.id && 
+  deepEqual(oldProps.preferences , newProps.preferences);
 }
