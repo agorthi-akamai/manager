@@ -2,7 +2,6 @@ import { Box, Grid, Paper, Stack, Typography, useTheme } from '@mui/material';
 import { DateTime } from 'luxon';
 import React from 'react';
 
-import { Divider } from 'src/components/Divider';
 import { useFlags } from 'src/hooks/useFlags';
 import { useCloudPulseMetricsQuery } from 'src/queries/cloudpulse/metrics';
 import { useProfile } from 'src/queries/profile/profile';
@@ -275,12 +274,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
             justifyContent={{ sm: 'space-between' }}
             padding={1}
           >
-            <Typography
-              data-qa-widget={convertStringToCamelCasesWithSpaces(widget.label)}
-              fontSize={{ sm: '1.5rem', xs: '2rem' }}
-              marginLeft={1}
-              variant="h2"
-            >
+            <Typography marginLeft={1} variant="h2">
               {convertStringToCamelCasesWithSpaces(widget.label)}{' '}
               {!isLoading &&
                 `(${currentUnit}${unit.endsWith('ps') ? '/s' : ''})`}
@@ -293,9 +287,9 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
             >
               {availableMetrics?.scrape_interval && (
                 <CloudPulseIntervalSelect
-                  default_interval={widgetProp?.time_granularity}
+                  defaultInterval={widgetProp?.time_granularity}
                   onIntervalChange={handleIntervalChange}
-                  scrape_interval={availableMetrics.scrape_interval}
+                  scrapeInterval={availableMetrics.scrape_interval}
                 />
               )}
               {Boolean(

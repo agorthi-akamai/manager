@@ -14,7 +14,7 @@ export interface IntervalSelectProperties {
   /**
    * Default time granularity to be selected
    */
-  default_interval?: TimeGranularity | undefined;
+  defaultInterval?: TimeGranularity | undefined;
 
   /**
    * Function to be triggered on aggregate function changed from dropdown
@@ -24,7 +24,7 @@ export interface IntervalSelectProperties {
   /**
    * scrape intervalto filter out minimum time granularity
    */
-  scrape_interval: string;
+  scrapeInterval: string;
 }
 
 export const getInSeconds = (interval: string) => {
@@ -45,7 +45,7 @@ export const getInSeconds = (interval: string) => {
 };
 
 // Intervals must be in ascending order here
-export const all_interval_options: IntervalOptions[] = [
+export const allIntervalOptions: IntervalOptions[] = [
   {
     label: '1 min',
     unit: 'min',
@@ -75,7 +75,7 @@ const autoIntervalOption: IntervalOptions = {
 };
 
 export const getIntervalIndex = (scrapeIntervalValue: number) => {
-  return all_interval_options.findIndex(
+  return allIntervalOptions.findIndex(
     (interval) =>
       scrapeIntervalValue <=
       getInSeconds(String(interval.value) + interval.unit.slice(0, 1))
@@ -84,27 +84,27 @@ export const getIntervalIndex = (scrapeIntervalValue: number) => {
 
 export const CloudPulseIntervalSelect = React.memo(
   (props: IntervalSelectProperties) => {
-    const { default_interval, onIntervalChange, scrape_interval } = props;
-    const scrapeIntervalValue = getInSeconds(scrape_interval);
+    const { defaultInterval, onIntervalChange, scrapeInterval } = props;
+    const scrapeIntervalValue = getInSeconds(scrapeInterval);
 
     const firstIntervalIndex = getIntervalIndex(scrapeIntervalValue);
 
     // all intervals displayed if srape interval > highest available interval. Error handling done by api
-    const available_interval_options =
+    const availableIntervalOptions =
       firstIntervalIndex < 0
-        ? all_interval_options.slice()
-        : all_interval_options.slice(
+        ? allIntervalOptions.slice()
+        : allIntervalOptions.slice(
             firstIntervalIndex,
-            all_interval_options.length
+            allIntervalOptions.length
           );
 
     let default_value =
-      default_interval?.unit === 'Auto'
+      props.defaultInterval?.unit === 'Auto'
         ? autoIntervalOption
-        : available_interval_options.find(
+        : availableIntervalOptions.find(
             (obj) =>
-              obj.value === default_interval?.value &&
-              obj.unit === default_interval?.unit
+              obj.value === props.defaultInterval?.value &&
+              obj.unit === props.defaultInterval?.unit
           );
 
     if (!default_value) {
@@ -143,7 +143,7 @@ export const CloudPulseIntervalSelect = React.memo(
         fullWidth={false}
         label="Select an Interval"
         noMarginTop={true}
-        options={[autoIntervalOption, ...available_interval_options]}
+        options={[autoIntervalOption, ...availableIntervalOptions]}
         sx={{ width: { xs: '100%' } }}
         value={selectedInterval}
       />
