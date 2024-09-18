@@ -1,4 +1,4 @@
-import { useTheme } from '@mui/material/styles';
+import { useTheme } from '@mui/material';
 import * as React from 'react';
 
 import ZoomInMap from 'src/assets/icons/cloudpulse_zoomin.svg';

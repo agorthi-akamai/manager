@@ -1,13 +1,13 @@
-import { Box, Grid, Paper, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Grid, Stack, Typography } from '@mui/material';
 import { DateTime } from 'luxon';
 import React from 'react';
 
 import { useFlags } from 'src/hooks/useFlags';
 import { useCloudPulseMetricsQuery } from 'src/queries/cloudpulse/metrics';
 import { useProfile } from 'src/queries/profile/profile';
-import { themes } from 'src/utilities/theme';
 
 import {
+  StyledWidgetWrapper,
   generateGraphData,
   getCloudPulseMetricRequest,
 } from '../Utils/CloudPulseWidgetUtils';
@@ -260,29 +260,27 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
 
   const metricsApiCallError = error?.[0]?.reason;
   return (
-    <Grid height={'521px'} item lg={widget.size} xs={12}>
-      <Paper
-        sx={{
-          height: '513px',
-        }}
-      >
-        <Stack spacing={2}>
+    <Grid item lg={widget.size} xs={12}>
+      <Stack spacing={2}>
+        <StyledWidgetWrapper>
           <Stack
             alignItems={'center'}
             direction={{ sm: 'row' }}
             gap={{ sm: 0, xs: 2 }}
             justifyContent={{ sm: 'space-between' }}
+            marginBottom={1}
             padding={1}
           >
             <Typography marginLeft={1} variant="h2">
-              {convertStringToCamelCasesWithSpaces(widget.label)}{' '}
-              {!isLoading &&
-                `(${currentUnit}${unit.endsWith('ps') ? '/s' : ''})`}
+              {convertStringToCamelCasesWithSpaces(widget.label)} ({currentUnit}
+              {unit.endsWith('ps') ? '/s' : ''})
             </Typography>
             <Stack
               alignItems={'center'}
               direction={{ sm: 'row' }}
-              gap={{ md: 2, xs: 1 }}
+              gap={1}
+              maxHeight={'85px'}
+              overflow={'auto'}
               width={{ sm: 'inherit', xs: '100%' }}
             >
               {availableMetrics?.scrape_interval && (
@@ -328,13 +326,12 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
             formatTooltip={(value: number) => formatToolTip(value, unit)}
             gridSize={widget.size}
             loading={isLoading || metricsApiCallError === jweTokenExpiryError} // keep loading until we fetch the refresh token
-            // nativeLegend
             showToday={today}
             timezone={timezone}
             title={widget.label}
           />
-        </Stack>
-      </Paper>
+        </StyledWidgetWrapper>
+      </Stack>
     </Grid>
   );
 };
