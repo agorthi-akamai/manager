@@ -278,7 +278,7 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
             <Stack
               alignItems={'center'}
               direction={{ sm: 'row' }}
-              gap={1}
+              gap={2}
               maxHeight={'85px'}
               overflow={'auto'}
               width={{ sm: 'inherit', xs: '100%' }}
