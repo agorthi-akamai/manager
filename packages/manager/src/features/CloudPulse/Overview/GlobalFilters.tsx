@@ -95,14 +95,18 @@ export const GlobalFilters = React.memo((props: GlobalFilterProperties) => {
         >
           <Grid display={'flex'} item md={4} sm={5} xs={12}>
             <CloudPulseDashboardSelect
+              defaultValue={preferences?.dashboardId}
               handleDashboardChange={onDashboardChange}
+              savePreferences
             />
           </Grid>
           <Grid display="flex" gap={1} item md={4} sm={5} xs={12}>
             <CloudPulseTimeRangeSelect
+              defaultValue={preferences?.timeDuration}
               handleStatsChange={handleTimeRangeChange}
               hideLabel
               label="Select Time Range"
+              savePreferences
             />
             <IconButton
               sx={{
