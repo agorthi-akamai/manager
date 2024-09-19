@@ -1,6 +1,5 @@
 import { Grid, Typography } from '@mui/material';
 import * as React from 'react';
-import deepEqual from 'fast-deep-equal';
 
 import KeyboardArrowDownIcon from 'src/assets/icons/cloudpulse_arrow_down.svg';
 import KeyboardArrowRightIcon from 'src/assets/icons/cloudpulse_arrow_right.svg';
@@ -312,6 +311,5 @@ function compareProps(
   oldProps: CloudPulseDashboardFilterBuilderProps,
   newProps: CloudPulseDashboardFilterBuilderProps
 ) {
-  return oldProps.dashboard?.id === newProps.dashboard?.id && 
-  deepEqual(oldProps.preferences , newProps.preferences);
+  return oldProps.dashboard?.id === newProps.dashboard?.id;
 }
