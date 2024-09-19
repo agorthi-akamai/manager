@@ -100,7 +100,7 @@ export const CloudPulseDashboardWithFilters = React.memo(
 
     return (
       <>
-        <Paper>
+        <StyledPaper>
           <Grid
             justifyContent={{
               sm: 'flex-end',
@@ -113,8 +113,7 @@ export const CloudPulseDashboardWithFilters = React.memo(
             maxHeight={'120px'}
             mb={1}
             overflow={'auto'}
-            px={2}
-            py={1}
+            p={3}
             rowGap={2}
             xs={12}
           >
@@ -126,18 +125,14 @@ export const CloudPulseDashboardWithFilters = React.memo(
               />
             </Grid>
           </Grid>
-          <Divider />
           {isFilterBuilderNeeded && (
-            <>
-              <CloudPulseDashboardFilterBuilder
-                dashboard={dashboard}
-                emitFilterChange={onFilterChange}
-                isServiceAnalyticsIntegration={true}
-              />
-              <Divider />
-            </>
+            <CloudPulseDashboardFilterBuilder
+              dashboard={dashboard}
+              emitFilterChange={onFilterChange}
+              isServiceAnalyticsIntegration={true}
+            />
           )}
-        </Paper>
+        </StyledPaper>
         {isMandatoryFiltersSelected ? (
           <CloudPulseDashboard
             {...getDashboardProperties({
@@ -160,4 +155,11 @@ const StyledPlaceholder = styled(Placeholder, {
   label: 'StyledPlaceholder',
 })({
   flex: 'auto',
+});
+
+const StyledPaper = styled(
+  Paper,
+  {}
+)({
+  padding: 0,
 });
