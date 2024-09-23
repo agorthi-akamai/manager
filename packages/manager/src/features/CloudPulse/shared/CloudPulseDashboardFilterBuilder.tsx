@@ -10,6 +10,7 @@ import NullComponent from 'src/components/NullComponent';
 
 import RenderComponent from '../shared/CloudPulseComponentRenderer';
 import {
+  DASHBOARD_ID,
   REGION,
   RELATIVE_TIME_DURATION,
   RESOURCE_ID,
@@ -321,5 +322,9 @@ function compareProps(
   oldProps: CloudPulseDashboardFilterBuilderProps,
   newProps: CloudPulseDashboardFilterBuilderProps
 ) {
-  return oldProps.dashboard?.id === newProps.dashboard?.id;
+  return (
+    oldProps.dashboard?.id === newProps.dashboard?.id &&
+    oldProps.preferences?.[DASHBOARD_ID] ===
+      newProps.preferences?.[DASHBOARD_ID]
+  );
 }
