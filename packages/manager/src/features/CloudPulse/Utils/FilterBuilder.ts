@@ -146,6 +146,7 @@ export const getCustomSelectProperties = (
       filterKey,
       dashboard
     ),
+    dashboard,
     defaultValue: preferences?.[filterKey],
     disabled: checkIfWeNeedToDisableFilterByFilterKey(
       filterKey,
@@ -159,6 +160,7 @@ export const getCustomSelectProperties = (
     maxSelections,
     options,
     placeholder,
+    preferences,
     savePreferences: !isServiceAnalyticsIntegration,
     type: options
       ? CloudPulseSelectTypes.static
@@ -187,8 +189,7 @@ export const getTimeDurationProperties = (
 
   const timeDuration = preferences?.timeDuration;
   return {
-    defaultValue:
-      timeDuration !== undefined ? (timeDuration as string) : undefined,
+    defaultValue: timeDuration,
     handleStatsChange: handleTimeRangeChange,
     placeholder,
     savePreferences: !isServiceAnalyticsIntegration,

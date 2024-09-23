@@ -14,7 +14,7 @@ import type {
   CloudPulseServiceTypeFiltersOptions,
   QueryFunctionAndKey,
 } from '../Utils/models';
-import type { FilterValue } from '@linode/api-v4';
+import type { AclpConfig, Dashboard, FilterValue } from '@linode/api-v4';
 
 /**
  * These are the properties requires for CloudPulseCustomSelect Components
@@ -41,6 +41,8 @@ export interface CloudPulseCustomSelectProps {
    */
   clearDependentSelections?: string[];
 
+  dashboard: Dashboard;
+
   /**
    * Last selected values from user preferences
    */
@@ -60,11 +62,11 @@ export interface CloudPulseCustomSelectProps {
    * The filterKey that needs to be used
    */
   filterKey: string;
-
   /**
    * The type of the filter like string, number etc.,
    */
   filterType: string;
+
   /**
    * The callback function , that will be called on a filter change
    * @param filterKey - The filterKey of the component
@@ -74,7 +76,7 @@ export interface CloudPulseCustomSelectProps {
     filterKey: string,
     value: FilterValueType,
     savePref?: boolean,
-    updatedPreferenceData?: {}
+    updatedPreferenceData?: AclpConfig
   ) => void;
 
   /**
@@ -96,6 +98,8 @@ export interface CloudPulseCustomSelectProps {
    * The placeholder that needs to displayed
    */
   placeholder?: string;
+
+  preferences?: AclpConfig;
 
   /**
    * This property controls whether to save the preferences or not
@@ -120,6 +124,7 @@ export const CloudPulseCustomSelect = React.memo(
       apiResponseLabelField,
       apiV4QueryKey,
       clearDependentSelections,
+      dashboard,
       defaultValue,
       disabled,
       filterKey,
@@ -128,6 +133,7 @@ export const CloudPulseCustomSelect = React.memo(
       maxSelections,
       options,
       placeholder,
+      preferences,
       savePreferences,
       type,
     } = props;
@@ -159,6 +165,7 @@ export const CloudPulseCustomSelect = React.memo(
             handleSelectionChange,
             isMultiSelect: isMultiSelect ?? false,
             options: options || queriedResources || [],
+            preferences,
             savePreferences: savePreferences ?? false,
           })
         );

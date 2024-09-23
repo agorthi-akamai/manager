@@ -13,7 +13,7 @@ export interface CloudPulseResources {
 }
 
 export interface CloudPulseResourcesSelectProps {
-  defaultValue?: FilterValue;
+  defaultValue?: Partial<FilterValue>;
   disabled?: boolean;
   handleResourcesSelection: (
     resources: CloudPulseResources[],
@@ -50,9 +50,9 @@ export const CloudPulseResourcesSelect = React.memo(
       CloudPulseResources[]
     >();
 
-    const getResourcesList = (): CloudPulseResources[] => {
+    const getResourcesList = React.useMemo<CloudPulseResources[]>(() => {
       return resources && resources.length > 0 ? resources : [];
-    };
+    }, [resources]);
 
     // Once the data is loaded, set the state variable with value stored in preferences
     React.useEffect(() => {
@@ -61,18 +61,21 @@ export const CloudPulseResourcesSelect = React.memo(
           defaultValue && Array.isArray(defaultValue)
             ? defaultValue.map((resource) => String(resource))
             : [];
-        const resource = getResourcesList().filter((resource) =>
+        const resource = getResourcesList.filter((resource) =>
           defaultResources.includes(String(resource.id))
         );
 
         handleResourcesSelection(resource);
         setSelectedResources(resource);
       } else {
+        if (selectedResources) {
+          setSelectedResources([]);
+        }
         handleResourcesSelection([]);
       }
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [resources]);
+    }, [resources, region, xFilter, resourceType]);
 
     return (
       <Autocomplete
@@ -103,7 +106,7 @@ export const CloudPulseResourcesSelect = React.memo(
         label="Select Resources"
         limitTags={2}
         multiple
-        options={getResourcesList()}
+        options={getResourcesList}
         value={selectedResources ?? []}
       />
     );
@@ -119,6 +122,7 @@ function compareProps(
   const keysToCompare: (keyof CloudPulseResourcesSelectProps)[] = [
     'region',
     'resourceType',
+    'handleResourcesSelection',
   ];
 
   for (const key of keysToCompare) {

@@ -10,6 +10,7 @@ import NullComponent from 'src/components/NullComponent';
 
 import RenderComponent from '../shared/CloudPulseComponentRenderer';
 import {
+  DASHBOARD_ID,
   REGION,
   RELATIVE_TIME_DURATION,
   RESOURCE_ID,
@@ -48,6 +49,10 @@ export interface CloudPulseDashboardFilterBuilderProps {
    * this will handle the restrictions, if the parent of the component is going to be integrated in service analytics page
    */
   isServiceAnalyticsIntegration: boolean;
+
+  /**
+   * Last selected values from user preferences
+   */
   preferences?: AclpConfig;
 }
 
@@ -99,7 +104,7 @@ export const CloudPulseDashboardFilterBuilder = React.memo(
         filterKey: string,
         filterValue: FilterValueType,
         savePref: boolean = false,
-        updatedPreferenceData: {} = {}
+        updatedPreferenceData: AclpConfig = {}
       ) => {
         emitFilterChange(
           filterKey,
@@ -255,7 +260,13 @@ export const CloudPulseDashboardFilterBuilder = React.memo(
     }
 
     return (
-      <Grid container item m={3} xs={12} paddingBottom={isServiceAnalyticsIntegration ? 3 : 0}>
+      <Grid
+        container
+        item
+        m={3}
+        paddingBottom={isServiceAnalyticsIntegration ? 3 : 0}
+        xs={12}
+      >
         <Grid
           sx={{
             m: 0,
@@ -311,5 +322,9 @@ function compareProps(
   oldProps: CloudPulseDashboardFilterBuilderProps,
   newProps: CloudPulseDashboardFilterBuilderProps
 ) {
-  return oldProps.dashboard?.id === newProps.dashboard?.id;
+  return (
+    oldProps.dashboard?.id === newProps.dashboard?.id &&
+    oldProps.preferences?.[DASHBOARD_ID] ===
+      newProps.preferences?.[DASHBOARD_ID]
+  );
 }

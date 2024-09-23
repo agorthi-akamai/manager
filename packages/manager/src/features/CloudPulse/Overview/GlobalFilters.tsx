@@ -13,13 +13,15 @@ import { DASHBOARD_ID, REFRESH, TIME_DURATION } from '../Utils/constants';
 import { useAclpPreference } from '../Utils/UserPreference';
 
 import type { FilterValueType } from '../Dashboard/CloudPulseDashboardLanding';
-import type { Dashboard, TimeDuration } from '@linode/api-v4';
+import type { AclpConfig, Dashboard, TimeDuration } from '@linode/api-v4';
 
 export interface GlobalFilterProperties {
   handleAnyFilterChange(filterKey: string, filterValue: FilterValueType): void;
   handleDashboardChange(dashboard: Dashboard | undefined): void;
   handleTimeDurationChange(timeDuration: TimeDuration): void;
 }
+
+export interface FilterChangeProperties {}
 
 export const GlobalFilters = React.memo((props: GlobalFilterProperties) => {
   const {
@@ -35,6 +37,7 @@ export const GlobalFilters = React.memo((props: GlobalFilterProperties) => {
   const [selectedDashboard, setSelectedDashboard] = React.useState<
     Dashboard | undefined
   >();
+
   const handleTimeRangeChange = React.useCallback(
     (
       timerDuration: TimeDuration,
@@ -46,7 +49,7 @@ export const GlobalFilters = React.memo((props: GlobalFilterProperties) => {
       }
       handleTimeDurationChange(timerDuration);
     },
-    [updatePreferences]
+    []
   );
 
   const onDashboardChange = React.useCallback(
@@ -59,7 +62,7 @@ export const GlobalFilters = React.memo((props: GlobalFilterProperties) => {
       setSelectedDashboard(dashboard);
       handleDashboardChange(dashboard);
     },
-    [updatePreferences]
+    []
   );
 
   const emitFilterChange = React.useCallback(
@@ -67,14 +70,14 @@ export const GlobalFilters = React.memo((props: GlobalFilterProperties) => {
       filterKey: string,
       value: FilterValueType,
       savePref: boolean = false,
-      updatedPreferenceData: {} = {}
+      updatedPreferenceData: AclpConfig = {}
     ) => {
       if (savePref) {
         updatePreferences(updatedPreferenceData);
       }
       handleAnyFilterChange(filterKey, value);
     },
-    [updatePreferences]
+    []
   );
 
   const handleGlobalRefresh = React.useCallback(() => {

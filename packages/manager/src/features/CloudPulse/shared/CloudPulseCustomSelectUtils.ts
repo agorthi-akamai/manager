@@ -15,7 +15,7 @@ interface CloudPulseCustomSelectProps {
     filterKey: string,
     value: FilterValueType,
     savePref?: boolean,
-    updatedPreferenceData?: {}
+    updatedPreferenceData?: AclpConfig
   ) => void;
 
   /**
@@ -38,7 +38,6 @@ interface CloudPulseCustomSelectDefaultValueProps
    * Default selected value from the drop down
    */
   defaultValue?: FilterValue;
-
   /**
    * Indicates whether we need multiselect for the component or not
    */
@@ -90,6 +89,7 @@ export const getInitialDefaultSelections = (
     handleSelectionChange,
     isMultiSelect,
     options,
+    preferences,
     savePreferences,
   } = defaultSelectionProps;
 
@@ -106,7 +106,6 @@ export const getInitialDefaultSelections = (
     );
     return initialSelection;
   }
-
   const selectedValues = options.filter(({ id }) =>
     (Array.isArray(defaultValue) ? defaultValue : [defaultValue]).includes(
       String(id)
