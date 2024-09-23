@@ -1,8 +1,8 @@
-import { Grid, Typography } from '@mui/material';
+import { Grid, Typography, useTheme } from '@mui/material';
 import * as React from 'react';
 
-import KeyboardArrowDownIcon from 'src/assets/icons/cloudpulse_arrow_down.svg';
-import KeyboardArrowRightIcon from 'src/assets/icons/cloudpulse_arrow_right.svg';
+import KeyboardArrowDownIcon from 'src/assets/icons/arrow_down.svg';
+import KeyboardArrowRightIcon from 'src/assets/icons/arrow_right.svg';
 import InfoIcon from 'src/assets/icons/info.svg';
 import { Button } from 'src/components/Button/Button';
 import { ErrorState } from 'src/components/ErrorState/ErrorState';
@@ -70,6 +70,8 @@ export const CloudPulseDashboardFilterBuilder = React.memo(
     }>({});
 
     const [showFilter, setShowFilter] = React.useState<boolean>(true);
+
+    const theme = useTheme();
 
     const dependentFilterReference: React.MutableRefObject<{
       [key: string]: FilterValueType;
@@ -273,7 +275,7 @@ export const CloudPulseDashboardFilterBuilder = React.memo(
             p: 0,
           }}
           item
-          key={'toggleFilter'}
+          key="toggleFilter"
           xs={12}
         >
           <Button
@@ -294,10 +296,13 @@ export const CloudPulseDashboardFilterBuilder = React.memo(
               minHeight: 'auto',
               minWidth: 'auto',
               p: 0,
+              svg: {
+                color: theme.color.grey4,
+              },
             }}
             onClick={toggleShowFilter}
           >
-            <Typography variant={'h3'}>Filters</Typography>
+            <Typography variant="h3">Filters</Typography>
           </Button>
         </Grid>
         <Grid
