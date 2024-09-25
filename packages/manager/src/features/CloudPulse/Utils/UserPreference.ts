@@ -23,6 +23,11 @@ export const useAclpPreference = (): AclpPreferenceObject => {
 
   const preferenceRef = useRef(preferences?.aclpPreference ?? {});
 
+  // Update preferenceRef with the latest preferences when preferences change
+  if (preferences?.aclpPreference) {
+    preferenceRef.current = preferences.aclpPreference;
+  }
+
   /**
    *
    * @param data AclpConfig data to be updated in preferences
@@ -53,11 +58,11 @@ export const useAclpPreference = (): AclpPreferenceObject => {
    * @param data AclpWidget data for the label that is to be updated in preference
    */
   const updateWidgetPreference = (label: string, data: Partial<AclpWidget>) => {
-    const updatedPreferences = { ...preferenceRef.current };
-
-    if (!updatedPreferences.widgets) {
-      updatedPreferences.widgets = {};
-    }
+    // Synchronize preferenceRef with latest preferences
+    const updatedPreferences = {
+      ...preferenceRef.current,
+      widgets: { ...(preferenceRef.current.widgets ?? {}) },
+    };
 
     updatedPreferences.widgets[label] = {
       ...updatedPreferences.widgets[label],
@@ -65,10 +70,7 @@ export const useAclpPreference = (): AclpPreferenceObject => {
       ...data,
     };
 
-    preferenceRef.current = {
-      ...preferenceRef.current,
-      widgets: { ...updatedPreferences.widgets },
-    };
+    preferenceRef.current = updatedPreferences;
     updateFunction({ aclpPreference: updatedPreferences });
   };
 
