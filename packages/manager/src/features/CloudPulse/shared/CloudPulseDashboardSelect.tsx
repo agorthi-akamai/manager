@@ -117,7 +117,5 @@ export const CloudPulseDashboardSelect = React.memo(
         value={selectedDashboard ?? null} // Undefined is not allowed for uncontrolled component
       />
     );
-  },
-  (prevProps, newProps) =>
-    prevProps.handleDashboardChange === newProps.handleDashboardChange
+  }
 );
