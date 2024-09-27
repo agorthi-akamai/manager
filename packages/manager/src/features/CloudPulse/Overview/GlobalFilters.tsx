@@ -115,6 +115,7 @@ export const GlobalFilters = React.memo((props: GlobalFilterProperties) => {
               sx={{
                 marginBlockEnd: 'auto',
               }}
+              aria-label="Refresh Dashboard Metrics"
               disabled={!selectedDashboard}
               onClick={() => handleGlobalRefresh()}
               size="small"

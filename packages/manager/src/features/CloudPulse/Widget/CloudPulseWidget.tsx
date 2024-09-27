@@ -267,7 +267,10 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
   return (
     <Grid container item lg={widget.size} xs={12}>
       <Stack flexGrow={1} spacing={2}>
-        <Paper sx={{ flexGrow: 1 }}>
+        <Paper
+          data-qa-widget={convertStringToCamelCasesWithSpaces(widget.label)}
+          sx={{ flexGrow: 1 }}
+        >
           <Stack
             alignItems={'center'}
             direction={{ sm: 'row' }}
@@ -276,7 +279,13 @@ export const CloudPulseWidget = (props: CloudPulseWidgetProperties) => {
             marginBottom={1}
             padding={1}
           >
-            <Typography marginLeft={1} variant="h2">
+            <Typography
+              data-qa-widget-header={convertStringToCamelCasesWithSpaces(
+                widget.label
+              )}
+              marginLeft={1}
+              variant="h2"
+            >
               {convertStringToCamelCasesWithSpaces(widget.label)} ({currentUnit}
               {unit.endsWith('ps') ? '/s' : ''})
             </Typography>
