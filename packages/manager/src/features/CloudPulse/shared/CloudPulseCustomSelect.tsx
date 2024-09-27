@@ -233,6 +233,7 @@ export const CloudPulseCustomSelect = React.memo(
         textFieldProps={{
           hideLabel: true,
         }}
+        autoHighlight
         disabled={isAutoCompleteDisabled}
         errorText={staticErrorText}
         isOptionEqualToValue={(option, value) => option.label === value.label}
@@ -260,11 +261,6 @@ function compareProps(
     if (prevProps[key] !== nextProps[key]) {
       return false;
     }
-  }
-
-  // Deep comparison for options
-  if (!deepEqual(prevProps.options, nextProps.options)) {
-    return false;
   }
 
   // Ignore function props in comparison
