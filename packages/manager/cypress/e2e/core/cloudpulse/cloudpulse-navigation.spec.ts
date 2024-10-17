@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for Cloudpulse Navigation.
+ * @file Integration tests for CloudPulse navigation.
  */
 
 import { mockAppendFeatureFlags } from 'support/intercepts/feature-flags';
@@ -9,14 +9,14 @@ import { ui } from 'support/ui';
 
 const mockAccount = accountFactory.build();
 
-describe('Cloudpulse Navigation', () => {
+describe('CloudPulse  navigation', () => {
   beforeEach(() => {
     mockGetAccount(mockAccount).as('getAccount');
   });
 
   /*
-   * - Confirms that cloudpulse navigation item is shown when feature flag is enabled.
-   * - Confirms that clicking cloudpulse navigation item directs user to Cloudpulse landing page.
+   * - Confirms that Cloudpulse navigation item is shown when feature flag is enabled.
+   * - Confirms that clicking Cloudpulse navigation item directs user to Cloudpulse landing page.
    */
   it('can navigate to Cloudpulse landing page', () => {
     mockAppendFeatureFlags({
@@ -36,7 +36,7 @@ describe('Cloudpulse Navigation', () => {
   /*
    * - Confirms that Cloudpulse navigation item is not shown when feature flag is disabled.
    */
-  it('does not show cloudpulse navigation item when feature is disabled', () => {
+  it('does not show  Cloudpulse navigation item when feature is disabled', () => {
     mockAppendFeatureFlags({
       aclp: {
         beta: true,

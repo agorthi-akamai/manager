@@ -167,21 +167,21 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
 
     // Selecting a dashboard from the autocomplete input.
     ui.autocomplete
-      .findByLabel('Dashboard')
+      .findByLabel('Select a Dashboard')
       .should('be.visible')
       .type(`${dashboardName}{enter}`)
       .should('be.visible');
 
     // Select a time duration from the autocomplete input.
     ui.autocomplete
-      .findByLabel('Time Range')
+      .findByLabel('Select a Time Duration')
       .should('be.visible')
       .type(`${timeDurationToSelect}{enter}`)
       .should('be.visible');
 
     //Select a Engine from the autocomplete input.
     ui.autocomplete
-      .findByLabel('Engine')
+      .findByLabel('Select an Engine')
       .should('be.visible')
       .type(`${engine}{enter}`)
       .should('be.visible');
@@ -191,7 +191,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
 
     // Select a resource from the autocomplete input.
     ui.autocomplete
-      .findByLabel('DB Clusters')
+      .findByLabel('Select a Resource')
       .should('be.visible')
       .type(`${clusterName}{enter}`)
       .click();
@@ -199,7 +199,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
 
     //Select a Node from the autocomplete input.
     ui.autocomplete
-      .findByLabel('Node Type')
+      .findByLabel('Select a Node Type')
       .should('be.visible')
       .type(`${nodeType}{enter}`);
 
