@@ -311,7 +311,6 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
 
     cy.get('@changeEngine.all')
       .should('have.length', 4)
-      .should('have.length', 4)
       .each((xhr: unknown) => {
         const interception = xhr as Interception;
         const { body: requestPayload } = interception.request;
