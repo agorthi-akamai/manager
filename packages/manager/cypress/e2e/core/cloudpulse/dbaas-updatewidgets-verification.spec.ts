@@ -210,7 +210,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
 
     // Resource from the autocomplete input.
     ui.autocomplete
-      .findByLabel('DB Cluster')
+      .findByLabel('DB Clusters')
       .should('be.visible')
       .type(`${clusterName}{enter}`)
       .click();
@@ -302,7 +302,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
 
     // Resource from the autocomplete input.
     ui.autocomplete
-      .findByLabel('DB Cluster')
+      .findByLabel('DB Clusters')
       .should('be.visible')
       .type(`test2{enter}`)
       .click();

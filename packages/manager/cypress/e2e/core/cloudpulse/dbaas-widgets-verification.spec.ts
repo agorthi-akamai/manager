@@ -229,7 +229,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
 
     // Select a resource from the autocomplete input.
     ui.autocomplete
-      .findByLabel('DB Cluster')
+      .findByLabel('DB Clusters')
       .should('be.visible')
       .type(`${clusterName}{enter}`)
       .click();
@@ -597,7 +597,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
     ui.regionSelect.find().should('be.visible').and('have.value', region);
 
     // Check if the Resource filter is visible
-    ui.autocomplete.findByLabel('DB Cluster').should('be.visible');
+    ui.autocomplete.findByLabel('DB Clusters').should('be.visible');
 
     // Check if the Node Type filter is visible and has the correct value
     ui.autocomplete
@@ -672,7 +672,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
     ui.regionSelect.find().should('be.visible').and('have.value', region);
 
     // Check if the Resource filter is visible
-    ui.autocomplete.findByLabel('DB Cluster').should('be.visible');
+    ui.autocomplete.findByLabel('DB Clusters').should('be.visible');
 
     // Check if the Node Type filter is visible and has the correct value
     ui.autocomplete

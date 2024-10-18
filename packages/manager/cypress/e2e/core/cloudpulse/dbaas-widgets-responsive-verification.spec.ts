@@ -238,7 +238,7 @@ viewports.forEach(({ name, width, height }) => {
 
       // Resource from the autocomplete input.
       ui.autocomplete
-        .findByLabel('DB Cluster')
+        .findByLabel('DB Clusters')
         .scrollIntoView()
         .should('be.visible')
         .type(`${clusterName}{enter}`)
@@ -466,7 +466,7 @@ viewports.forEach(({ name, width, height }) => {
 
       // Check if the Resource filter is visible
       ui.autocomplete
-        .findByLabel('DB Cluster')
+        .findByLabel('DB Clusters')
         .scrollIntoView()
         .should('be.visible');
 
