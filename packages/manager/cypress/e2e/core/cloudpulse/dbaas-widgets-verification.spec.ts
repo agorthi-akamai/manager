@@ -337,7 +337,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
             });
 
             //validate the widget linegrah is present
-            cy.findByTestId('linegraph-wrapper').within(() => {
+            cy.findByTestId('areachart-wrapper').within(() => {
               const expectedWidgetValues = getWidgetLegendRowValuesFromResponse(
                 metricsAPIResponsePayload
               );
