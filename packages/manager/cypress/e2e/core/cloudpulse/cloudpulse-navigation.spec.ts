@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for CloudPulse navigation.
+ * @file Integration tests for CloudPulse Navigation.
  */
 
 import { mockAppendFeatureFlags } from 'support/intercepts/feature-flags';
@@ -18,7 +18,7 @@ describe('CloudPulse navigation', () => {
    * - Confirms that Cloudpulse navigation item is shown when feature flag is enabled.
    * - Confirms that clicking Cloudpulse navigation item directs user to Cloudpulse landing page.
    */
-  it('can navigate to Cloudpulse landing page', () => {
+  it('can navigate to Cloudpulse Landing page', () => {
     mockAppendFeatureFlags({
       aclp: {
         beta: true,

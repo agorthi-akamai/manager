@@ -31,13 +31,14 @@ import {
 import { mockGetRegions } from 'support/intercepts/regions';
 import { extendRegion } from 'support/util/regions';
 import { CloudPulseMetricsResponse, Database } from '@linode/api-v4';
-import { transformData } from 'src/features/CloudPulse/Utils/unitConversion';
-import { getMetrics } from 'src/utilities/statMetrics';
+import { generateGraphData } from 'src/features/CloudPulse/Utils/CloudPulseWidgetUtils';
 import { Interception } from 'cypress/types/net-stubbing';
 import { generateRandomMetricsData } from 'support/util/cloudpulse';
 import { mockGetDatabases } from 'support/intercepts/databases';
 import { UserPreferences } from '@linode/api-v4/src/profile';
 import { userPreferencesFactory } from 'src/factories/dashboards';
+import type { Flags } from 'src/featureFlags';
+import { formatToolTip } from 'src/features/CloudPulse/Utils/unitConversion';
 
 /**
  * This test ensures that widget titles are displayed correctly on the dashboard.
@@ -138,31 +139,58 @@ const userPreferences = userPreferencesFactory.build({
 } as Partial<UserPreferences>);
 
 /**
- * Verifies the presence and values of specific properties within the aclpPreference object
- * of the request payload. This function checks that the expected properties exist
- * and have the expected values, allowing for validation of user preferences in the application.
+ * Generates graph data from a given CloudPulse metrics response and 
+ * extracts average, last, and maximum metric values from the first 
+ * legend row. The values are rounded to two decimal places for 
+ * better readability.
  *
- * @param requestPayload - The payload received from the request, containing the aclpPreference object.
- * @param expectedValues - An object containing the expected values for properties to validate against the requestPayload.
- *    Expected properties may include:
- *    - dashboardId: The ID of the dashboard.
- *    - timeDuration: The selected time duration for metrics.
- *    - engine: The database engine used.
- *    - region: The selected region for the dashboard.
- *    - resources: An array of resource identifiers.
- *    -     node_type: nodeType.toLowerCase(),
- * The node type associated with the dashboard user.
+ * @param responsePayload - The metrics response object containing 
+ *                          the necessary data for graph generation.
+ * @param label - The label for the graph, used for display purposes.
+ * 
+ * @returns An object containing rounded values for average, last, 
+ *          and maximum metrics:
+ *          {
+ *            average: number,  // Rounded average metric value
+ *            last: number,     // Rounded last recorded metric value
+ *            max: number       // Rounded maximum metric value
+ *          }
  */
+
 const getWidgetLegendRowValuesFromResponse = (
-  responsePayload: CloudPulseMetricsResponse
+  responsePayload: CloudPulseMetricsResponse,
+  label: string,unit:string
 ) => {
-  const data = transformData(responsePayload.data.result[0].values, 'Bytes');
-  const { average, last, max } = getMetrics(data);
-  const roundedAverage = Math.round(average * 100) / 100;
-  const roundedLast = Math.round(last * 100) / 100;
-  const roundedMax = Math.round(max * 100) / 100;
+  // Generate graph data using the provided parameters
+  const graphData = generateGraphData({
+    flags: { enabled: true } as Partial<Flags>, 
+    label: label, 
+    metricsList: responsePayload, 
+    resources: [
+      {
+        id: '1', 
+        label: clusterName, 
+        region: 'us-ord',
+      },
+    ],
+    serviceType: serviceType, 
+    status: "success", 
+    unit: unit, 
+    widgetChartType: "area",
+    widgetColor: "red", 
+  });
+
+  // Destructure metrics data from the first legend row
+  const { average, last, max } = graphData.legendRowsData[0].data;
+
+  // Round the metrics values to two decimal places
+  const roundedAverage =formatToolTip(average,unit)
+  const roundedLast =formatToolTip(last,unit)
+  const roundedMax =formatToolTip(max,unit)
+  // Return the rounded values in an object
   return { average: roundedAverage, last: roundedLast, max: roundedMax };
 };
+
 
 const databaseMock: Database = databaseFactory.build({
   label: clusterName,
@@ -244,7 +272,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
       .type(`${nodeType}{enter}`);
 
     // Verify that the network call's request payload matches the expected structure and values
-    cy.get('@getMetrics.all')
+      cy.get('@getMetrics.all')
       .should('have.length', 4)
       .each((xhr: unknown) => {
         const interception = xhr as Interception;
@@ -257,8 +285,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
             `Unexpected metric name '${metric}' included in the outgoing refresh API request`
           );
         }
-
-        expect(metric).to.equal(metricData.name);
+       expect(metric).to.equal(metricData.name);
         expect(timeRange).to.have.property('unit', 'hr');
         expect(timeRange).to.have.property('value', 24);
         expect(interception.request.body.resource_ids).to.deep.equal([1]);
@@ -304,11 +331,9 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
             .should('be.visible')
             .click();
 
-          // Verify tooltip message for granularity selection
+           // Verify tooltip message for granularity selection
 
-          ui.tooltip
-            .findByText('Data aggregation interval')
-            .should('be.visible');
+            ui.tooltip.findByText('Data aggregation interval').should('be.visible');
 
           expectedGranularityArray.forEach((option) => {
             ui.autocompletePopper.findByTitle(option).should('exist');
@@ -337,10 +362,8 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
             });
 
             //validate the widget linegrah is present
-            cy.findByTestId('areachart-wrapper').within(() => {
-              const expectedWidgetValues = getWidgetLegendRowValuesFromResponse(
-                metricsAPIResponsePayload
-              );
+            cy.findByTestId('linegraph-wrapper').within(() => {
+              const expectedWidgetValues = getWidgetLegendRowValuesFromResponse( metricsAPIResponsePayload,testData.title,testData.unit );
               cy.findByText(`${testData.title} (${testData.unit})`).should(
                 'be.visible'
               );
@@ -388,7 +411,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
               .clear()
               .type(`${aggregationValue}{enter}`); //type expected granularity
 
-            // Verify tooltip message for aggregation selection
+              // Verify tooltip message for aggregation selection
 
             ui.tooltip.findByText('Aggregation function').should('be.visible');
 
@@ -405,7 +428,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
             //validate the widget linegrah is present
             cy.findByTestId('linegraph-wrapper').within(() => {
               const expectedWidgetValues = getWidgetLegendRowValuesFromResponse(
-                metricsAPIResponsePayload
+                metricsAPIResponsePayload,testData.title,testData.unit
               );
               cy.findByText(`${testData.title} (${testData.unit})`).should(
                 'be.visible'
@@ -447,9 +470,9 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
       .should('be.visible')
       .click();
 
-    // Verify tooltip message for Refresh action
+    // Verify tooltip message for Refresh action   
 
-    ui.tooltip.findByText('Refresh').should('be.visible');
+      ui.tooltip.findByText('Refresh').should('be.visible');
 
     // validate the API calls are going with intended payload
     cy.get('@refreshMetrics.all')
@@ -484,14 +507,14 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
             .should('be.enabled')
             .click();
 
-          // Verify tooltip message for Zoom-in
+      // Verify tooltip message for Zoom-in 
 
-          ui.tooltip.findByText('Maximize').should('be.visible');
+       ui.tooltip.findByText('Maximize').should('be.visible');  
 
           cy.get('@widget').should('be.visible');
           cy.findByTestId('linegraph-wrapper').within(() => {
             const expectedWidgetValues = getWidgetLegendRowValuesFromResponse(
-              metricsAPIResponsePayload
+              metricsAPIResponsePayload,testData.title,testData.unit
             );
             cy.findByText(`${testData.title} (${testData.unit})`).should(
               'be.visible'
@@ -526,14 +549,14 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
             .scrollIntoView()
             .click({ force: true });
 
-          // Verify tooltip message for Zoom-out
+      // Verify tooltip message for Zoom-out
 
-          ui.tooltip.findByText('Minimize').should('be.visible');
+       ui.tooltip.findByText('Minimize').should('be.visible');  
 
           cy.get('@widget').should('be.visible');
           cy.findByTestId('linegraph-wrapper').within(() => {
             const expectedWidgetValues = getWidgetLegendRowValuesFromResponse(
-              metricsAPIResponsePayload
+              metricsAPIResponsePayload,testData.title,testData.unit
             );
             cy.findByText(`${testData.title} (${testData.unit})`).should(
               'be.visible'
