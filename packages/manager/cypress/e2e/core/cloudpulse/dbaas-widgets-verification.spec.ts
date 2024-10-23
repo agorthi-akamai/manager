@@ -137,8 +137,6 @@ const userPreferences = userPreferencesFactory.build({
   },
 } as Partial<UserPreferences>);
 
-
-
 /**
  * `verifyWidgetValues` processes and verifies the metric values of a widget from the provided response payload.
  *
@@ -161,7 +159,6 @@ const getWidgetLegendRowValuesFromResponse = (
   const roundedMax = Math.round(max * 100) / 100;
   return { average: roundedAverage, last: roundedLast, max: roundedMax };
 };
-
 
 const databaseMock: Database = databaseFactory.build({
   label: clusterName,
@@ -243,7 +240,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
       .type(`${nodeType}{enter}`);
 
     // Verify that the network call's request payload matches the expected structure and values
-      cy.get('@getMetrics.all')
+    cy.get('@getMetrics.all')
       .should('have.length', 4)
       .each((xhr: unknown) => {
         const interception = xhr as Interception;
@@ -256,7 +253,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
             `Unexpected metric name '${metric}' included in the outgoing refresh API request`
           );
         }
-       expect(metric).to.equal(metricData.name);
+        expect(metric).to.equal(metricData.name);
         expect(timeRange).to.have.property('unit', 'hr');
         expect(timeRange).to.have.property('value', 24);
         expect(interception.request.body.resource_ids).to.deep.equal([1]);
@@ -302,9 +299,11 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
             .should('be.visible')
             .click();
 
-           // Verify tooltip message for granularity selection
+          // Verify tooltip message for granularity selection
 
-            ui.tooltip.findByText('Data aggregation interval').should('be.visible');
+          ui.tooltip
+            .findByText('Data aggregation interval')
+            .should('be.visible');
 
           expectedGranularityArray.forEach((option) => {
             ui.autocompletePopper.findByTitle(option).should('exist');
@@ -334,7 +333,9 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
 
             //validate the widget linegrah is present
             cy.findByTestId('linegraph-wrapper').within(() => {
-              const expectedWidgetValues = getWidgetLegendRowValuesFromResponse( metricsAPIResponsePayload );
+              const expectedWidgetValues = getWidgetLegendRowValuesFromResponse(
+                metricsAPIResponsePayload
+              );
               cy.findByText(`${testData.title} (${testData.unit})`).should(
                 'be.visible'
               );
@@ -382,7 +383,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
               .clear()
               .type(`${aggregationValue}{enter}`); //type expected granularity
 
-              // Verify tooltip message for aggregation selection
+            // Verify tooltip message for aggregation selection
 
             ui.tooltip.findByText('Aggregation function').should('be.visible');
 
@@ -441,9 +442,9 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
       .should('be.visible')
       .click();
 
-    // Verify tooltip message for Refresh action   
+    // Verify tooltip message for Refresh action
 
-      ui.tooltip.findByText('Refresh').should('be.visible');
+    ui.tooltip.findByText('Refresh').should('be.visible');
 
     // validate the API calls are going with intended payload
     cy.get('@refreshMetrics.all')
@@ -478,9 +479,9 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
             .should('be.enabled')
             .click();
 
-      // Verify tooltip message for Zoom-in 
+          // Verify tooltip message for Zoom-in
 
-       ui.tooltip.findByText('Maximize').should('be.visible');  
+          ui.tooltip.findByText('Maximize').should('be.visible');
 
           cy.get('@widget').should('be.visible');
           cy.findByTestId('linegraph-wrapper').within(() => {
@@ -520,9 +521,9 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
             .scrollIntoView()
             .click({ force: true });
 
-      // Verify tooltip message for Zoom-out
+          // Verify tooltip message for Zoom-out
 
-       ui.tooltip.findByText('Minimize').should('be.visible');  
+          ui.tooltip.findByText('Minimize').should('be.visible');
 
           cy.get('@widget').should('be.visible');
           cy.findByTestId('linegraph-wrapper').within(() => {

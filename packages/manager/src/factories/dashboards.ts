@@ -66,8 +66,8 @@ export const dashboardMetricFactory = Factory.Sync.makeFactory<AvailableMetrics>
   }
 );
 
-export const cloudPulseMetricsResponseDataFactory = Factory.Sync.makeFactory<CloudPulseMetricsResponseData>(
-  {
+export const cloudPulseMetricsResponseDataFactory =
+  Factory.Sync.makeFactory<CloudPulseMetricsResponseData>({
     result: [
       {
         metric: {},
