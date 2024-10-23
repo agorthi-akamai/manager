@@ -1,5 +1,5 @@
 /**
- * @file Integration Tests for CloudPulse Dbass Dashboard.
+ * @file Responsive Tests for CloudPulse Dbass Dashboard.
  */
 import { mockAppendFeatureFlags } from 'support/intercepts/feature-flags';
 import {
@@ -215,6 +215,7 @@ viewports.forEach(({ name, width, height }) => {
       // Selecting a dashboard from the autocomplete input.
       ui.autocomplete
         .findByLabel('Dashboard')
+        .scrollIntoView()
         .should('be.visible')
         .type(`${dashboardName}{enter}`)
         .should('be.visible');
@@ -226,9 +227,9 @@ viewports.forEach(({ name, width, height }) => {
         .type(`${timeDurationToSelect}{enter}`)
         .should('be.visible');
 
-      //Select a Engine from the autocomplete input.
+      //Select a Database Engine from the autocomplete input.
       ui.autocomplete
-        .findByLabel('Engine')
+        .findByLabel('Database Engine')
         .should('be.visible')
         .type(`${engine}{enter}`)
         .should('be.visible');
@@ -238,7 +239,7 @@ viewports.forEach(({ name, width, height }) => {
 
       // Resource from the autocomplete input.
       ui.autocomplete
-        .findByLabel('DB Clusters')
+        .findByLabel('Database Clusters')
         .scrollIntoView()
         .should('be.visible')
         .type(`${clusterName}{enter}`)
@@ -250,6 +251,7 @@ viewports.forEach(({ name, width, height }) => {
       //Select a Node from the autocomplete input.
       ui.autocomplete
         .findByLabel('Node Type')
+        .scrollIntoView()
         .scrollIntoView()
         .should('be.visible')
         .type(`${nodeType}{enter}`);
@@ -456,7 +458,7 @@ viewports.forEach(({ name, width, height }) => {
 
       // Check if the Engine filter is visible and has the correct value
       ui.autocomplete
-        .findByLabel('Engine')
+        .findByLabel('Database Engine')
         .scrollIntoView()
         .should('be.visible')
         .and('have.value', engine);
@@ -466,7 +468,7 @@ viewports.forEach(({ name, width, height }) => {
 
       // Check if the Resource filter is visible
       ui.autocomplete
-        .findByLabel('DB Clusters')
+        .findByLabel('Database Clusters')
         .scrollIntoView()
         .should('be.visible');
 

@@ -1,5 +1,5 @@
 /**
- * @file Integration Tests for CloudPulse Dbass Dashboard.
+ * @file Update Tests for CloudPulse Dbass Dashboard.
  */
 import { mockAppendFeatureFlags } from 'support/intercepts/feature-flags';
 import {
@@ -159,7 +159,7 @@ const metricsAPIResponsePayload = cloudPulseMetricsResponseFactory.build({
   data: generateRandomMetricsData(timeDurationToSelect, '5 min'),
 });
 
-describe('Integration Tests for DBaaS Dashboard ', () => {
+describe('Update Tests for DBaaS Dashboard ', () => {
   beforeEach(() => {
     mockAppendFeatureFlags({
       aclp: { beta: true, enabled: true },
@@ -198,9 +198,9 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
       .type(`${timeDurationToSelect}{enter}`)
       .should('be.visible');
 
-    //Select a Engine from the autocomplete input.
+    //Select a Database Engine from the autocomplete input.
     ui.autocomplete
-      .findByLabel('Engine')
+      .findByLabel('Database Engine')
       .should('be.visible')
       .type(`${engine}{enter}`)
       .should('be.visible');
@@ -210,7 +210,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
 
     // Resource from the autocomplete input.
     ui.autocomplete
-      .findByLabel('DB Clusters')
+      .findByLabel('Database Clusters')
       .should('be.visible')
       .type(`${clusterName}{enter}`)
       .click();
@@ -295,14 +295,14 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
     ).as('changeEngine');
 
     ui.autocomplete
-      .findByLabel('Engine')
+      .findByLabel('Database Engine')
       .should('be.visible')
       .type(`PostgreSQL{enter}`)
       .should('be.visible');
 
     // Resource from the autocomplete input.
     ui.autocomplete
-      .findByLabel('DB Clusters')
+      .findByLabel('Database Clusters')
       .should('be.visible')
       .type(`test2{enter}`)
       .click();

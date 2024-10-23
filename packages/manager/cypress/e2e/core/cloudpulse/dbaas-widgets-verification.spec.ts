@@ -31,14 +31,13 @@ import {
 import { mockGetRegions } from 'support/intercepts/regions';
 import { extendRegion } from 'support/util/regions';
 import { CloudPulseMetricsResponse, Database } from '@linode/api-v4';
-import { generateGraphData } from 'src/features/CloudPulse/Utils/CloudPulseWidgetUtils';
 import { Interception } from 'cypress/types/net-stubbing';
 import { generateRandomMetricsData } from 'support/util/cloudpulse';
 import { mockGetDatabases } from 'support/intercepts/databases';
 import { UserPreferences } from '@linode/api-v4/src/profile';
 import { userPreferencesFactory } from 'src/factories/dashboards';
-import type { Flags } from 'src/featureFlags';
-import { formatToolTip } from 'src/features/CloudPulse/Utils/unitConversion';
+import { transformData } from 'src/features/CloudPulse/Utils/unitConversion';
+import { getMetrics } from 'src/utilities/statMetrics';
 
 /**
  * This test ensures that widget titles are displayed correctly on the dashboard.
@@ -138,56 +137,28 @@ const userPreferences = userPreferencesFactory.build({
   },
 } as Partial<UserPreferences>);
 
+
+
 /**
- * Generates graph data from a given CloudPulse metrics response and 
- * extracts average, last, and maximum metric values from the first 
- * legend row. The values are rounded to two decimal places for 
- * better readability.
+ * `verifyWidgetValues` processes and verifies the metric values of a widget from the provided response payload.
  *
- * @param responsePayload - The metrics response object containing 
- *                          the necessary data for graph generation.
- * @param label - The label for the graph, used for display purposes.
- * 
- * @returns An object containing rounded values for average, last, 
- *          and maximum metrics:
- *          {
- *            average: number,  // Rounded average metric value
- *            last: number,     // Rounded last recorded metric value
- *            max: number       // Rounded maximum metric value
- *          }
+ * This method performs the following steps:
+ * 1. Transforms the raw data from the response payload into a more manageable format using `transformData`.
+ * 2. Extracts key metrics (average, last, and max) from the transformed data using `getMetrics`.
+ * 3. Rounds these metrics to two decimal places for accuracy.
+ * 4. Returns an object containing the rounded average, last, and max values for further verification or comparison.
+ *
+ * @param {CloudPulseMetricsResponse} responsePayload - The response payload containing metric data for a widget.
+ * @returns {Object} An object with the rounded average, last, and max metric values.
  */
-
 const getWidgetLegendRowValuesFromResponse = (
-  responsePayload: CloudPulseMetricsResponse,
-  label: string,unit:string
+  responsePayload: CloudPulseMetricsResponse
 ) => {
-  // Generate graph data using the provided parameters
-  const graphData = generateGraphData({
-    flags: { enabled: true } as Partial<Flags>, 
-    label: label, 
-    metricsList: responsePayload, 
-    resources: [
-      {
-        id: '1', 
-        label: clusterName, 
-        region: 'us-ord',
-      },
-    ],
-    serviceType: serviceType, 
-    status: "success", 
-    unit: unit, 
-    widgetChartType: "area",
-    widgetColor: "red", 
-  });
-
-  // Destructure metrics data from the first legend row
-  const { average, last, max } = graphData.legendRowsData[0].data;
-
-  // Round the metrics values to two decimal places
-  const roundedAverage =formatToolTip(average,unit)
-  const roundedLast =formatToolTip(last,unit)
-  const roundedMax =formatToolTip(max,unit)
-  // Return the rounded values in an object
+  const data = transformData(responsePayload.data.result[0].values, 'Bytes');
+  const { average, last, max } = getMetrics(data);
+  const roundedAverage = Math.round(average * 100) / 100;
+  const roundedLast = Math.round(last * 100) / 100;
+  const roundedMax = Math.round(max * 100) / 100;
   return { average: roundedAverage, last: roundedLast, max: roundedMax };
 };
 
@@ -247,7 +218,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
 
     //Select a Engine from the autocomplete input.
     ui.autocomplete
-      .findByLabel('Engine')
+      .findByLabel('Database Engine')
       .should('be.visible')
       .type(`${engine}{enter}`)
       .should('be.visible');
@@ -257,7 +228,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
 
     // Select a resource from the autocomplete input.
     ui.autocomplete
-      .findByLabel('DB Clusters')
+      .findByLabel('Database Clusters')
       .should('be.visible')
       .type(`${clusterName}{enter}`)
       .click();
@@ -363,7 +334,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
 
             //validate the widget linegrah is present
             cy.findByTestId('linegraph-wrapper').within(() => {
-              const expectedWidgetValues = getWidgetLegendRowValuesFromResponse( metricsAPIResponsePayload,testData.title,testData.unit );
+              const expectedWidgetValues = getWidgetLegendRowValuesFromResponse( metricsAPIResponsePayload );
               cy.findByText(`${testData.title} (${testData.unit})`).should(
                 'be.visible'
               );
@@ -428,7 +399,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
             //validate the widget linegrah is present
             cy.findByTestId('linegraph-wrapper').within(() => {
               const expectedWidgetValues = getWidgetLegendRowValuesFromResponse(
-                metricsAPIResponsePayload,testData.title,testData.unit
+                metricsAPIResponsePayload
               );
               cy.findByText(`${testData.title} (${testData.unit})`).should(
                 'be.visible'
@@ -514,7 +485,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
           cy.get('@widget').should('be.visible');
           cy.findByTestId('linegraph-wrapper').within(() => {
             const expectedWidgetValues = getWidgetLegendRowValuesFromResponse(
-              metricsAPIResponsePayload,testData.title,testData.unit
+              metricsAPIResponsePayload
             );
             cy.findByText(`${testData.title} (${testData.unit})`).should(
               'be.visible'
@@ -556,7 +527,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
           cy.get('@widget').should('be.visible');
           cy.findByTestId('linegraph-wrapper').within(() => {
             const expectedWidgetValues = getWidgetLegendRowValuesFromResponse(
-              metricsAPIResponsePayload,testData.title,testData.unit
+              metricsAPIResponsePayload
             );
             cy.findByText(`${testData.title} (${testData.unit})`).should(
               'be.visible'
@@ -612,7 +583,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
 
     // Check if the Engine filter is visible and has the correct value
     ui.autocomplete
-      .findByLabel('Engine')
+      .findByLabel('Database Engine')
       .should('be.visible')
       .and('have.value', engine);
 
@@ -620,7 +591,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
     ui.regionSelect.find().should('be.visible').and('have.value', region);
 
     // Check if the Resource filter is visible
-    ui.autocomplete.findByLabel('DB Clusters').should('be.visible');
+    ui.autocomplete.findByLabel('Database Clusters').should('be.visible');
 
     // Check if the Node Type filter is visible and has the correct value
     ui.autocomplete
@@ -685,9 +656,9 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
       .should('be.visible')
       .and('have.value', timeDurationToSelect);
 
-    // Check if the Engine filter is visible and has the correct value
+    // Check if the Database Engine filter is visible and has the correct value
     ui.autocomplete
-      .findByLabel('Engine')
+      .findByLabel('Database Engine')
       .should('be.visible')
       .and('have.value', engine);
 
@@ -695,7 +666,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
     ui.regionSelect.find().should('be.visible').and('have.value', region);
 
     // Check if the Resource filter is visible
-    ui.autocomplete.findByLabel('DB Clusters').should('be.visible');
+    ui.autocomplete.findByLabel('Database Clusters').should('be.visible');
 
     // Check if the Node Type filter is visible and has the correct value
     ui.autocomplete

@@ -1,5 +1,5 @@
 /**
- * @file Integration Tests for contextualview of Dbass Dashboard.
+ * @file Integration Tests for Contextual of Dbass Dashboard.
  */
 import { mockAppendFeatureFlags } from 'support/intercepts/feature-flags';
 import {
@@ -141,7 +141,7 @@ const mockRegion = extendRegion(
   })
 );
 
-describe('Integration Tests for DBaaS Dashboard ', () => {
+describe('Contextual View of DBaaS Dashboard ', () => {
   beforeEach(() => {
     mockAppendFeatureFlags({
       aclp: { beta: true, enabled: true },
