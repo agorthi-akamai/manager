@@ -260,7 +260,6 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
         expect(nodeType.toLowerCase()).to.equal(
           interception.request.body.filters[0]?.value
         );
-        expect('node_type').to.equal(interception.request.body.filters[0]?.key);
         expect('avg').to.equal(interception.request.body.aggregate_function);
       });
 

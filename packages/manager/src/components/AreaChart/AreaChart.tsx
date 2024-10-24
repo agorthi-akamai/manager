@@ -196,7 +196,7 @@ export const AreaChart = (props: AreaChartProps) => {
   const accessibleDataKeys = areas.map((area) => area.dataKey);
 
   return (
-    <React.Fragment data-testid="areachart-wrapper">
+    <>
       <ResponsiveContainer height={height} width="100%">
         <_AreaChart aria-label={ariaLabel} data={data}>
           <CartesianGrid
@@ -272,7 +272,7 @@ export const AreaChart = (props: AreaChartProps) => {
         timezone={timezone}
         unit={unit}
       />
-    </React.Fragment>
+    </>
   );
 };
 

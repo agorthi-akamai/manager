@@ -73,8 +73,6 @@ export const MetricsDisplay = ({ hiddenRows, rows }: Props) => {
                 return (
                   <TableCell
                     data-qa-body-cell
-                    data-qa-graph-column-title={rowHeaders[idx]}
-                    data-qa-graph-row-title={section}
                     key={idx}
                     parentColumn={rowHeaders[idx]}
                   >
