@@ -35,6 +35,9 @@ describe('volume clone flow', () => {
   before(() => {
     cleanUp('volumes');
   });
+  beforeEach(() => {
+    cy.tag('method:e2e');
+  });
 
   /*
    * - Clicks "Clone" action menu item for volume, enters new label, and submits form.
@@ -48,7 +51,7 @@ describe('volume clone flow', () => {
 
     const cloneVolumeLabel = randomLabel();
 
-    cy.defer(createActiveVolume(volumeRequest), 'creating volume').then(
+    cy.defer(() => createActiveVolume(volumeRequest), 'creating volume').then(
       (volume: Volume) => {
         interceptCloneVolume(volume.id).as('cloneVolume');
         cy.visitWithLogin('/volumes', {

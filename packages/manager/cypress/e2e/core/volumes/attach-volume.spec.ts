@@ -1,4 +1,3 @@
-import { createLinode } from '@linode/api-v4/lib/linodes';
 import { createVolume } from '@linode/api-v4/lib/volumes';
 import { Linode, Volume } from '@linode/api-v4';
 import { createLinodeRequestFactory } from 'src/factories/linodes';
@@ -13,6 +12,7 @@ import { ui } from 'support/ui';
 import { chooseRegion } from 'support/util/regions';
 import { interceptGetLinodeConfigs } from 'support/intercepts/configs';
 import { cleanUp } from 'support/util/cleanup';
+import { createTestLinode } from 'support/util/linodes';
 
 // Local storage override to force volume table to list up to 100 items.
 // This is a workaround while we wait to get stuck volumes removed.
@@ -48,7 +48,10 @@ const pageSizeOverride = {
 authenticate();
 describe('volume attach and detach flows', () => {
   before(() => {
-    cleanUp('volumes');
+    cleanUp(['volumes', 'linodes']);
+  });
+  beforeEach(() => {
+    cy.tag('method:e2e');
   });
 
   /*
@@ -66,14 +69,15 @@ describe('volume attach and detach flows', () => {
       label: randomLabel(),
       region: commonRegion.id,
       root_pass: randomString(32),
+      booted: false,
     });
 
     const entityPromise = Promise.all([
       createVolume(volumeRequest),
-      createLinode(linodeRequest),
+      createTestLinode(linodeRequest),
     ]);
 
-    cy.defer(entityPromise, 'creating Volume and Linode').then(
+    cy.defer(() => entityPromise, 'creating Volume and Linode').then(
       ([volume, linode]: [Volume, Linode]) => {
         interceptAttachVolume(volume.id).as('attachVolume');
         interceptGetLinodeConfigs(linode.id).as('getLinodeConfigs');
@@ -113,7 +117,9 @@ describe('volume attach and detach flows', () => {
 
         // Confirm that volume has been attached to Linode.
         cy.wait('@attachVolume').its('response.statusCode').should('eq', 200);
-        ui.toast.assertMessage(`Volume ${volume.label} successfully attached.`);
+        ui.toast.assertMessage(
+          `Volume ${volume.label} has been attached to Linode ${linode.label}.`
+        );
         cy.findByText(volume.label)
           .should('be.visible')
           .closest('tr')

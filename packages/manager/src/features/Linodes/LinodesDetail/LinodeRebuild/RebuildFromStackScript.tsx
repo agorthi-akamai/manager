@@ -1,10 +1,8 @@
 import { rebuildLinode } from '@linode/api-v4/lib/linodes';
-import { UserDefinedField } from '@linode/api-v4/lib/stackscripts';
-import { APIError } from '@linode/api-v4/lib/types';
 import { RebuildLinodeFromStackScriptSchema } from '@linode/validation/lib/linodes.schema';
 import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
-import { Formik, FormikProps } from 'formik';
+import { Formik } from 'formik';
 import { useSnackbar } from 'notistack';
 import { isEmpty } from 'ramda';
 import * as React from 'react';
@@ -13,9 +11,7 @@ import { AccessPanel } from 'src/components/AccessPanel/AccessPanel';
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
 import { ImageSelect } from 'src/components/ImageSelect/ImageSelect';
 import { TypeToConfirm } from 'src/components/TypeToConfirm/TypeToConfirm';
-import { ImageEmptyState } from 'src/features/Linodes/LinodesCreate/TabbedContent/ImageEmptyState';
 import SelectStackScriptPanel from 'src/features/StackScripts/SelectStackScriptPanel/SelectStackScriptPanel';
-import StackScriptDialog from 'src/features/StackScripts/StackScriptDialog';
 import {
   getCommunityStackscripts,
   getMineAndAccountStackScripts,
@@ -25,7 +21,7 @@ import { useStackScript } from 'src/hooks/useStackScript';
 import { listToItemsByID } from 'src/queries/base';
 import { useEventsPollingActions } from 'src/queries/events/events';
 import { useAllImagesQuery } from 'src/queries/images';
-import { usePreferences } from 'src/queries/preferences';
+import { usePreferences } from 'src/queries/profile/preferences';
 import { filterImagesByType } from 'src/store/image/image.helpers';
 import { getAPIErrorOrDefault } from 'src/utilities/errorUtils';
 import {
@@ -35,18 +31,31 @@ import {
 import { scrollErrorIntoView } from 'src/utilities/scrollErrorIntoView';
 import { extendValidationSchema } from 'src/utilities/validatePassword';
 
+import { StackScriptDetailsDialog } from '../../LinodeCreate/Tabs/StackScripts/StackScriptDetailsDialog';
+import { ImageEmptyState } from './ImageEmptyState';
+
+import type { UserDefinedField } from '@linode/api-v4/lib/stackscripts';
+import type { APIError } from '@linode/api-v4/lib/types';
+import type { FormikProps } from 'formik';
+
 interface Props {
   disabled: boolean;
+  diskEncryptionEnabled: boolean;
   handleRebuildError: (status: string) => void;
+  isLKELinode: boolean;
   linodeId: number;
+  linodeIsInDistributedRegion: boolean;
   linodeLabel?: string;
+  linodeRegion?: string;
   onClose: () => void;
   passwordHelperText: string;
+  toggleDiskEncryptionEnabled: () => void;
   type: 'account' | 'community';
 }
 
 interface RebuildFromStackScriptForm {
   authorized_users: string[];
+  disk_encryption: string | undefined;
   image: string;
   root_pass: string;
   stackscript_id: string;
@@ -54,6 +63,7 @@ interface RebuildFromStackScriptForm {
 
 const initialValues: RebuildFromStackScriptForm = {
   authorized_users: [],
+  disk_encryption: 'enabled',
   image: '',
   root_pass: '',
   stackscript_id: '',
@@ -61,11 +71,16 @@ const initialValues: RebuildFromStackScriptForm = {
 
 export const RebuildFromStackScript = (props: Props) => {
   const {
+    diskEncryptionEnabled,
     handleRebuildError,
+    isLKELinode,
     linodeId,
+    linodeIsInDistributedRegion,
     linodeLabel,
+    linodeRegion,
     onClose,
     passwordHelperText,
+    toggleDiskEncryptionEnabled,
   } = props;
 
   const {
@@ -103,6 +118,15 @@ export const RebuildFromStackScript = (props: Props) => {
     Object.keys(_imagesData).map((eachKey) => _imagesData[eachKey])
   );
 
+  const [
+    selectedStackScriptIdForDetailsDialog,
+    setSelectedStackScriptIdForDetailsDialog,
+  ] = React.useState<number | undefined>();
+
+  const onOpenStackScriptDetailsDialog = (stackscriptId: number) => {
+    setSelectedStackScriptIdForDetailsDialog(stackscriptId);
+  };
+
   // In this component, most errors are handled by Formik. This is not
   // possible with UDFs, since they are dynamic. Their errors need to
   // be handled separately.
@@ -120,8 +144,18 @@ export const RebuildFromStackScript = (props: Props) => {
   ) => {
     setSubmitting(true);
 
+    // if the linode is part of an LKE cluster or is in a Distributed region, the disk_encryption value
+    // cannot be changed, so set it to undefined and the API will disregard it
+    const diskEncryptionPayloadValue =
+      isLKELinode || linodeIsInDistributedRegion
+        ? undefined
+        : diskEncryptionEnabled
+        ? 'enabled'
+        : 'disabled';
+
     rebuildLinode(linodeId, {
       authorized_users,
+      disk_encryption: diskEncryptionPayloadValue,
       image,
       root_pass,
       stackscript_data: ss.udf_data,
@@ -266,6 +300,7 @@ export const RebuildFromStackScript = (props: Props) => {
                 error={errors.stackscript_id}
                 header="Select StackScript"
                 onSelect={handleSelect}
+                openStackScriptDetailsDialog={onOpenStackScriptDetailsDialog}
                 publicImages={filterImagesByType(_imagesData, 'public')}
                 resetSelectedStackScript={resetStackScript}
                 selectedId={ss.id}
@@ -286,13 +321,12 @@ export const RebuildFromStackScript = (props: Props) => {
 
               {ss.images && ss.images.length > 0 ? (
                 <ImageSelect
-                  handleSelectImage={(selected) =>
-                    setFieldValue('image', selected)
+                  onChange={(image) =>
+                    setFieldValue('image', image?.id ?? null)
                   }
-                  error={errors.image}
-                  images={ss.images}
-                  selectedImageID={values.image}
+                  errorText={errors.image}
                   title="Choose Image"
+                  value={values.image}
                   variant="public"
                 />
               ) : (
@@ -307,10 +341,17 @@ export const RebuildFromStackScript = (props: Props) => {
                 }
                 authorizedUsers={values.authorized_users}
                 data-qa-access-panel
+                diskEncryptionEnabled={diskEncryptionEnabled}
+                displayDiskEncryption
                 error={errors.root_pass}
                 handleChange={(value) => setFieldValue('root_pass', value)}
+                isInRebuildFlow
+                isLKELinode={isLKELinode}
+                linodeIsInDistributedRegion={linodeIsInDistributedRegion}
                 password={values.root_pass}
                 passwordHelperText={passwordHelperText}
+                selectedRegion={linodeRegion}
+                toggleDiskEncryptionEnabled={toggleDiskEncryptionEnabled}
               />
               <Grid
                 sx={(theme) => ({
@@ -349,7 +390,13 @@ export const RebuildFromStackScript = (props: Props) => {
                 />
               </Grid>
             </form>
-            <StackScriptDialog />
+            <StackScriptDetailsDialog
+              onClose={() =>
+                setSelectedStackScriptIdForDetailsDialog(undefined)
+              }
+              id={selectedStackScriptIdForDetailsDialog}
+              open={selectedStackScriptIdForDetailsDialog !== undefined}
+            />
           </Grid>
         );
       }}

@@ -1,9 +1,9 @@
-import { Theme } from '@mui/material/styles';
 import * as React from 'react';
 import { makeStyles } from 'tss-react/mui';
 
 import { DateTimeDisplay } from 'src/components/DateTimeDisplay';
 import { InlineMenuAction } from 'src/components/InlineMenuAction/InlineMenuAction';
+import { MaskableText } from 'src/components/MaskableText/MaskableText';
 import { PaginationFooter } from 'src/components/PaginationFooter/PaginationFooter';
 import { Table } from 'src/components/Table';
 import { TableBody } from 'src/components/TableBody';
@@ -17,9 +17,11 @@ import { TableSortCell } from 'src/components/TableSortCell';
 import { Typography } from 'src/components/Typography';
 import { useOrder } from 'src/hooks/useOrder';
 import { usePagination } from 'src/hooks/usePagination';
-import { useTrustedDevicesQuery } from 'src/queries/profile';
+import { useTrustedDevicesQuery } from 'src/queries/profile/profile';
 
 import { RevokeTrustedDeviceDialog } from './RevokeTrustedDevicesDialog';
+
+import type { Theme } from '@mui/material/styles';
 
 const useStyles = makeStyles()((theme: Theme) => ({
   copy: {
@@ -86,9 +88,13 @@ const TrustedDevices = () => {
 
     return data?.data.map((device) => {
       return (
-        <TableRow ariaLabel={`Device ${device.id}`} key={device.id}>
-          <TableCell>{device.user_agent}</TableCell>
-          <TableCell>{device.last_remote_addr}</TableCell>
+        <TableRow key={device.id}>
+          <TableCell>
+            <MaskableText isToggleable text={device.user_agent} />
+          </TableCell>
+          <TableCell>
+            <MaskableText isToggleable text={device.last_remote_addr} />
+          </TableCell>
           <TableCell>
             <DateTimeDisplay value={device.last_authenticated} />
           </TableCell>

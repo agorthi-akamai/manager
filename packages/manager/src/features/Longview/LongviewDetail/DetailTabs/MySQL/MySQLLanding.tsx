@@ -1,15 +1,13 @@
-import { APIError } from '@linode/api-v4/lib/types';
+import { Box } from '@linode/ui';
 import Grid from '@mui/material/Unstable_Grid2';
 import * as React from 'react';
 
-import { Box } from 'src/components/Box';
 import { DocumentTitleSegment } from 'src/components/DocumentTitle';
 import { Link } from 'src/components/Link';
 import { Notice } from 'src/components/Notice/Notice';
 import { Typography } from 'src/components/Typography';
 import { isToday as _isToday } from 'src/utilities/isToday';
 
-import { WithStartAndEnd } from '../../../request.types';
 import {
   StyledTimeRangeSelect,
   StyledTypography,
@@ -17,6 +15,9 @@ import {
 import { StyledItemGrid } from '../CommonStyles.styles';
 import { useGraphs } from '../OverviewGraphs/useGraphs';
 import { MySQLGraphs } from './MySQLGraphs';
+
+import type { WithStartAndEnd } from '../../../request.types';
+import type { APIError } from '@linode/api-v4/lib/types';
 
 interface Props {
   clientAPIKey?: string;
@@ -72,7 +73,7 @@ export const MySQLLanding = React.memo((props: Props) => {
         <Typography>{notice}</Typography>
         <Typography>
           See our{' '}
-          <Link to="https://www.linode.com/docs/platform/longview/longview-app-for-mysql/#troubleshooting">
+          <Link to="https://techdocs.akamai.com/cloud-computing/docs/capture-mysql-metrics-with-linode-longview#troubleshooting">
             guide
           </Link>{' '}
           for help troubleshooting the MySQL Longview app.

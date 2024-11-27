@@ -1,25 +1,26 @@
-import {
-  APIError,
-  CreateSubnetPayload,
-  CreateVPCPayload,
-} from '@linode/api-v4';
 import { createVPCSchema } from '@linode/validation';
 import { useFormik } from 'formik';
 import * as React from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 
-import { useGrants, useProfile } from 'src/queries/profile';
+import { useGrants, useProfile } from 'src/queries/profile/profile';
 import { useRegionsQuery } from 'src/queries/regions/regions';
-import { useCreateVPCMutation } from 'src/queries/vpcs';
-import {
-  SubnetError,
-  handleVPCAndSubnetErrors,
-} from 'src/utilities/formikErrorUtils';
+import { useCreateVPCMutation } from 'src/queries/vpcs/vpcs';
+import { sendLinodeCreateFormStepEvent } from 'src/utilities/analytics/formEventAnalytics';
+import { handleVPCAndSubnetErrors } from 'src/utilities/formikErrorUtils';
+import { getQueryParamsFromQueryString } from 'src/utilities/queryParams';
 import { scrollErrorIntoView } from 'src/utilities/scrollErrorIntoView';
-import {
-  DEFAULT_SUBNET_IPV4_VALUE,
-  SubnetFieldState,
-} from 'src/utilities/subnets';
+import { DEFAULT_SUBNET_IPV4_VALUE } from 'src/utilities/subnets';
+
+import type {
+  APIError,
+  CreateSubnetPayload,
+  CreateVPCPayload,
+  VPC,
+} from '@linode/api-v4';
+import type { LinodeCreateType } from 'src/features/Linodes/LinodeCreate/types';
+import type { SubnetError } from 'src/utilities/formikErrorUtils';
+import type { SubnetFieldState } from 'src/utilities/subnets';
 
 // Custom hook to consolidate shared logic between VPCCreate.tsx and VPCCreateDrawer.tsx
 
@@ -31,7 +32,7 @@ export interface CreateVPCFieldState {
 }
 
 export interface UseCreateVPCInputs {
-  handleSelectVPC?: (vpcId: number) => void;
+  handleSelectVPC?: (vpc: VPC) => void;
   onDrawerClose?: () => void;
   pushToVPCPage?: boolean;
   selectedRegion?: string;
@@ -50,6 +51,10 @@ export const useCreateVPC = (inputs: UseCreateVPCInputs) => {
   const { data: grants } = useGrants();
   const userCannotAddVPC = profile?.restricted && !grants?.global.add_vpcs;
 
+  const location = useLocation();
+  const isFromLinodeCreate = location.pathname.includes('/linodes/create');
+  const queryParams = getQueryParamsFromQueryString(location.search);
+
   const { data: regions } = useRegionsQuery();
   const regionsData = regions ?? [];
 
@@ -62,7 +67,7 @@ export const useCreateVPC = (inputs: UseCreateVPCInputs) => {
   >();
 
   const {
-    isLoading: isLoadingCreateVPC,
+    isPending: isLoadingCreateVPC,
     mutateAsync: createVPC,
   } = useCreateVPCMutation();
 
@@ -71,7 +76,7 @@ export const useCreateVPC = (inputs: UseCreateVPCInputs) => {
   // on the UI and still have any errors returned by the API correspond to the correct subnet
   const createSubnetsPayloadAndMapping = () => {
     const subnetsPayload: CreateSubnetPayload[] = [];
-    const subnetIdxMapping = {};
+    const subnetIdxMapping: Record<number, number> = {};
     let apiSubnetIdx = 0;
 
     for (let i = 0; i < formik.values.subnets.length; i++) {
@@ -93,8 +98,8 @@ export const useCreateVPC = (inputs: UseCreateVPCInputs) => {
   };
 
   const combineErrorsAndSubnets = (
-    errors: {},
-    visualToAPISubnetMapping: {}
+    errors: Record<number, SubnetError>,
+    visualToAPISubnetMapping: Record<number, number>
   ) => {
     return formik.values.subnets.map((subnet, idx) => {
       const apiSubnetIdx: number | undefined = visualToAPISubnetMapping[idx];
@@ -131,14 +136,24 @@ export const useCreateVPC = (inputs: UseCreateVPCInputs) => {
     };
 
     try {
-      const response = await createVPC(createVPCPayload);
+      const vpc = await createVPC(createVPCPayload);
       if (pushToVPCPage) {
-        history.push(`/vpcs/${response.id}`);
+        history.push(`/vpcs/${vpc.id}`);
       } else {
         if (handleSelectVPC && onDrawerClose) {
-          handleSelectVPC(response.id);
+          handleSelectVPC(vpc);
           onDrawerClose();
         }
+      }
+
+      // Fire analytics form submit upon successful VPC creation from Linode Create flow.
+      if (isFromLinodeCreate) {
+        sendLinodeCreateFormStepEvent({
+          createType: (queryParams.type as LinodeCreateType) ?? 'OS',
+          headerName: 'Create VPC',
+          interaction: 'click',
+          label: 'Create VPC',
+        });
       }
     } catch (errors) {
       const generalSubnetErrors = errors.filter(
@@ -181,6 +196,7 @@ export const useCreateVPC = (inputs: UseCreateVPCInputs) => {
   };
 
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
       description: '',
       label: '',
@@ -205,7 +221,7 @@ export const useCreateVPC = (inputs: UseCreateVPCInputs) => {
   // Helper method to set a field's value and clear existing errors
   const onChangeField = (field: string, value: string) => {
     formik.setFieldValue(field, value);
-    if (formik.errors[field]) {
+    if (formik.errors[field as keyof CreateVPCFieldState]) {
       formik.setFieldError(field, undefined);
     }
   };

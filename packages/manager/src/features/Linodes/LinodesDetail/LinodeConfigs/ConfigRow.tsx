@@ -1,4 +1,9 @@
-import { Config } from '@linode/api-v4/lib/linodes';
+import {
+  Config,
+  Devices,
+  DiskDevice,
+  VolumeDevice,
+} from '@linode/api-v4/lib/linodes';
 import { styled } from '@mui/material/styles';
 import * as React from 'react';
 
@@ -7,7 +12,7 @@ import { TableRow } from 'src/components/TableRow';
 import { API_MAX_PAGE_SIZE } from 'src/constants';
 import { useAllLinodeDisksQuery } from 'src/queries/linodes/disks';
 import { useLinodeKernelQuery } from 'src/queries/linodes/linodes';
-import { useLinodeVolumesQuery } from 'src/queries/volumes';
+import { useLinodeVolumesQuery } from 'src/queries/volumes/volumes';
 
 import { InterfaceListItem } from './InterfaceListItem';
 import { ConfigActionMenu } from './LinodeConfigActionMenu';
@@ -20,6 +25,18 @@ interface Props {
   onEdit: () => void;
   readOnly: boolean;
 }
+
+export const isDiskDevice = (
+  device: VolumeDevice | DiskDevice
+): device is DiskDevice => {
+  return 'disk_id' in device;
+};
+
+const isVolumeDevice = (
+  device: VolumeDevice | DiskDevice
+): device is VolumeDevice => {
+  return 'volume_id' in device;
+};
 
 export const ConfigRow = React.memo((props: Props) => {
   const { config, linodeId, onBoot, onDelete, onEdit, readOnly } = props;
@@ -39,20 +56,17 @@ export const ConfigRow = React.memo((props: Props) => {
   const validDevices = React.useMemo(
     () =>
       Object.keys(config.devices)
-        .map((thisDevice) => {
+        .map((thisDevice: keyof Devices) => {
           const device = config.devices[thisDevice];
           let label: null | string = null;
-          if (device?.disk_id) {
+          if (device && isDiskDevice(device)) {
             label =
-              disks?.find(
-                (thisDisk) =>
-                  thisDisk.id === config.devices[thisDevice]?.disk_id
-              )?.label ?? `disk-${device.disk_id}`;
-          } else if (device?.volume_id) {
+              disks?.find((thisDisk) => thisDisk.id === device.disk_id)
+                ?.label ?? `disk-${device.disk_id}`;
+          } else if (device && isVolumeDevice(device)) {
             label =
               volumes?.data.find(
-                (thisVolume) =>
-                  thisVolume.id === config.devices[thisDevice]?.volume_id
+                (thisVolume) => thisVolume.id === device.volume_id
               )?.label ?? `volume-${device.volume_id}`;
           }
 

@@ -7,10 +7,10 @@ import { Link } from 'src/components/Link';
 import { Notice } from 'src/components/Notice/Notice';
 import { Typography } from 'src/components/Typography';
 import { API_MAX_PAGE_SIZE } from 'src/constants';
-import { useLinodeVolumesQuery } from 'src/queries/volumes';
+import { useLinodeVolumesQuery } from 'src/queries/volumes/volumes';
 
 interface Props {
-  edgeRegionWarning?: string;
+  distributedRegionWarning?: string;
   error?: string;
   hasConfirmed: boolean;
   linodeId: number | undefined;
@@ -21,7 +21,7 @@ interface Props {
 
 export const CautionNotice = React.memo((props: Props) => {
   const {
-    edgeRegionWarning,
+    distributedRegionWarning,
     error,
     hasConfirmed,
     linodeId,
@@ -69,14 +69,14 @@ export const CautionNotice = React.memo((props: Props) => {
         <li>
           Any DNS records (including Reverse DNS) will need to be updated. You
           can use the <Link to="/domains">DNS Manager</Link> or{' '}
-          <Link to="https://linode.com/docs/networking/dns/configure-your-linode-for-reverse-dns/">
+          <Link to="https://techdocs.akamai.com/cloud-computing/docs/configure-rdns-reverse-dns-on-a-compute-instance">
             Configure Your Linode for Reverse DNS (rDNS).
           </Link>
         </li>
         <li>
           Any attached VLANs will be inaccessible if the destination region does
           not support VLANs.{` `}
-          <Link to="https://linode.com/docs/products/networking/vlans/">
+          <Link to="https://techdocs.akamai.com/cloud-computing/docs/vlan">
             Check VLAN region compatibility.
           </Link>
         </li>
@@ -105,7 +105,7 @@ export const CautionNotice = React.memo((props: Props) => {
           to complete.
         </li>
         {metadataWarning && <li>{metadataWarning}</li>}
-        {edgeRegionWarning && <li>{edgeRegionWarning}</li>}
+        {distributedRegionWarning && <li>{distributedRegionWarning}</li>}
       </ul>
       {error && <Notice text={error} variant="error" />}
       <Checkbox

@@ -1,7 +1,6 @@
-import { createLinode } from '@linode/api-v4/lib/linodes';
+import { createTestLinode } from 'support/util/linodes';
 import { createLinodeRequestFactory } from 'src/factories/linodes';
 import { authenticate } from 'support/api/authentication';
-import { containsClick, getClick } from 'support/helpers';
 import { interceptCreateFirewall } from 'support/intercepts/firewalls';
 import { randomString, randomLabel } from 'support/util/random';
 import { ui } from 'support/ui';
@@ -12,6 +11,9 @@ authenticate();
 describe('create firewall', () => {
   before(() => {
     cleanUp(['lke-clusters', 'linodes', 'firewalls']);
+  });
+  beforeEach(() => {
+    cy.tag('method:e2e');
   });
 
   /*
@@ -33,10 +35,10 @@ describe('create firewall', () => {
       .should('be.visible')
       .within(() => {
         // An error message appears when attempting to create a Firewall without a label
-        getClick('[data-testid="submit"]');
+        cy.get('[data-testid="submit"]').click();
         cy.findByText('Label is required.');
         // Fill out and submit firewall create form.
-        containsClick('Label').type(firewall.label);
+        cy.contains('Label').click().type(firewall.label);
         ui.buttonGroup
           .findButtonByTitle('Create Firewall')
           .should('be.visible')
@@ -75,7 +77,10 @@ describe('create firewall', () => {
       label: randomLabel(),
     };
 
-    cy.defer(createLinode(linodeRequest), 'creating Linode').then((linode) => {
+    cy.defer(
+      () => createTestLinode(linodeRequest, { securityMethod: 'powered_off' }),
+      'creating Linode'
+    ).then((linode) => {
       interceptCreateFirewall().as('createFirewall');
       cy.visitWithLogin('/firewalls/create');
 
@@ -84,7 +89,7 @@ describe('create firewall', () => {
         .should('be.visible')
         .within(() => {
           // Fill out and submit firewall create form.
-          containsClick('Label').type(firewall.label);
+          cy.contains('Label').click().type(firewall.label);
           cy.findByLabelText('Linodes')
             .should('be.visible')
             .click()

@@ -1,22 +1,27 @@
+import { Paper } from '@linode/ui';
+import { createLazyRoute } from '@tanstack/react-router';
 import * as React from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 
 import { Code } from 'src/components/Code/Code';
 import { DocumentTitleSegment } from 'src/components/DocumentTitle';
 import { FormControlLabel } from 'src/components/FormControlLabel';
-import { Paper } from 'src/components/Paper';
 import { Radio } from 'src/components/Radio/Radio';
 import { RadioGroup } from 'src/components/RadioGroup';
 import { Stack } from 'src/components/Stack';
 import { Toggle } from 'src/components/Toggle/Toggle';
 import { Typography } from 'src/components/Typography';
-import { useMutatePreferences, usePreferences } from 'src/queries/preferences';
-import { useMutateProfile, useProfile } from 'src/queries/profile';
+import {
+  useMutatePreferences,
+  usePreferences,
+} from 'src/queries/profile/preferences';
+import { useMutateProfile, useProfile } from 'src/queries/profile/profile';
 import { getQueryParamFromQueryString } from 'src/utilities/queryParams';
-import { ThemeChoice } from 'src/utilities/theme';
 import { isOSMac } from 'src/utilities/userAgent';
 
 import { PreferenceEditor } from './PreferenceEditor';
+
+import type { ThemeChoice } from 'src/utilities/theme';
 
 export const ProfileSettings = () => {
   const location = useLocation();
@@ -33,7 +38,7 @@ export const ProfileSettings = () => {
   };
 
   const { data: profile } = useProfile();
-  const { isLoading, mutateAsync: updateProfile } = useMutateProfile();
+  const { isPending, mutateAsync: updateProfile } = useMutateProfile();
 
   const { data: preferences } = usePreferences();
   const { mutateAsync: updatePreferences } = useMutatePreferences();
@@ -44,7 +49,9 @@ export const ProfileSettings = () => {
     preferences?.type_to_confirm === undefined ||
     preferences?.type_to_confirm === true;
 
+  // Email notifications and masking sensitive data are disabled by default until the user explicitly enables it.
   const areEmailNotificationsEnabled = profile?.email_notifications === true;
+  const isSensitiveDataMasked = preferences?.maskSensitiveData === true;
 
   return (
     <Stack spacing={2}>
@@ -67,7 +74,7 @@ export const ProfileSettings = () => {
           label={`Email alerts for account activity are ${
             areEmailNotificationsEnabled ? 'enabled' : 'disabled'
           }`}
-          disabled={isLoading}
+          disabled={isPending}
         />
       </Paper>
       <Paper>
@@ -113,6 +120,27 @@ export const ProfileSettings = () => {
           }`}
         />
       </Paper>
+      <Paper>
+        <Typography marginBottom={1} variant="h2">
+          Mask Sensitive Data
+        </Typography>
+        <Typography marginBottom={1} variant="body1">
+          Mask IP addresses and user contact information for data privacy.
+        </Typography>
+        <FormControlLabel
+          control={
+            <Toggle
+              onChange={(_, checked) =>
+                updatePreferences({ maskSensitiveData: checked })
+              }
+              checked={isSensitiveDataMasked}
+            />
+          }
+          label={`Sensitive data is ${
+            isSensitiveDataMasked ? 'masked' : 'visible'
+          }`}
+        />
+      </Paper>
       <PreferenceEditor
         onClose={handleClosePreferenceEditor}
         open={preferenceEditorOpen}
@@ -127,3 +155,7 @@ const ThemeKeyboardShortcut = (
     <Code>D</Code>
   </>
 );
+
+export const SettingsLazyRoute = createLazyRoute('/profile/settings')({
+  component: ProfileSettings,
+});

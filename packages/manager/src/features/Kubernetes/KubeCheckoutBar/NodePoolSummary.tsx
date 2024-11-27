@@ -1,16 +1,16 @@
+import { Box, IconButton } from '@linode/ui';
 import Close from '@mui/icons-material/Close';
-import { Theme } from '@mui/material/styles';
-import { makeStyles } from 'tss-react/mui';
 import * as React from 'react';
+import { makeStyles } from 'tss-react/mui';
 
-import { Box } from 'src/components/Box';
 import { DisplayPrice } from 'src/components/DisplayPrice';
 import { Divider } from 'src/components/Divider';
 import { EnhancedNumberInput } from 'src/components/EnhancedNumberInput/EnhancedNumberInput';
-import { IconButton } from 'src/components/IconButton';
 import { Typography } from 'src/components/Typography';
-import { ExtendedType } from 'src/utilities/extendType';
 import { pluralize } from 'src/utilities/pluralize';
+
+import type { Theme } from '@mui/material/styles';
+import type { ExtendedType } from 'src/utilities/extendType';
 
 const useStyles = makeStyles()((theme: Theme) => ({
   button: {
@@ -55,7 +55,7 @@ export interface Props {
   updateNodeCount: (count: number) => void;
 }
 
-export const NodePoolSummary: React.FC<Props> = (props) => {
+export const NodePoolSummary = React.memo((props: Props) => {
   const { classes } = useStyles();
   const { nodeCount, onRemove, poolType, price, updateNodeCount } = props;
 
@@ -109,6 +109,4 @@ export const NodePoolSummary: React.FC<Props> = (props) => {
       </Box>
     </>
   );
-};
-
-export default React.memo(NodePoolSummary);
+});

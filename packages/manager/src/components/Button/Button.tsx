@@ -1,14 +1,15 @@
+import { Tooltip, omittedProps } from '@linode/ui';
 import HelpOutline from '@mui/icons-material/HelpOutline';
-import _Button, { ButtonProps as _ButtonProps } from '@mui/material/Button';
-import { Theme, styled } from '@mui/material/styles';
-import { SxProps } from '@mui/system';
+import _Button from '@mui/material/Button';
+import { styled } from '@mui/material/styles';
 import * as React from 'react';
 
 import Reload from 'src/assets/icons/reload.svg';
-import { Tooltip } from 'src/components/Tooltip';
 
 import { rotate360 } from '../../styles/keyframes';
-import { omittedProps } from '../../utilities/omittedProps';
+
+import type { ButtonProps as _ButtonProps } from '@mui/material/Button';
+import type { SxProps, Theme } from '@mui/material/styles';
 
 export type ButtonType = 'outlined' | 'primary' | 'secondary';
 
@@ -30,6 +31,10 @@ export interface ButtonProps extends _ButtonProps {
    * @default false
    */
   compactY?: boolean;
+  /**
+   * Optional test ID
+   */
+  'data-testid'?: string;
   /**
    * Show a loading indicator
    * @default false
@@ -151,7 +156,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         color={color}
         compactX={compactX}
         compactY={compactY}
-        data-testid={rest['data-testid'] || 'Button'}
+        data-testid={rest['data-testid'] || 'button'}
         disableRipple={disabled}
         disabled={loading}
         loading={loading}

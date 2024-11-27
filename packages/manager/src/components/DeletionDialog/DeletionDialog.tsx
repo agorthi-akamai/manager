@@ -7,12 +7,12 @@ import { Notice } from 'src/components/Notice/Notice';
 import { TypeToConfirm } from 'src/components/TypeToConfirm/TypeToConfirm';
 import { Typography } from 'src/components/Typography';
 import { titlecase } from 'src/features/Linodes/presentation';
-import { usePreferences } from 'src/queries/preferences';
+import { usePreferences } from 'src/queries/profile/preferences';
 import { capitalize } from 'src/utilities/capitalize';
 
-import { DialogProps } from '../Dialog/Dialog';
+import type { DialogProps } from '../Dialog/Dialog';
 
-interface DeletionDialogProps extends Omit<DialogProps, 'title'> {
+export interface DeletionDialogProps extends Omit<DialogProps, 'title'> {
   entity: string;
   error?: string;
   label: string;

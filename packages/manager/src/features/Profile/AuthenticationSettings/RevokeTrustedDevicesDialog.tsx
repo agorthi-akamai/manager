@@ -3,7 +3,7 @@ import * as React from 'react';
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
 import { ConfirmationDialog } from 'src/components/ConfirmationDialog/ConfirmationDialog';
 import { Typography } from 'src/components/Typography';
-import { useRevokeTrustedDeviceMutation } from 'src/queries/profile';
+import { useRevokeTrustedDeviceMutation } from 'src/queries/profile/profile';
 
 interface Props {
   deviceId: number;
@@ -14,7 +14,7 @@ interface Props {
 export const RevokeTrustedDeviceDialog = (props: Props) => {
   const { deviceId, onClose, open } = props;
 
-  const { error, isLoading, mutateAsync } = useRevokeTrustedDeviceMutation(
+  const { error, isPending, mutateAsync } = useRevokeTrustedDeviceMutation(
     deviceId
   );
 
@@ -30,7 +30,7 @@ export const RevokeTrustedDeviceDialog = (props: Props) => {
         <ActionsPanel
           primaryButtonProps={{
             label: 'Revoke Device',
-            loading: isLoading,
+            loading: isPending,
             onClick: onRevoke,
           }}
           secondaryButtonProps={{ label: 'Cancel', onClick: onClose }}

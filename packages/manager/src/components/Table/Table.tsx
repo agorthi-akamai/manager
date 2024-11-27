@@ -1,11 +1,9 @@
-import {
-  default as _Table,
-  TableProps as _TableProps,
-} from '@mui/material/Table';
-import { omit } from 'lodash';
+import { default as _Table } from '@mui/material/Table';
 import * as React from 'react';
 
 import { StyledTableWrapper } from './Table.styles';
+
+import type { TableProps as _TableProps } from '@mui/material/Table';
 
 export interface TableProps extends _TableProps {
   /** Optional additional css class to pass to the component */
@@ -78,14 +76,6 @@ export const Table = (props: TableProps) => {
     ...rest
   } = props;
 
-  const tableProps = omit(rest, [
-    'noBorder',
-    'noOverflow',
-    'rowHoverState',
-    'spacingBottom',
-    'spacingTop',
-  ]);
-
   return (
     <StyledTableWrapper
       className={className}
@@ -97,7 +87,7 @@ export const Table = (props: TableProps) => {
     >
       <_Table
         className={tableClass}
-        {...tableProps}
+        {...rest}
         aria-colcount={colCount}
         aria-rowcount={rowCount}
         role="table"

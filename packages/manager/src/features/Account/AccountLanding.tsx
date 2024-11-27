@@ -1,29 +1,27 @@
+import { createLazyRoute } from '@tanstack/react-router';
 import * as React from 'react';
 import { matchPath, useHistory, useLocation } from 'react-router-dom';
 
 import { DocumentTitleSegment } from 'src/components/DocumentTitle';
-import {
-  LandingHeader,
-  LandingHeaderProps,
-} from 'src/components/LandingHeader';
+import { LandingHeader } from 'src/components/LandingHeader';
 import { SuspenseLoader } from 'src/components/SuspenseLoader';
 import { SafeTabPanel } from 'src/components/Tabs/SafeTabPanel';
 import { TabLinkList } from 'src/components/Tabs/TabLinkList';
 import { TabPanels } from 'src/components/Tabs/TabPanels';
 import { Tabs } from 'src/components/Tabs/Tabs';
 import { switchAccountSessionContext } from 'src/context/switchAccountSessionContext';
-import { useParentTokenManagement } from 'src/features/Account/SwitchAccounts/useParentTokenManagement';
+import { useIsParentTokenExpired } from 'src/features/Account/SwitchAccounts/useIsParentTokenExpired';
 import { getRestrictedResourceText } from 'src/features/Account/utils';
-import { useFlags } from 'src/hooks/useFlags';
-import { usePendingRevocationToken } from 'src/hooks/usePendingRevocationToken';
 import { useRestrictedGlobalGrantCheck } from 'src/hooks/useRestrictedGlobalGrantCheck';
 import { useAccount } from 'src/queries/account/account';
-import { useProfile } from 'src/queries/profile';
-import { sendSwitchAccountEvent } from 'src/utilities/analytics';
+import { useProfile } from 'src/queries/profile/profile';
+import { sendSwitchAccountEvent } from 'src/utilities/analytics/customEventAnalytics';
 
 import AccountLogins from './AccountLogins';
 import { SwitchAccountButton } from './SwitchAccountButton';
 import { SwitchAccountDrawer } from './SwitchAccountDrawer';
+
+import type { LandingHeaderProps } from 'src/components/LandingHeader';
 
 const Billing = React.lazy(() =>
   import('src/features/Billing/BillingDetail').then((module) => ({
@@ -53,13 +51,8 @@ const AccountLanding = () => {
   const { data: account } = useAccount();
   const { data: profile } = useProfile();
 
-  const flags = useFlags();
   const [isDrawerOpen, setIsDrawerOpen] = React.useState<boolean>(false);
   const sessionContext = React.useContext(switchAccountSessionContext);
-  const {
-    getPendingRevocationToken,
-    pendingRevocationToken,
-  } = usePendingRevocationToken();
 
   const isAkamaiAccount = account?.billing_source === 'akamai';
   const isProxyUser = profile?.user_type === 'proxy';
@@ -76,7 +69,7 @@ const AccountLanding = () => {
     globalGrantType: 'child_account_access',
   });
 
-  const { isParentTokenExpired } = useParentTokenManagement({ isProxyUser });
+  const { isParentTokenExpired } = useIsParentTokenExpired({ isProxyUser });
 
   const tabs = [
     {
@@ -118,10 +111,6 @@ const AccountLanding = () => {
       });
     }
 
-    if (isProxyUser) {
-      getPendingRevocationToken();
-    }
-
     setIsDrawerOpen(true);
   };
 
@@ -152,8 +141,7 @@ const AccountLanding = () => {
 
   const isBillingTabSelected = location.pathname.match(/billing/);
   const canSwitchBetweenParentOrProxyAccount =
-    flags.parentChildAccountAccess &&
-    ((!isChildAccountAccessRestricted && isParentUser) || isProxyUser);
+    (!isChildAccountAccessRestricted && isParentUser) || isProxyUser;
 
   const landingHeaderProps: LandingHeaderProps = {
     breadcrumbProps: {
@@ -172,7 +160,7 @@ const AccountLanding = () => {
   if (isBillingTabSelected) {
     landingHeaderProps.docsLabel = 'How Linode Billing Works';
     landingHeaderProps.docsLink =
-      'https://www.linode.com/docs/guides/how-linode-billing-works/';
+      'https://techdocs.akamai.com/cloud-computing/docs/understanding-how-billing-works';
     landingHeaderProps.createButtonText = 'Make a Payment';
     if (!isAkamaiAccount) {
       landingHeaderProps.onButtonClick = () =>
@@ -223,11 +211,14 @@ const AccountLanding = () => {
       <SwitchAccountDrawer
         onClose={() => setIsDrawerOpen(false)}
         open={isDrawerOpen}
-        proxyToken={pendingRevocationToken}
         userType={profile?.user_type}
       />
     </React.Fragment>
   );
 };
+
+export const accountLandingLazyRoute = createLazyRoute('/account')({
+  component: AccountLanding,
+});
 
 export default AccountLanding;

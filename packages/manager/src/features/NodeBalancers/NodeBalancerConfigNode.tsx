@@ -1,9 +1,9 @@
-import Grid from '@mui/material/Unstable_Grid2';
+import { Box } from '@linode/ui';
 import { styled } from '@mui/material/styles';
+import Grid from '@mui/material/Unstable_Grid2';
 import * as React from 'react';
 
 import { Autocomplete } from 'src/components/Autocomplete/Autocomplete';
-import { Box } from 'src/components/Box';
 import { Button } from 'src/components/Button/Button';
 import { Chip } from 'src/components/Chip';
 import { Divider } from 'src/components/Divider';
@@ -13,8 +13,8 @@ import { Typography } from 'src/components/Typography';
 import { getErrorMap } from 'src/utilities/errorUtils';
 
 import { ConfigNodeIPSelect } from './ConfigNodeIPSelect';
-import { NodeBalancerConfigNodeFields } from './types';
 
+import type { NodeBalancerConfigNodeFields } from './types';
 import type { NodeBalancerConfigNodeMode } from '@linode/api-v4';
 
 export interface NodeBalancerConfigNodeProps {
@@ -134,18 +134,13 @@ export const NodeBalancerConfigNode = React.memo(
           <Grid container data-qa-node key={idx} spacing={2}>
             <Grid lg={forEdit ? 2 : 4} sm={3} xs={12}>
               <ConfigNodeIPSelect
-                textfieldProps={{
-                  dataAttrs: {
-                    'data-qa-backend-ip-address': true,
-                  },
-                }}
                 disabled={disabled}
                 errorText={nodesErrorMap.address}
                 handleChange={onNodeAddressChange}
                 inputId={`ip-select-node-${configIdx}-${idx}`}
                 nodeAddress={node.address}
                 nodeIndex={idx}
-                selectedRegion={nodeBalancerRegion}
+                region={nodeBalancerRegion}
               />
             </Grid>
             <Grid lg={2} sm={3} xs={6}>

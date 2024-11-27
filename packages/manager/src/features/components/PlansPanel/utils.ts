@@ -2,11 +2,19 @@ import { arrayToList } from 'src/utilities/arrayToList';
 import { ExtendedType } from 'src/utilities/extendType';
 
 import {
-  DBAAS_DEDICATED_512_GB_PLAN,
   DEDICATED_512_GB_PLAN,
+  LIMITED_AVAILABILITY_COPY,
+  PLAN_IS_CURRENTLY_UNAVAILABLE_COPY,
+  PLAN_IS_TOO_SMALL_FOR_APL_COPY,
+  PLAN_NOT_AVAILABLE_IN_REGION_COPY,
   PREMIUM_512_GB_PLAN,
+  SMALLER_PLAN_DISABLED_COPY,
 } from './constants';
-import { PlanSelectionType, TypeWithAvailability } from './types';
+import {
+  DisabledTooltipReasons,
+  PlanSelectionType,
+  PlanWithAvailability,
+} from './types';
 
 import type {
   Capabilities,
@@ -14,6 +22,7 @@ import type {
   Region,
   RegionAvailability,
 } from '@linode/api-v4';
+import type { Flags } from 'src/featureFlags';
 
 export type PlansTypes<T> = Record<LinodeTypeClass, T[]>;
 
@@ -49,7 +58,7 @@ export const getPlanSelectionsByPlanType = <
   T extends { class: LinodeTypeClass }
 >(
   types: T[]
-): PlansByType<T> => {
+): Partial<PlansByType<T>> => {
   const plansByType: PlansByType<T> = planTypeOrder.reduce((acc, key) => {
     acc[key] = [];
     return acc;
@@ -71,12 +80,16 @@ export const getPlanSelectionsByPlanType = <
   }
 
   // filter empty plan group
-  return Object.keys(plansByType).reduce((acc, key) => {
-    if (plansByType[key].length > 0) {
-      acc[key] = plansByType[key];
-    }
-    return acc;
-  }, {} as PlansByType<T>);
+  return Object.keys(plansByType).reduce<Partial<PlansByType<T>>>(
+    (acc, key) => {
+      if (plansByType[key as keyof PlansByType<T>].length > 0) {
+        acc[key as keyof PlansByType<T>] =
+          plansByType[key as keyof PlansByType<T>];
+      }
+      return acc;
+    },
+    {} as PlansByType<T>
+  );
 };
 
 export const determineInitialPlanCategoryTab = (
@@ -210,7 +223,11 @@ export const planTabInfoContent = {
 export const replaceOrAppendPlaceholder512GbPlans = (
   types: (ExtendedType | PlanSelectionType)[]
 ) => {
+  // DBaaS does not currently offer a 512 GB plan
   const isInDatabasesFlow = types.some((type) => type.label.includes('DBaaS'));
+  if (isInDatabasesFlow) {
+    return types;
+  }
 
   // Function to replace or append a specific plan
   const replaceOrAppendPlan = <T extends ExtendedType | PlanSelectionType>(
@@ -226,40 +243,153 @@ export const replaceOrAppendPlaceholder512GbPlans = (
     }
   };
 
-  if (isInDatabasesFlow) {
-    replaceOrAppendPlan('DBaaS - Dedicated 512GB', DBAAS_DEDICATED_512_GB_PLAN);
-  } else {
-    // For Linodes and LKE
-    replaceOrAppendPlan('Dedicated 512GB', DEDICATED_512_GB_PLAN);
-    replaceOrAppendPlan('Premium 512GB', PREMIUM_512_GB_PLAN);
-  }
+  // For Linodes and LKE
+  replaceOrAppendPlan('Dedicated 512GB', DEDICATED_512_GB_PLAN);
+  replaceOrAppendPlan('Premium 512GB', PREMIUM_512_GB_PLAN);
 
   return types;
 };
 
+interface ExtractPlansInformationProps {
+  disableLargestGbPlansFlag: Flags['disableLargestGbPlans'] | undefined;
+  disabledClasses?: LinodeTypeClass[];
+  disabledSmallerPlans?: PlanSelectionType[];
+  isAPLEnabled?: boolean;
+  plans: PlanSelectionType[];
+  regionAvailabilities: RegionAvailability[] | undefined;
+  selectedRegionId: Region['id'] | undefined;
+}
+
 /**
- * Used to determine the contents of certain notices about availability and whether tooltips regarding
- * limited availability for plans are displayed within plan tables.
+ * Extracts plan information and determines if any plans are disabled.
+ * Used for Linode and Kubernetes selection Plan tables and notices.
  *
- * @param plans An array of plans in a LinodeTypeClass, e.g. Dedicated or Shared plans
+ * @param disableLargestGbPlansFlag The flag to disable the largest GB plans.
+ * @param disabledClasses The disabled classes (aka linode types).
+ * @param plans The plans for the Linode type class.
+ * @param regionAvailabilities The region availabilities.
+ * @param selectedRegionId The selected region ID.
  *
- * @returns boolean
+ * @returns An object containing the plan information and disabled logic.
  */
-export const isMajorityLimitedAvailabilityPlans = (
-  plans: TypeWithAvailability[]
-): boolean => {
-  const plansTotal = plans.length;
+export const extractPlansInformation = ({
+  disableLargestGbPlansFlag,
+  disabledClasses,
+  disabledSmallerPlans,
+  isAPLEnabled,
+  plans,
+  regionAvailabilities,
+  selectedRegionId,
+}: ExtractPlansInformationProps) => {
+  const plansForThisLinodeTypeClass: PlanWithAvailability[] = plans.map(
+    (plan) => {
+      const planIsDisabled512Gb =
+        plan.label.includes('512GB') &&
+        Boolean(disableLargestGbPlansFlag) &&
+        // new Ada GPU plans are actually available
+        plan.class !== 'gpu';
+      const planHasLimitedAvailability = getIsLimitedAvailability({
+        plan,
+        regionAvailabilities,
+        selectedRegionId,
+      });
+      const planBelongsToDisabledClass = Boolean(
+        disabledClasses?.includes(plan.class)
+      );
+      const planIsTooSmall = Boolean(
+        disabledSmallerPlans?.find(
+          (disabledPlan) => disabledPlan.id === plan.id
+        )
+      );
+      const planIsTooSmallForAPL =
+        isAPLEnabled && Boolean(plan.memory < 8000 || plan.vcpus < 4);
 
-  const countOfLimitedAvailabilityPlans = plans.filter(
-    (plan) => plan.isLimitedAvailabilityPlan
-  ).length;
+      return {
+        ...plan,
+        planBelongsToDisabledClass,
+        planHasLimitedAvailability,
+        planIsDisabled512Gb,
+        planIsTooSmall,
+        planIsTooSmallForAPL,
+      };
+    }
+  );
 
-  const limitedAvailabilityToTotalRatio =
-    countOfLimitedAvailabilityPlans / plansTotal;
+  const allDisabledPlans = plansForThisLinodeTypeClass.reduce((acc, plan) => {
+    const {
+      planBelongsToDisabledClass,
+      planHasLimitedAvailability,
+      planIsDisabled512Gb,
+      planIsTooSmall,
+      planIsTooSmallForAPL,
+    } = plan;
 
-  if (limitedAvailabilityToTotalRatio > 0.5) {
-    return true;
+    // Determine if the plan should be disabled due to
+    // - belonging to a disabled class
+    // - having limited availability (API based)
+    // - being a 512GB plan (hard coded)
+    if (
+      planBelongsToDisabledClass ||
+      planHasLimitedAvailability ||
+      planIsDisabled512Gb ||
+      planIsTooSmall ||
+      planIsTooSmallForAPL
+    ) {
+      return [...acc, plan];
+    }
+
+    return acc;
+  }, []);
+  const hasDisabledPlans = allDisabledPlans.length > 0;
+  const hasMajorityOfPlansDisabled =
+    allDisabledPlans.length > plansForThisLinodeTypeClass.length / 2;
+
+  return {
+    allDisabledPlans,
+    hasDisabledPlans,
+    hasMajorityOfPlansDisabled,
+    plansForThisLinodeTypeClass,
+  };
+};
+
+/**
+ * A utility function to determine what the disabled plan reason is.
+ * Defaults to the currently unavailable copy.
+ */
+export const getDisabledPlanReasonCopy = ({
+  planBelongsToDisabledClass,
+  planHasLimitedAvailability,
+  planIsDisabled512Gb,
+  planIsTooSmall,
+  planIsTooSmallForAPL,
+  wholePanelIsDisabled,
+}: {
+  planBelongsToDisabledClass: DisabledTooltipReasons['planBelongsToDisabledClass'];
+  planHasLimitedAvailability: DisabledTooltipReasons['planHasLimitedAvailability'];
+  planIsDisabled512Gb: DisabledTooltipReasons['planIsDisabled512Gb'];
+  planIsTooSmall: DisabledTooltipReasons['planIsTooSmall'];
+  planIsTooSmallForAPL?: DisabledTooltipReasons['planIsTooSmallForAPL'];
+  wholePanelIsDisabled?: DisabledTooltipReasons['wholePanelIsDisabled'];
+}): string => {
+  if (wholePanelIsDisabled) {
+    return PLAN_NOT_AVAILABLE_IN_REGION_COPY;
   }
 
-  return false;
+  if (planBelongsToDisabledClass) {
+    return PLAN_IS_CURRENTLY_UNAVAILABLE_COPY;
+  }
+
+  if (planIsTooSmall) {
+    return SMALLER_PLAN_DISABLED_COPY;
+  }
+
+  if (planIsTooSmallForAPL) {
+    return PLAN_IS_TOO_SMALL_FOR_APL_COPY;
+  }
+
+  if (planHasLimitedAvailability || planIsDisabled512Gb) {
+    return LIMITED_AVAILABILITY_COPY;
+  }
+
+  return PLAN_IS_CURRENTLY_UNAVAILABLE_COPY;
 };

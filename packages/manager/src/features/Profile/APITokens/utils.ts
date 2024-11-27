@@ -4,7 +4,7 @@ import { isPast } from 'src/utilities/isPast';
 
 import { ExcludedScope } from './CreateAPITokenDrawer';
 
-export type Permission = [string, number];
+export type Permission = [keyof typeof basePermNameMap, number];
 
 export const basePerms = [
   'account',
@@ -18,6 +18,7 @@ export const basePerms = [
   'linodes',
   'lke',
   'longview',
+  'monitor',
   'nodebalancers',
   'object_storage',
   'stackscripts',
@@ -37,6 +38,7 @@ export const basePermNameMap = {
   linodes: 'Linodes',
   lke: 'Kubernetes',
   longview: 'Longview',
+  monitor: 'Monitor',
   nodebalancers: 'NodeBalancers',
   object_storage: 'Object Storage',
   stackscripts: 'StackScripts',
@@ -56,8 +58,16 @@ export const levelMap = {
   view: 1,
 };
 
-const defaultScopeMap = (perms: typeof basePerms): Record<string, 0> =>
-  perms.reduce((obj, key) => ({ ...obj, [key]: 0 }), {});
+const NO_SCOPE_SELECTION = -1;
+
+const defaultScopeMap = (
+  perms: typeof basePerms,
+  isCreateFlow?: boolean
+): Record<string, -1 | 0> =>
+  perms.reduce(
+    (obj, key) => ({ ...obj, [key]: isCreateFlow ? NO_SCOPE_SELECTION : 0 }),
+    {}
+  );
 
 /**
  * This function accepts scopes strings as given by the API, which have the following format:
@@ -85,7 +95,10 @@ const defaultScopeMap = (perms: typeof basePerms): Record<string, 0> =>
  * Each permission level gives a user access to all lower permission levels.
  */
 const permRegex = new RegExp(/[, ]/);
-export const scopeStringToPermTuples = (scopes: string): Permission[] => {
+export const scopeStringToPermTuples = (
+  scopes: string,
+  isCreateFlow?: boolean
+): Permission[] => {
   if (scopes === '*') {
     return basePerms.map((perm) => [perm, 2] as Permission);
   }
@@ -94,9 +107,9 @@ export const scopeStringToPermTuples = (scopes: string): Permission[] => {
     const [perm, level] = scopeStr.split(':');
     return {
       ...map,
-      [perm]: levelMap[level],
+      [perm]: levelMap[level as keyof typeof levelMap],
     };
-  }, defaultScopeMap(basePerms));
+  }, defaultScopeMap(basePerms, isCreateFlow));
 
   /**
    * So there are deprecated permission types that have been folded into a parent permission. So
@@ -238,4 +251,23 @@ Omit<typeof basePermNameMap, T[number]['name']> => {
   }
 
   return filteredPermNameMap;
+};
+
+/**
+ * Determines whether a selection has been made for every scope, since by default, the scope permissions are set to null.
+ *
+ * @param scopeTuples - The array of scope tuples.
+ * @returns {boolean} True if all scopes have permissions set to none/read_only/read_write, false otherwise.
+ */
+export const hasAccessBeenSelectedForAllScopes = (
+  scopeTuples: Permission[]
+): boolean => {
+  const validAccessLevels = [
+    levelMap['none'],
+    levelMap['read_only'],
+    levelMap['read_write'],
+  ];
+  return scopeTuples.every((scopeTuple) =>
+    validAccessLevels.includes(scopeTuple[1])
+  );
 };

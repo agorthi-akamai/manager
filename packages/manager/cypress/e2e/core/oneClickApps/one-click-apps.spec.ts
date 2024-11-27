@@ -1,135 +1,137 @@
-import { containsClick, containsVisible } from 'support/helpers';
 import { ui } from 'support/ui';
-import { authenticate } from 'support/api/authentication';
-import { cleanUp } from 'support/util/cleanup';
 import {
   interceptGetStackScripts,
+  mockGetStackScript,
   mockGetStackScripts,
 } from 'support/intercepts/stackscripts';
-import { interceptCreateLinode } from 'support/intercepts/linodes';
-import {
-  filterOneClickApps,
-  handleAppLabel,
-} from 'src/features/Linodes/LinodesCreate/utilities';
+import { mockCreateLinode } from 'support/intercepts/linodes';
 import { randomLabel, randomString } from 'support/util/random';
 import { chooseRegion } from 'support/util/regions';
-import {
-  mockAppendFeatureFlags,
-  mockGetFeatureFlagClientstream,
-} from 'support/intercepts/feature-flags';
-import { makeFeatureFlagData } from 'support/util/feature-flags';
-import { mapStackScriptLabelToOCA } from 'src/features/OneClickApps/utils';
-import { baseApps } from 'src/features/StackScripts/stackScriptUtils';
 import { stackScriptFactory } from 'src/factories/stackscripts';
 import { oneClickApps } from 'src/features/OneClickApps/oneClickApps';
+import { getMarketplaceAppLabel } from 'src/features/Linodes/LinodeCreate/Tabs/Marketplace/utilities';
 
 import type { StackScript } from '@linode/api-v4';
-import type { OCA } from '@src/features/OneClickApps/types';
-
-authenticate();
+import { imageFactory, linodeFactory } from 'src/factories';
+import { mockGetAllImages } from 'support/intercepts/images';
 
 describe('OneClick Apps (OCA)', () => {
-  before(() => {
-    cleanUp(['linodes']);
-  });
-
   it('Lists all the OneClick Apps', () => {
-    interceptGetStackScripts().as('getStackScripts');
+    cy.tag('method:e2e');
 
+    interceptGetStackScripts().as('getStackScripts');
     cy.visitWithLogin(`/linodes/create?type=One-Click`);
 
     cy.wait('@getStackScripts').then((xhr) => {
       const stackScripts: StackScript[] = xhr.response?.body.data ?? [];
 
-      const trimmedApps: StackScript[] = filterOneClickApps({
-        baseApps,
-        newApps: {},
-        queryResults: stackScripts,
-      });
-
-      // Check the content of the OCA listing
+      // Check the content of the app list
       cy.findByTestId('one-click-apps-container').within(() => {
         // Check that all sections are present (note: New apps can be empty so not asserting its presence)
-        cy.findByTestId('Popular apps').should('exist');
-        cy.findByTestId('All apps').should('exist');
+        cy.findByText('Popular apps').should('be.visible');
+        cy.findByText('All apps').should('be.visible');
 
-        trimmedApps.forEach((stackScript) => {
-          const { decodedLabel, label } = handleAppLabel(stackScript);
+        // For every Marketplace app defined in Cloud Manager, make sure the API returns
+        // the nessesary StackScript and that the app renders on the page.
+        for (const stackscriptId in oneClickApps) {
+          const stackscript = stackScripts.find(
+            (stackScript) => stackScript.id === +stackscriptId
+          );
 
-          // Check that every OCA is listed with the correct label
-          cy.get(`[data-qa-select-card-heading="${label}"]`).should('exist');
+          if (!stackscript) {
+            throw new Error(
+              `Cloud Manager's fetch to GET /v4/linode/stackscripts did not receive a StackScript with ID ${stackscriptId}. We expected a StackScript to be in the response.`
+            );
+          }
 
-          // Check that every OCA has a drawer match
-          // This validates the regex in `mapStackScriptLabelToOCA`
-          // and ensures every app listed has a corresponding populated drawer
-          // This is only true for the apps defined in `oneClickApps.ts`
-          expect(
-            mapStackScriptLabelToOCA({
-              oneClickApps,
-              stackScriptLabel: decodedLabel,
-            })
-          ).to.not.be.undefined;
-        });
-      });
+          const displayLabel = getMarketplaceAppLabel(stackscript.label);
 
-      // Check drawer content for one OCA candidate
-      const candidate = trimmedApps[0].label;
-      const stackScriptCandidate = cy
-        .get(`[data-qa-selection-card-info="${candidate}"]`)
-        .first();
-      stackScriptCandidate.should('exist').click();
-
-      const app: OCA | undefined = mapStackScriptLabelToOCA({
-        oneClickApps,
-        stackScriptLabel: candidate,
-      });
-
-      if (!app) {
-        throw new Error(
-          `Failed to map StackScript label '${candidate}' to a One-Click App`
-        );
-      }
-
-      ui.drawer
-        .findByTitle(trimmedApps[0].label)
-        .should('be.visible')
-        .within(() => {
-          containsVisible(app.description);
-          containsVisible(app.summary);
-          containsVisible(app.website!);
-        });
-      ui.drawerCloseButton.find().click();
-      ui.drawer.find().should('not.exist');
-
-      // Check the filtering of the apps
-      cy.scrollTo(0, 0);
-      const initialNumberOfApps = trimmedApps.length;
-      cy.findByPlaceholderText('Search for app name')
-        .should('exist')
-        .type(candidate);
-      cy.findByTestId('one-click-apps-container').within(() => {
-        cy.get('[data-qa-selection-card="true"]').should(
-          'have.length.below',
-          initialNumberOfApps
-        );
-        cy.get(`[data-qa-selection-card-info="${candidate}"]`).should(
-          'be.visible'
-        );
+          // Using `findAllByText` because some apps may be duplicatd under different sections
+          cy.findAllByText(displayLabel).should('exist');
+        }
       });
     });
   });
 
-  it('Deploys a Linode from a One Click App', () => {
-    const stackscriptId = 401709;
-    const stackScripts = stackScriptFactory.build({
-      id: stackscriptId,
+  it('Can view app details of a marketplace app', () => {
+    cy.tag('method:e2e');
+
+    interceptGetStackScripts().as('getStackScripts');
+    cy.visitWithLogin(`/linodes/create?type=One-Click`);
+
+    cy.wait('@getStackScripts').then((xhr) => {
+      const stackScripts: StackScript[] = xhr.response?.body.data ?? [];
+
+      // For the sake of this test, use the first marketplace app defined in Cloud Manager
+      const candidateStackScriptId = +Object.keys(oneClickApps)[0];
+
+      const candidateApp = oneClickApps[candidateStackScriptId];
+
+      if (!candidateApp) {
+        throw new Error(
+          'The candidate app for this test no longer exists. The tests needs updating.'
+        );
+      }
+
+      const candidateStackScript = stackScripts.find(
+        (s) => s.id === candidateStackScriptId
+      );
+
+      if (!candidateStackScript) {
+        throw new Error(
+          'No StackScript returned by the API for the candidate app.'
+        );
+      }
+
+      cy.findByTestId('one-click-apps-container').within(() => {
+        cy.findAllByLabelText(
+          `Info for "${getMarketplaceAppLabel(candidateStackScript.label)}"`
+        )
+          .first()
+          .scrollIntoView()
+          .should('be.visible')
+          .should('be.enabled')
+          .click();
+      });
+
+      ui.drawer
+        .findByTitle(getMarketplaceAppLabel(candidateStackScript.label))
+        .should('be.visible')
+        .within(() => {
+          cy.findByText(candidateApp.description).should('be.visible');
+          cy.findByText(candidateApp.summary).should('be.visible');
+          cy.findByText(candidateApp.website!).should('be.visible');
+        });
+
+      ui.drawerCloseButton.find().click();
+      ui.drawer.find().should('not.exist');
+    });
+  });
+
+  it('Deploys a Linode from a One Click App with user defined fields', () => {
+    const images = [
+      imageFactory.build({
+        id: 'linode/ubuntu22.04',
+        label: 'Ubuntu 20.04',
+      }),
+      imageFactory.build({
+        id: 'linode/debian11',
+        label: 'Debian 11',
+      }),
+    ];
+
+    // For the sake of this test, use the first marketplace app defined in Cloud Manager
+    const candidateStackScriptId = +Object.keys(oneClickApps)[0];
+
+    const stackscript = stackScriptFactory.build({
+      id: candidateStackScriptId,
       username: 'linode',
       user_gravatar_id: '9d4d301385af69ceb7ad658aad09c142',
       label: 'E2E Test App',
       description: 'Minecraft OCA',
       ordinal: 10,
       logo_url: 'assets/Minecraft.svg',
-      images: ['linode/debian11', 'linode/ubuntu20.04'],
+      images: ['linode/debian11', 'linode/ubuntu24.04'],
       deployments_total: 18854,
       deployments_active: 412,
       is_public: true,
@@ -157,67 +159,70 @@ describe('OneClick Apps (OCA)', () => {
       ],
     });
 
-    const firstName = randomLabel();
-    const password = randomString(16);
-    const image = 'linode/ubuntu20.04';
     const rootPassword = randomString(16);
     const region = chooseRegion();
     const linodeLabel = randomLabel();
+
+    // UDF values
+    const firstName = randomLabel();
+    const password = randomString(16);
     const levelName = 'Get the enderman!';
 
-    mockGetStackScripts([stackScripts]).as('getStackScripts');
-    mockAppendFeatureFlags({
-      oneClickApps: makeFeatureFlagData({
-        401709: 'E2E Test App',
-      }),
-    }).as('getFeatureFlags');
-    mockGetFeatureFlagClientstream().as('getClientStream');
+    const linode = linodeFactory.build({
+      label: linodeLabel,
+    });
+
+    mockGetAllImages(images);
+    mockGetStackScripts([stackscript]).as('getStackScripts');
+    mockGetStackScript(stackscript.id, stackscript);
 
     cy.visitWithLogin(`/linodes/create?type=One-Click`);
 
-    cy.wait('@getFeatureFlags');
     cy.wait('@getStackScripts');
 
     cy.findByTestId('one-click-apps-container').within(() => {
       // Since it is mock data we can assert the New App section is present
-      cy.findByTestId('New apps').should('exist');
+      cy.findByText('New apps').should('be.visible');
 
       // Check that the app is listed and select it
-      cy.get('[data-qa-selection-card="true"]').should('have.length', 3);
-      cy.get(`[id=app-${stackscriptId}]`).first().should('be.visible').click();
+      cy.get('[data-qa-selection-card="true"]').should('have.length', 2);
+      cy.findAllByText(stackscript.label).first().should('be.visible').click();
     });
 
-    // Input the user defined fields
-    const userFieldId =
-      "the-username-for-the-linode's-non-root-admin/ssh-user(must-be-lowercase)";
-    const passwordFieldId =
-      "the-password-for-the-linode's-non-root-admin/ssh-user";
-    const levelNameFieldId = 'world-name';
+    cy.findByLabelText(
+      "The username for the Linode's non-root admin/SSH user(must be lowercase) (required)"
+    )
+      .should('be.visible')
+      .click()
+      .type(firstName);
 
-    cy.findByTestId('user-defined-fields-panel').within(() => {
-      cy.get(`[id="${userFieldId}"]`)
-        .should('be.visible')
-        .click()
-        .type(`${firstName}{enter}`);
-      cy.get(`[id="${passwordFieldId}"]`)
-        .should('be.visible')
-        .click()
-        .type(`${password}{enter}`);
-      cy.get(`[id="${levelNameFieldId}"]`)
-        .should('be.visible')
-        .click()
-        .type(`${levelName}{enter}`);
+    cy.findByLabelText(
+      "The password for the Linode's non-root admin/SSH user (required)"
+    )
+      .should('be.visible')
+      .click()
+      .type(password);
 
-      // Check each field should persist when moving onto another field
-      cy.get(`[id="${userFieldId}"]`).should('have.value', firstName);
-      cy.get(`[id="${passwordFieldId}"]`).should('have.value', password);
-      cy.get(`[id="${levelNameFieldId}"]`).should('have.value', levelName);
-    });
+    cy.findByLabelText('World Name (required)')
+      .should('be.visible')
+      .click()
+      .type(levelName);
+
+    // Check each field should persist when moving onto another field
+    cy.findByLabelText(
+      "The username for the Linode's non-root admin/SSH user(must be lowercase) (required)"
+    ).should('have.value', firstName);
+
+    cy.findByLabelText(
+      "The password for the Linode's non-root admin/SSH user (required)"
+    ).should('have.value', password);
+
+    cy.findByLabelText('World Name (required)').should('have.value', levelName);
 
     // Choose an image
-    cy.get('[data-qa-enhanced-select="Choose an image"]').within(() => {
-      containsClick('Choose an image').type(`${image}{enter}`);
-    });
+    cy.findByPlaceholderText('Choose an image')
+      .click()
+      .type('{downArrow}{enter}');
 
     // Choose a region
     ui.regionSelect.find().click().type(`${region.id}{enter}`);
@@ -233,14 +238,14 @@ describe('OneClick Apps (OCA)', () => {
     cy.findByText('Linode Label')
       .should('be.visible')
       .click()
-      .type('{selectAll}{backspace}')
       .type(linodeLabel);
 
     // Choose a Root Password
     cy.get('[id="root-password"]').type(rootPassword);
 
     // Create the Linode
-    interceptCreateLinode().as('createLinode');
+    mockCreateLinode(linode).as('createLinode');
+
     ui.button
       .findByTitle('Create Linode')
       .should('be.visible')
@@ -248,6 +253,7 @@ describe('OneClick Apps (OCA)', () => {
       .click();
 
     cy.wait('@createLinode');
-    ui.toast.assertMessage(`Your Linode ${linodeLabel} is being created.`);
+
+    ui.toast.assertMessage(`Your Linode ${linode.label} is being created.`);
   });
 });

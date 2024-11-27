@@ -1,7 +1,7 @@
+import { FormControl } from '@linode/ui';
 import * as React from 'react';
 
-import Select, { Item } from 'src/components/EnhancedSelect/Select';
-import { FormControl } from 'src/components/FormControl';
+import { Autocomplete } from 'src/components/Autocomplete/Autocomplete';
 import { useAllLinodeConfigsQuery } from 'src/queries/linodes/configs';
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
   linodeId: null | number;
   name: string;
   onBlur: (e: any) => void;
-  onChange: (value: number) => void;
+  onChange: (value: number | undefined) => void;
   value: null | number;
   width?: number;
 }
@@ -36,6 +36,9 @@ export const ConfigSelect = React.memo((props: Props) => {
     return { label: config.label, value: config.id };
   });
 
+  // This used to be in a useEffect. We are reverting that because it caused a
+  // page crash - see [PDI-3054] for more information. Note that [M3-8578] will
+  // need to be looked into again as a result.
   if (configList?.length === 1) {
     const newValue = configList[0].value;
     if (value !== newValue) {
@@ -43,39 +46,36 @@ export const ConfigSelect = React.memo((props: Props) => {
     }
   }
 
-  if (linodeId === null) {
-    return null;
-  }
-
   return (
     <FormControl
       fullWidth={width ? false : true}
       style={{ marginTop: 20, width }}
     >
-      <Select
+      <Autocomplete
         errorText={
           error ?? configsError
             ? 'An error occurred while retrieving configs for this Linode.'
             : undefined
         }
-        noOptionsMessage={
-          () =>
-            !configs || configs.length == 0
-              ? 'No configs are available for this Linode.'
-              : 'No options.' // No matches for search
+        noOptionsText={
+          !configs || configs.length == 0
+            ? 'No configs are available for this Linode.'
+            : 'No options.'
         }
-        onChange={(e: Item<number>) => {
-          onChange(+e.value);
+        onChange={(_, selected) => {
+          onChange(selected !== null ? +selected?.value : undefined);
         }}
+        value={
+          configList?.find((thisConfig) => thisConfig.value === value) ?? null
+        }
+        clearIcon={null}
         id={name}
-        isClearable={false}
+        isOptionEqualToValue={(option, value) => option.value === value.value}
         label="Config"
-        name={name}
         noMarginTop
         onBlur={onBlur}
-        options={configList}
+        options={configList ?? []}
         placeholder="Select a Config"
-        value={configList?.find((thisConfig) => thisConfig.value === value)}
         {...rest}
       />
     </FormControl>

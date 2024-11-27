@@ -1,21 +1,24 @@
-import { KubernetesCluster } from '@linode/api-v4/lib/kubernetes';
+import { Box } from '@linode/ui';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { Theme } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/Unstable_Grid2';
 import { useSnackbar } from 'notistack';
 import * as React from 'react';
-import { makeStyles } from 'tss-react/mui';
 
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
-import { Button } from 'src/components/Button/Button';
+import { StyledActionButton } from 'src/components/Button/StyledActionButton';
 import { Chip } from 'src/components/Chip';
 import { ConfirmationDialog } from 'src/components/ConfirmationDialog/ConfirmationDialog';
-import { Paper } from 'src/components/Paper';
-import { TagsPanel } from 'src/components/TagsPanel/TagsPanel';
-import KubeClusterSpecs from 'src/features/Kubernetes/KubernetesClusterDetail/KubeClusterSpecs';
+import { EntityDetail } from 'src/components/EntityDetail/EntityDetail';
+import { EntityHeader } from 'src/components/EntityHeader/EntityHeader';
+import { Stack } from 'src/components/Stack';
+import { Typography } from 'src/components/Typography';
+import { KubeClusterSpecs } from 'src/features/Kubernetes/KubernetesClusterDetail/KubeClusterSpecs';
+import { getKubeControlPlaneACL } from 'src/features/Kubernetes/kubeUtils';
 import { useIsResourceRestricted } from 'src/hooks/useIsResourceRestricted';
+import { useAccount } from 'src/queries/account/account';
 import {
-  useKubernetesClusterMutation,
+  useKubernetesControlPlaneACLQuery,
   useKubernetesDashboardQuery,
   useResetKubeConfigMutation,
 } from 'src/queries/kubernetes';
@@ -24,92 +27,32 @@ import { getErrorStringOrDefault } from 'src/utilities/errorUtils';
 import { DeleteKubernetesClusterDialog } from './DeleteKubernetesClusterDialog';
 import { KubeConfigDisplay } from './KubeConfigDisplay';
 import { KubeConfigDrawer } from './KubeConfigDrawer';
+import { KubeControlPlaneACLDrawer } from './KubeControlPaneACLDrawer';
+import { KubeEntityDetailFooter } from './KubeEntityDetailFooter';
+import { StyledActionRowGrid } from './KubeSummaryPanel.styles';
 
-const useStyles = makeStyles()((theme: Theme) => ({
-  actionRow: {
-    '& button': {
-      alignItems: 'flex-start',
-    },
-    alignItems: 'flex-end',
-    alignSelf: 'stretch',
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    padding: '8px 0px',
-  },
-  dashboard: {
-    '& svg': {
-      height: 14,
-      marginLeft: 4,
-    },
-  },
-  deleteClusterBtn: {
-    paddingRight: '0px',
-    [theme.breakpoints.up('md')]: {
-      paddingRight: '8px',
-    },
-  },
-  mainGridContainer: {
-    position: 'relative',
-  },
-  root: {
-    marginBottom: theme.spacing(3),
-    padding: `${theme.spacing(2.5)} ${theme.spacing(1)} ${theme.spacing(
-      2.5
-    )} ${theme.spacing(3)}`,
-  },
-  tags: {
-    // Tags Panel wrapper
-    '& > div:last-child': {
-      marginBottom: 0,
-      marginTop: 2,
-      width: '100%',
-    },
-    '&.MuiGrid-item': {
-      paddingBottom: 0,
-    },
-    alignItems: 'flex-end',
-    alignSelf: 'stretch',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'flex-end',
-    [theme.breakpoints.down('lg')]: {
-      width: '100%',
-    },
-    [theme.breakpoints.up('lg')]: {
-      '& .MuiChip-root': {
-        marginLeft: 4,
-        marginRight: 0,
-      },
-      // Add a Tag button
-      '& > div:first-of-type': {
-        justifyContent: 'flex-end',
-        marginTop: theme.spacing(4),
-      },
-      // Tags Panel wrapper
-      '& > div:last-child': {
-        display: 'flex',
-        flexWrap: 'wrap',
-        justifyContent: 'flex-end',
-      },
-    },
-  },
-}));
+import type { KubernetesCluster } from '@linode/api-v4/lib/kubernetes';
 
 interface Props {
   cluster: KubernetesCluster;
 }
 
-export const KubeSummaryPanel = (props: Props) => {
+export const KubeSummaryPanel = React.memo((props: Props) => {
   const { cluster } = props;
-  const { classes } = useStyles();
-  const { enqueueSnackbar } = useSnackbar();
-  const [drawerOpen, setDrawerOpen] = React.useState<boolean>(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
 
-  const { mutateAsync: updateKubernetesCluster } = useKubernetesClusterMutation(
-    cluster.id
-  );
+  const { data: account } = useAccount();
+  const { showControlPlaneACL } = getKubeControlPlaneACL(account);
+
+  const theme = useTheme();
+
+  const { enqueueSnackbar } = useSnackbar();
+
+  const [drawerOpen, setDrawerOpen] = React.useState<boolean>(false);
+  const [
+    isControlPlaneACLDrawerOpen,
+    setControlPlaneACLDrawerOpen,
+  ] = React.useState<boolean>(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
 
   const {
     data: dashboard,
@@ -118,7 +61,7 @@ export const KubeSummaryPanel = (props: Props) => {
 
   const {
     error: resetKubeConfigError,
-    isLoading: isResettingKubeConfig,
+    isPending: isResettingKubeConfig,
     mutateAsync: resetKubeConfig,
   } = useResetKubeConfigMutation();
 
@@ -127,6 +70,12 @@ export const KubeSummaryPanel = (props: Props) => {
     grantType: 'linode',
     id: cluster.id,
   });
+
+  const {
+    data: aclData,
+    error: isErrorKubernetesACL,
+    isLoading: isLoadingKubernetesACL,
+  } = useKubernetesControlPlaneACLQuery(cluster.id, !!showControlPlaneACL);
 
   const [
     resetKubeConfigDialogOpen,
@@ -146,79 +95,128 @@ export const KubeSummaryPanel = (props: Props) => {
     setDrawerOpen(true);
   };
 
-  const handleUpdateTags = (newTags: string[]) => {
-    return updateKubernetesCluster({
-      tags: newTags,
-    });
+  const sxSpacing = {
+    paddingLeft: theme.spacing(3),
+    paddingRight: theme.spacing(1),
+  };
+
+  const sxMainGridContainer = {
+    paddingBottom: theme.spacing(2.5),
+    paddingTop: theme.spacing(2),
+    position: 'relative',
   };
 
   return (
-    <>
-      <Paper className={classes.root}>
-        <Grid className={classes.mainGridContainer} container spacing={2}>
-          <KubeClusterSpecs cluster={cluster} />
-          <Grid container direction="column" lg={4} xs={12}>
-            <KubeConfigDisplay
-              clusterId={cluster.id}
-              clusterLabel={cluster.label}
-              handleOpenDrawer={handleOpenDrawer}
-              isResettingKubeConfig={isResettingKubeConfig}
-              setResetKubeConfigDialogOpen={setResetKubeConfigDialogOpen}
-            />
-          </Grid>
+    <Stack sx={{ marginBottom: theme.spacing(3) }}>
+      <EntityDetail
+        body={
           <Grid
             container
-            direction="column"
-            justifyContent="space-between"
-            lg={5}
-            xs={12}
+            spacing={2}
+            sx={{ ...sxSpacing, ...sxMainGridContainer }}
           >
-            <Grid className={classes.actionRow}>
-              {cluster.control_plane.high_availability && (
-                <Chip
-                  label="HA CLUSTER"
-                  size="small"
-                  sx={(theme) => ({ borderColor: theme.color.green })}
-                  variant="outlined"
-                />
-              )}
-              <Button
+            <KubeClusterSpecs cluster={cluster} />
+            <Grid container direction="column" lg={4} xs={12}>
+              <KubeConfigDisplay
+                clusterId={cluster.id}
+                clusterLabel={cluster.label}
+                handleOpenDrawer={handleOpenDrawer}
+                isResettingKubeConfig={isResettingKubeConfig}
+                setResetKubeConfigDialogOpen={setResetKubeConfigDialogOpen}
+              />
+            </Grid>
+            <Grid
+              container
+              direction="column"
+              justifyContent="space-between"
+              lg={5}
+              xs={12}
+            >
+              <StyledActionRowGrid>
+                {cluster.control_plane.high_availability && (
+                  <Chip
+                    label="HA CLUSTER"
+                    size="small"
+                    sx={(theme) => ({ borderColor: theme.color.green })}
+                    variant="outlined"
+                  />
+                )}
+              </StyledActionRowGrid>
+            </Grid>
+          </Grid>
+        }
+        footer={
+          <KubeEntityDetailFooter
+            aclData={aclData}
+            clusterCreated={cluster.created}
+            clusterId={cluster.id}
+            clusterLabel={cluster.label}
+            clusterTags={cluster.tags}
+            clusterUpdated={cluster.updated}
+            isClusterReadOnly={isClusterReadOnly}
+            isLoadingKubernetesACL={isLoadingKubernetesACL}
+            setControlPlaneACLDrawerOpen={setControlPlaneACLDrawerOpen}
+            showControlPlaneACL={!!showControlPlaneACL}
+          />
+        }
+        header={
+          <EntityHeader>
+            <Box
+              sx={{
+                ...sxSpacing,
+                paddingBottom: theme.spacing(),
+                paddingTop: theme.spacing(),
+              }}
+            >
+              <Typography variant="h2">Summary</Typography>
+            </Box>
+            <Box display="flex" justifyContent="end">
+              <StyledActionButton
                 onClick={() => {
                   window.open(dashboard?.url, '_blank');
                 }}
-                buttonType="secondary"
-                className={classes.dashboard}
-                compactY
+                sx={{
+                  '& svg': {
+                    height: '14px',
+                    marginLeft: '4px',
+                  },
+                  alignItems: 'center',
+                  display: 'flex',
+                }}
                 disabled={Boolean(dashboardError) || !dashboard}
               >
                 Kubernetes Dashboard
                 <OpenInNewIcon />
-              </Button>
-              <Button
-                buttonType="secondary"
-                className={classes.deleteClusterBtn}
-                compactY
+              </StyledActionButton>
+              <StyledActionButton
+                sx={{
+                  [theme.breakpoints.up('md')]: {
+                    paddingRight: '8px',
+                  },
+                }}
                 onClick={() => setIsDeleteDialogOpen(true)}
               >
                 Delete Cluster
-              </Button>
-            </Grid>
-            <Grid className={classes.tags}>
-              <TagsPanel
-                disabled={isClusterReadOnly}
-                tags={cluster.tags}
-                updateTags={handleUpdateTags}
-              />
-            </Grid>
-          </Grid>
-        </Grid>
-      </Paper>
+              </StyledActionButton>
+            </Box>
+          </EntityHeader>
+        }
+        noBodyBottomBorder
+      />
 
       <KubeConfigDrawer
         closeDrawer={() => setDrawerOpen(false)}
         clusterId={cluster.id}
         clusterLabel={cluster.label}
         open={drawerOpen}
+      />
+      <KubeControlPlaneACLDrawer
+        closeDrawer={() => setControlPlaneACLDrawerOpen(false)}
+        clusterId={cluster.id}
+        clusterLabel={cluster.label}
+        clusterMigrated={!isErrorKubernetesACL}
+        open={isControlPlaneACLDrawerOpen}
+        showControlPlaneACL={!!showControlPlaneACL}
       />
       <DeleteKubernetesClusterDialog
         clusterId={cluster.id}
@@ -256,8 +254,6 @@ export const KubeSummaryPanel = (props: Props) => {
         will no longer be able to access this cluster via your previous
         Kubeconfig file. This action cannot be undone.
       </ConfirmationDialog>
-    </>
+    </Stack>
   );
-};
-
-export default React.memo(KubeSummaryPanel);
+});

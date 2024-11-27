@@ -1,16 +1,16 @@
-import { Grants, Profile } from '@linode/api-v4/lib';
-import { APIError } from '@linode/api-v4/lib/types';
 import * as React from 'react';
-import { UseQueryResult } from '@tanstack/react-query';
 
 import { reactRouterProps } from 'src/__data__/reactRouterProps';
-import { imageFactory, normalizeEntities, profileFactory } from 'src/factories';
+import { profileFactory } from 'src/factories';
 import { queryClientFactory } from 'src/queries/base';
 import { renderWithTheme } from 'src/utilities/testHelpers';
 
 import { StackScriptCreate } from './StackScriptCreate';
 
-const images = normalizeEntities(imageFactory.buildList(10));
+import type { Grants, Profile } from '@linode/api-v4/lib';
+import type { APIError } from '@linode/api-v4/lib/types';
+import type { UseQueryResult } from '@tanstack/react-query';
+
 const queryClient = queryClientFactory();
 
 describe('StackScriptCreate', () => {
@@ -25,9 +25,6 @@ describe('StackScriptCreate', () => {
           >
         }
         grants={{ data: {} } as UseQueryResult<Grants, APIError[]>}
-        imagesData={images}
-        imagesLastUpdated={0}
-        imagesLoading={false}
         mode="create"
         queryClient={queryClient}
       />,
@@ -38,7 +35,7 @@ describe('StackScriptCreate', () => {
 
     expect(getByLabelText('StackScript Label (required)')).toBeVisible();
     expect(getByLabelText('Description')).toBeVisible();
-    expect(getByLabelText('Target Images')).toBeVisible();
+    expect(getByLabelText('Target Images (required)')).toBeVisible();
     expect(getByLabelText('Script (required)')).toBeVisible();
     expect(getByLabelText('Revision Note')).toBeVisible();
 

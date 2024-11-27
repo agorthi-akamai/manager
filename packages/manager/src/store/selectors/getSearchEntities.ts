@@ -1,18 +1,24 @@
-import { Domain } from '@linode/api-v4/lib/domains';
-import { Image } from '@linode/api-v4/lib/images';
-import { KubernetesCluster } from '@linode/api-v4/lib/kubernetes';
-import { Linode } from '@linode/api-v4/lib/linodes';
-import { NodeBalancer } from '@linode/api-v4/lib/nodebalancers';
-import { ObjectStorageBucket } from '@linode/api-v4/lib/object-storage';
-import { Region } from '@linode/api-v4/lib/regions';
-import { Volume } from '@linode/api-v4/lib/volumes';
-
+import { getDatabasesDescription } from 'src/features/Databases/utilities';
+import { getFirewallDescription } from 'src/features/Firewalls/shared';
 import { getDescriptionForCluster } from 'src/features/Kubernetes/kubeUtils';
 import { displayType } from 'src/features/Linodes/presentation';
-import { SearchableItem } from 'src/features/Search/search.interfaces';
-import { ExtendedType } from 'src/utilities/extendType';
 import { getLinodeDescription } from 'src/utilities/getLinodeDescription';
 import { readableBytes } from 'src/utilities/unitConversions';
+
+import type {
+  DatabaseInstance,
+  Domain,
+  Firewall,
+  Image,
+  KubernetesCluster,
+  Linode,
+  NodeBalancer,
+  ObjectStorageBucket,
+  Region,
+  Volume,
+} from '@linode/api-v4';
+import type { SearchableItem } from 'src/features/Search/search.interfaces';
+import type { ExtendedType } from 'src/utilities/extendType';
 
 export const getLinodeIps = (linode: Linode): string[] => {
   const { ipv4, ipv6 } = linode;
@@ -65,7 +71,7 @@ export const volumeToSearchableItem = (volume: Volume): SearchableItem => ({
     created: volume.created,
     description: volume.size + ' GB',
     icon: 'volume',
-    path: `/volumes/${volume.id}`,
+    path: `/volumes?query=${volume.label}`,
     region: volume.region,
     tags: volume.tags,
   },
@@ -83,10 +89,9 @@ export const imageToSearchableItem = (image: Image): SearchableItem => ({
   data: {
     created: image.created,
     description: image.description || '',
-    /* TODO: Update this with the Images icon! */
-    icon: 'volume',
+    icon: 'image',
     /* TODO: Choose a real location for this to link to */
-    path: `/images`,
+    path: `/images?query=${image.label}`,
     tags: [],
   },
   entityType: 'image',
@@ -153,11 +158,42 @@ export const bucketToSearchableItem = (
     cluster: bucket.cluster,
     created: bucket.created,
     description: readableBytes(bucket.size).formatted,
-    icon: 'bucket',
+    icon: 'storage',
     label: bucket.label,
     path: `/object-storage/buckets/${bucket.cluster}/${bucket.label}`,
   },
   entityType: 'bucket',
   label: bucket.label,
   value: `${bucket.cluster}/${bucket.label}`,
+});
+
+export const firewallToSearchableItem = (
+  firewall: Firewall
+): SearchableItem => ({
+  data: {
+    created: firewall.created,
+    description: getFirewallDescription(firewall),
+    icon: 'firewall',
+    path: `/firewalls/${firewall.id}`,
+    tags: firewall.tags,
+  },
+  entityType: 'firewall',
+  label: firewall.label,
+  value: firewall.id,
+});
+
+export const databaseToSearchableItem = (
+  database: DatabaseInstance
+): SearchableItem => ({
+  data: {
+    created: database.created,
+    description: getDatabasesDescription(database),
+    icon: 'database',
+    path: `/databases/${database.engine}/${database.id}`,
+    region: database.region,
+    status: database.status,
+  },
+  entityType: 'database',
+  label: database.label,
+  value: `${database.engine}/${database.id}`,
 });

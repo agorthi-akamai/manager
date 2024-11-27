@@ -1,15 +1,14 @@
+import { Box } from '@linode/ui';
 import { styled } from '@mui/material';
-import { Stack } from 'src/components/Stack';
-import { isNumber } from 'lodash';
 import { useSnackbar } from 'notistack';
 import * as React from 'react';
 
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
-import { Box } from 'src/components/Box';
 import { DisplayPrice } from 'src/components/DisplayPrice';
 import { Drawer } from 'src/components/Drawer';
 import { Link } from 'src/components/Link';
 import { Notice } from 'src/components/Notice/Notice';
+import { Stack } from 'src/components/Stack';
 import { Table } from 'src/components/Table';
 import { TableBody } from 'src/components/TableBody';
 import { TableCell } from 'src/components/TableCell';
@@ -24,6 +23,7 @@ import {
 } from 'src/queries/account/settings';
 import { useAllLinodesQuery } from 'src/queries/linodes/linodes';
 import { useAllTypes } from 'src/queries/types';
+import { isNumber } from 'src/utilities/isNumber';
 import { pluralize } from 'src/utilities/pluralize';
 import { getTotalBackupsPrice } from 'src/utilities/pricing/backups';
 import { UNKNOWN_PRICE } from 'src/utilities/pricing/constants';
@@ -31,10 +31,11 @@ import { UNKNOWN_PRICE } from 'src/utilities/pricing/constants';
 import { AutoEnroll } from './AutoEnroll';
 import { BackupLinodeRow } from './BackupLinodeRow';
 import {
-  EnableBackupsRejectedResult,
   getFailureNotificationText,
   useEnableBackupsOnLinodesMutation,
 } from './utils';
+
+import type { EnableBackupsRejectedResult } from './utils';
 
 interface Props {
   onClose: () => void;
@@ -60,7 +61,7 @@ export const BackupDrawer = (props: Props) => {
 
   const {
     error: updateAccountSettingsError,
-    isLoading: isUpdatingAccountSettings,
+    isPending: isUpdatingAccountSettings,
     mutateAsync: updateAccountSettings,
   } = useMutateAccountSettings();
 
@@ -70,7 +71,7 @@ export const BackupDrawer = (props: Props) => {
 
   const {
     data: enableBackupsResult,
-    isLoading: isEnablingBackups,
+    isPending: isEnablingBackups,
     mutateAsync: enableBackups,
   } = useEnableBackupsOnLinodesMutation();
 
@@ -151,7 +152,7 @@ all new Linodes will automatically be backed up.`
           Three backup slots are executed and rotated automatically: a daily
           backup, a 2-7 day old backup, and an 8-14 day old backup. See our
           {` `}
-          <Link to="https://www.linode.com/docs/platform/disk-images/linode-backup-service/">
+          <Link to="https://techdocs.akamai.com/cloud-computing/docs/backup-service">
             guide on Backups
           </Link>{' '}
           for more information on features and limitations.{' '}

@@ -1,10 +1,9 @@
+import { Box, IconButton } from '@linode/ui';
 import MenuIcon from '@mui/icons-material/Menu';
 import * as React from 'react';
 
 import { AppBar } from 'src/components/AppBar';
-import { Box } from 'src/components/Box';
 import { Hidden } from 'src/components/Hidden';
-import { IconButton } from 'src/components/IconButton';
 import { Toolbar } from 'src/components/Toolbar';
 import { Typography } from 'src/components/Typography';
 import { useAuthentication } from 'src/hooks/useAuthentication';
@@ -14,7 +13,7 @@ import { Community } from './Community';
 import { Help } from './Help';
 import { NotificationMenu } from './NotificationMenu/NotificationMenu';
 import SearchBar from './SearchBar/SearchBar';
-import { TopMenuIcon } from './TopMenuIcon';
+import { TopMenuTooltip } from './TopMenuTooltip';
 import { UserMenu } from './UserMenu';
 
 export interface TopMenuProps {
@@ -41,18 +40,15 @@ export const TopMenu = React.memo((props: TopMenuProps) => {
     <React.Fragment>
       {loggedInAsCustomer && (
         <Box bgcolor="pink" padding="1em" textAlign="center">
-          <Typography color="black" fontSize="1.2em">
+          <Typography
+            color={(theme) => theme.tokens.color.Neutrals.Black}
+            fontSize="1.2em"
+          >
             You are logged in as customer: <strong>{username}</strong>
           </Typography>
         </Box>
       )}
-      <AppBar
-        sx={(theme) => ({
-          backgroundColor: theme.bg.bgPaper,
-          color: theme.palette.text.primary,
-          position: 'relative',
-        })}
-      >
+      <AppBar data-qa-appbar>
         <Toolbar
           sx={(theme) => ({
             '&.MuiToolbar-root': {
@@ -64,7 +60,7 @@ export const TopMenu = React.memo((props: TopMenuProps) => {
           variant="dense"
         >
           <Hidden mdDown>
-            <TopMenuIcon key={navHoverText} title={navHoverText}>
+            <TopMenuTooltip title={navHoverText}>
               <IconButton
                 aria-label="open menu"
                 color="inherit"
@@ -74,10 +70,10 @@ export const TopMenu = React.memo((props: TopMenuProps) => {
               >
                 <MenuIcon />
               </IconButton>
-            </TopMenuIcon>
+            </TopMenuTooltip>
           </Hidden>
           <Hidden mdUp>
-            <TopMenuIcon key={navHoverText} title={navHoverText}>
+            <TopMenuTooltip title={navHoverText}>
               <IconButton
                 aria-label="open menu"
                 color="inherit"
@@ -86,13 +82,15 @@ export const TopMenu = React.memo((props: TopMenuProps) => {
               >
                 <MenuIcon />
               </IconButton>
-            </TopMenuIcon>
+            </TopMenuTooltip>
           </Hidden>
           <AddNewMenu />
           <SearchBar />
           <Help />
           <Community />
+
           <NotificationMenu />
+
           <UserMenu />
         </Toolbar>
       </AppBar>

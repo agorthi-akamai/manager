@@ -1,5 +1,3 @@
-import { AccountLogin } from '@linode/api-v4/lib/account/types';
-import { Theme } from '@mui/material/styles';
 import * as React from 'react';
 import { makeStyles } from 'tss-react/mui';
 
@@ -16,14 +14,16 @@ import { TableRowError } from 'src/components/TableRowError/TableRowError';
 import { TableRowLoading } from 'src/components/TableRowLoading/TableRowLoading';
 import { TableSortCell } from 'src/components/TableSortCell';
 import { Typography } from 'src/components/Typography';
-import { useFlags } from 'src/hooks/useFlags';
 import { useOrder } from 'src/hooks/useOrder';
 import { usePagination } from 'src/hooks/usePagination';
 import { useAccountLoginsQuery } from 'src/queries/account/logins';
-import { useProfile } from 'src/queries/profile';
+import { useProfile } from 'src/queries/profile/profile';
 
 import AccountLoginsTableRow from './AccountLoginsTableRow';
 import { getRestrictedResourceText } from './utils';
+
+import type { AccountLogin } from '@linode/api-v4/lib/account/types';
+import type { Theme } from '@mui/material/styles';
 
 const preferenceKey = 'account-logins';
 
@@ -44,7 +44,6 @@ const useStyles = makeStyles()((theme: Theme) => ({
 const AccountLogins = () => {
   const { classes } = useStyles();
   const pagination = usePagination(1, preferenceKey);
-  const flags = useFlags();
 
   const { handleOrderChange, order, orderBy } = useOrder(
     {
@@ -68,12 +67,7 @@ const AccountLogins = () => {
   );
   const { data: profile } = useProfile();
   const isChildUser = profile?.user_type === 'child';
-
-  const isRestrictedChildUser = Boolean(
-    flags.parentChildAccountAccess && isChildUser
-  );
-  const isAccountAccessRestricted =
-    isRestrictedChildUser || profile?.restricted;
+  const isAccountAccessRestricted = profile?.restricted;
 
   const renderTableContent = () => {
     if (isLoading) {

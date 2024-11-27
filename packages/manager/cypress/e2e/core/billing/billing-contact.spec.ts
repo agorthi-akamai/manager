@@ -2,16 +2,8 @@ import { mockGetAccount, mockUpdateAccount } from 'support/intercepts/account';
 import { accountFactory } from 'src/factories/account';
 import type { Account } from '@linode/api-v4';
 import { ui } from 'support/ui';
-import { profileFactory } from '@src/factories';
-
-import {
-  mockAppendFeatureFlags,
-  mockGetFeatureFlagClientstream,
-} from 'support/intercepts/feature-flags';
-
-import { mockGetProfile } from 'support/intercepts/profile';
-import { makeFeatureFlagData } from 'support/util/feature-flags';
-import { randomLabel } from 'support/util/random';
+import { TAX_ID_HELPER_TEXT } from 'src/features/Billing/constants';
+import { mockAppendFeatureFlags } from 'support/intercepts/feature-flags';
 
 /* eslint-disable sonarjs/no-duplicate-string */
 const accountData = accountFactory.build({
@@ -73,6 +65,13 @@ const checkAccountContactDisplay = (accountInfo: Account) => {
 };
 
 describe('Billing Contact', () => {
+  beforeEach(() => {
+    mockAppendFeatureFlags({
+      taxId: {
+        enabled: true,
+      },
+    });
+  });
   it('Edit Contact Info', () => {
     // mock the user's account data and confirm that it is displayed correctly upon page load
     mockGetAccount(accountData).as('getAccount');
@@ -134,6 +133,8 @@ describe('Billing Contact', () => {
           .click()
           .clear()
           .type(newAccountData['phone']);
+        cy.get('[data-qa-contact-country]').click().type('Afghanistan{enter}');
+        cy.findByText(TAX_ID_HELPER_TEXT).should('be.visible');
         cy.get('[data-qa-contact-country]')
           .click()
           .type('United States{enter}');
@@ -146,6 +147,7 @@ describe('Billing Contact', () => {
           .click()
           .clear()
           .type(newAccountData['tax_id']);
+        cy.findByText(TAX_ID_HELPER_TEXT).should('not.exist');
         cy.get('[data-qa-save-contact-info="true"]')
           .click()
           .then(() => {
@@ -159,34 +161,5 @@ describe('Billing Contact', () => {
     cy.get('[data-qa-contact-summary]').within(() => {
       checkAccountContactDisplay(newAccountData);
     });
-  });
-});
-
-describe('Parent/Child feature disabled', () => {
-  beforeEach(() => {
-    mockAppendFeatureFlags({
-      parentChildAccountAccess: makeFeatureFlagData(false),
-    });
-    mockGetFeatureFlagClientstream();
-  });
-
-  it('disables company name for Parent users', () => {
-    const mockProfile = profileFactory.build({
-      username: randomLabel(),
-      restricted: false,
-      user_type: 'parent',
-    });
-
-    mockGetProfile(mockProfile);
-    cy.visitWithLogin('/account/billing/edit');
-
-    ui.drawer
-      .findByTitle('Edit Billing Contact Info')
-      .should('be.visible')
-      .within(() => {
-        cy.findByLabelText('Company Name')
-          .should('be.visible')
-          .should('be.disabled');
-      });
   });
 });

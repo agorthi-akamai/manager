@@ -9,7 +9,7 @@ import { Link } from 'src/components/Link';
 import { Notice } from 'src/components/Notice/Notice';
 import { TextField } from 'src/components/TextField';
 import { Typography } from 'src/components/Typography';
-import { useCreateSSHKeyMutation } from 'src/queries/profile';
+import { useCreateSSHKeyMutation } from 'src/queries/profile/profile';
 import { handleFormikBlur } from 'src/utilities/formikTrimUtil';
 import { getAPIErrorFor } from 'src/utilities/getAPIErrorFor';
 
@@ -22,7 +22,7 @@ export const CreateSSHKeyDrawer = React.memo(({ onClose, open }: Props) => {
   const { enqueueSnackbar } = useSnackbar();
   const {
     error,
-    isLoading,
+    isPending,
     mutateAsync: createSSHKey,
   } = useCreateSSHKeyMutation();
 
@@ -34,10 +34,14 @@ export const CreateSSHKeyDrawer = React.memo(({ onClose, open }: Props) => {
     async onSubmit(values) {
       await createSSHKey(values);
       enqueueSnackbar('Successfully created SSH key.', { variant: 'success' });
-      formik.resetForm();
-      onClose();
+      handleClose();
     },
   });
+
+  const handleClose = () => {
+    formik.resetForm();
+    onClose();
+  };
 
   const hasErrorFor = getAPIErrorFor(
     {
@@ -61,7 +65,13 @@ export const CreateSSHKeyDrawer = React.memo(({ onClose, open }: Props) => {
   );
 
   return (
-    <Drawer onClose={onClose} open={open} title="Add SSH Key">
+    <Drawer
+      onClose={handleClose}
+      open={open}
+      // Adding zIndex value so that the SSH drawer is not hidden behind the Rebuild Linode dialog, which prevented users from adding an SSH key
+      sx={{ zIndex: 1300 }}
+      title="Add SSH Key"
+    >
       {generalError && <Notice text={generalError} variant="error" />}
       <form onSubmit={formik.handleSubmit}>
         <TextField
@@ -86,10 +96,10 @@ export const CreateSSHKeyDrawer = React.memo(({ onClose, open }: Props) => {
           primaryButtonProps={{
             'data-testid': 'submit',
             label: 'Add Key',
-            loading: isLoading,
+            loading: isPending,
             type: 'submit',
           }}
-          secondaryButtonProps={{ label: 'Cancel', onClick: onClose }}
+          secondaryButtonProps={{ label: 'Cancel', onClick: handleClose }}
         />
       </form>
     </Drawer>

@@ -1,11 +1,12 @@
+import { Box, InputAdornment } from '@linode/ui';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import MuiAutocomplete from '@mui/material/Autocomplete';
 import React from 'react';
 
-import { Box } from 'src/components/Box';
-import { TextField, TextFieldProps } from 'src/components/TextField';
+import { TextField } from 'src/components/TextField';
 
+import { CircleProgress } from '../CircleProgress';
 import {
   CustomPopper,
   SelectedIcon,
@@ -13,6 +14,7 @@ import {
 } from './Autocomplete.styles';
 
 import type { AutocompleteProps } from '@mui/material/Autocomplete';
+import type { TextFieldProps } from 'src/components/TextField';
 
 export interface EnhancedAutocompleteProps<
   T extends { label: string },
@@ -23,6 +25,8 @@ export interface EnhancedAutocompleteProps<
     AutocompleteProps<T, Multiple, DisableClearable, FreeSolo>,
     'renderInput'
   > {
+  /** Removes "select all" option for mutliselect */
+  disableSelectAll?: boolean;
   /** Provides a hint with error styling to assist users. */
   errorText?: string;
   /** Provides a hint with normal styling to assist users. */
@@ -31,8 +35,8 @@ export interface EnhancedAutocompleteProps<
   label: string;
   /** Removes the top margin from the input label, if desired. */
   noMarginTop?: boolean;
-  /** Text to show when the Autocomplete search yields no results. */
-  noOptionsText?: string;
+  /** Element to show when the Autocomplete search yields no results. */
+  noOptionsText?: JSX.Element | string;
   placeholder?: string;
   /** Label for the "select all" option. */
   selectAllLabel?: string;
@@ -64,9 +68,10 @@ export const Autocomplete = <
   props: EnhancedAutocompleteProps<T, Multiple, DisableClearable, FreeSolo>
 ) => {
   const {
-    clearOnBlur = false,
+    clearOnBlur,
     defaultValue,
     disablePortal = true,
+    disableSelectAll = false,
     errorText = '',
     helperText,
     label,
@@ -98,6 +103,11 @@ export const Autocomplete = <
 
   return (
     <MuiAutocomplete
+      options={
+        multiple && !disableSelectAll && options.length > 0
+          ? optionsWithSelectAll
+          : options
+      }
       renderInput={(params) => (
         <TextField
           errorText={errorText}
@@ -106,7 +116,7 @@ export const Autocomplete = <
           label={label}
           loading={loading}
           noMarginTop={noMarginTop}
-          placeholder={placeholder || 'Select an option'}
+          placeholder={placeholder ?? 'Select an option'}
           required={textFieldProps?.InputProps?.required}
           tooltipText={textFieldProps?.tooltipText}
           {...params}
@@ -115,10 +125,15 @@ export const Autocomplete = <
             ...params.InputProps,
             ...textFieldProps?.InputProps,
             endAdornment: (
-              <React.Fragment>
+              <>
+                {loading && (
+                  <InputAdornment position="end">
+                    <CircleProgress size="sm" />
+                  </InputAdornment>
+                )}
                 {textFieldProps?.InputProps?.endAdornment}
                 {params.InputProps.endAdornment}
-              </React.Fragment>
+              </>
             ),
           }}
         />
@@ -130,7 +145,7 @@ export const Autocomplete = <
         return renderOption ? (
           renderOption(props, option, state, ownerState)
         ) : (
-          <ListItem {...props} data-qa-option>
+          <ListItem {...props} data-qa-option key={props.key}>
             <>
               <Box
                 sx={{
@@ -149,7 +164,7 @@ export const Autocomplete = <
       ChipProps={{ deleteIcon: <CloseIcon /> }}
       PopperComponent={CustomPopper}
       clearOnBlur={clearOnBlur}
-      data-qa-autocomplete
+      data-qa-autocomplete={label}
       defaultValue={defaultValue}
       disableCloseOnSelect={multiple}
       disablePortal={disablePortal}
@@ -159,7 +174,6 @@ export const Autocomplete = <
       multiple={multiple}
       noOptionsText={noOptionsText || <i>You have no options to choose from</i>}
       onBlur={onBlur}
-      options={multiple && options.length > 0 ? optionsWithSelectAll : options}
       popupIcon={<KeyboardArrowDownIcon />}
       value={value}
       {...rest}

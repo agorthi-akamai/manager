@@ -1,11 +1,20 @@
+import { renderHook, waitFor } from '@testing-library/react';
+
 import {
+  accountBetaFactory,
   kubeLinodeFactory,
   linodeTypeFactory,
   nodePoolFactory,
 } from 'src/factories';
+import { HttpResponse, http, server } from 'src/mocks/testServer';
 import { extendType } from 'src/utilities/extendType';
+import { wrapWithTheme } from 'src/utilities/testHelpers';
 
-import { getTotalClusterMemoryCPUAndStorage } from './kubeUtils';
+import {
+  getLatestVersion,
+  getTotalClusterMemoryCPUAndStorage,
+  useAPLAvailability,
+} from './kubeUtils';
 
 describe('helper functions', () => {
   const badPool = nodePoolFactory.build({
@@ -62,6 +71,60 @@ describe('helper functions', () => {
         RAM: 0,
         Storage: 0,
       });
+    });
+  });
+  describe('APL availability', () => {
+    it('should return true if the apl flag is true and beta is active', async () => {
+      const accountBeta = accountBetaFactory.build({
+        enrolled: '2023-01-15T00:00:00Z',
+        id: 'apl',
+      });
+      server.use(
+        http.get('*/account/betas/apl', () => {
+          return HttpResponse.json(accountBeta);
+        })
+      );
+      const { result } = renderHook(() => useAPLAvailability(), {
+        wrapper: (ui) => wrapWithTheme(ui, { flags: { apl: true } }),
+      });
+      await waitFor(() => {
+        expect(result.current).toBe(true);
+      });
+    });
+  });
+  describe('getLatestVersion', () => {
+    it('should return the correct latest version from a list of versions', () => {
+      const versions = [
+        { label: '1.00', value: '1.00' },
+        { label: '1.10', value: '1.10' },
+        { label: '2.00', value: '2.00' },
+      ];
+      const result = getLatestVersion(versions);
+      expect(result).toEqual({ label: '2.00', value: '2.00' });
+    });
+
+    it('should handle latest version minor version correctly', () => {
+      const versions = [
+        { label: '1.22', value: '1.22' },
+        { label: '1.23', value: '1.23' },
+        { label: '1.30', value: '1.30' },
+      ];
+      const result = getLatestVersion(versions);
+      expect(result).toEqual({ label: '1.30', value: '1.30' });
+    });
+    it('should handle latest patch version correctly', () => {
+      const versions = [
+        { label: '1.22', value: '1.30' },
+        { label: '1.23', value: '1.15' },
+        { label: '1.30', value: '1.50.1' },
+        { label: '1.30', value: '1.50' },
+      ];
+      const result = getLatestVersion(versions);
+      expect(result).toEqual({ label: '1.50.1', value: '1.50.1' });
+    });
+    it('should return default fallback value when called with empty versions', () => {
+      const result = getLatestVersion([]);
+      expect(result).toEqual({ label: '', value: '' });
     });
   });
 });

@@ -1,26 +1,24 @@
 import { authenticate } from 'support/api/authentication';
-import { createLinode } from '@linode/api-v4/lib/linodes';
+import { createTestLinode } from 'support/util/linodes';
 import { createLinodeRequestFactory } from '@src/factories/linodes';
 import { ui } from 'support/ui';
 import { cleanUp } from 'support/util/cleanup';
-import { apiMatcher } from 'support/util/intercepts';
 import { Linode } from '@linode/api-v4';
 import { accountSettingsFactory } from '@src/factories/accountSettings';
 import { randomLabel } from 'support/util/random';
-import { getClick, getVisible } from 'support/helpers';
+import { interceptDeleteLinode } from 'support/intercepts/linodes';
+import { mockGetAccountSettings } from 'support/intercepts/account';
 
 const confirmDeletion = (linodeLabel: string) => {
   cy.url().should('endWith', '/linodes');
   cy.findByText(linodeLabel).should('not.exist');
 
   // Confirm the linode instance is removed
-  cy.findByText(
-    'Search for Linodes, Volumes, NodeBalancers, Domains, Buckets, Tags...'
-  )
+  cy.findByText('Search Products, IP Addresses, Tags...')
     .click()
     .type(`${linodeLabel}{enter}`);
   cy.findByText('You searched for ...').should('be.visible');
-  cy.findByText('Sorry, no results for this one').should('be.visible');
+  cy.findByText('Sorry, no results for this one.').should('be.visible');
 };
 
 const deleteLinodeFromActionMenu = (linodeLabel: string) => {
@@ -48,7 +46,7 @@ const deleteLinodeFromActionMenu = (linodeLabel: string) => {
     });
 
   cy.wait('@deleteLinode').its('response.statusCode').should('eq', 200);
-  cy.findByText(linodeLabel).should('not.exist');
+  cy.findAllByText(linodeLabel).should('not.exist');
 };
 
 const preferenceOverrides = {
@@ -67,16 +65,17 @@ describe('delete linode', () => {
   before(() => {
     cleanUp(['linodes', 'lke-clusters']);
   });
+  beforeEach(() => {
+    cy.tag('method:e2e');
+  });
 
   it('deletes linode from linode details page', () => {
     const linodeCreatePayload = createLinodeRequestFactory.build({
       label: randomLabel(),
     });
-    cy.defer(createLinode(linodeCreatePayload)).then((linode) => {
+    cy.defer(() => createTestLinode(linodeCreatePayload)).then((linode) => {
       // catch delete request
-      cy.intercept('DELETE', apiMatcher('linode/instances/*')).as(
-        'deleteLinode'
-      );
+      interceptDeleteLinode(linode.id).as('deleteLinode');
       cy.visitWithLogin(`/linodes/${linode.id}`);
 
       // Wait for content to load before performing actions via action menu.
@@ -121,11 +120,9 @@ describe('delete linode', () => {
     const linodeCreatePayload = createLinodeRequestFactory.build({
       label: randomLabel(),
     });
-    cy.defer(createLinode(linodeCreatePayload)).then((linode) => {
+    cy.defer(() => createTestLinode(linodeCreatePayload)).then((linode) => {
       // catch delete request
-      cy.intercept('DELETE', apiMatcher('linode/instances/*')).as(
-        'deleteLinode'
-      );
+      interceptDeleteLinode(linode.id).as('deleteLinode');
       cy.visitWithLogin(`/linodes/${linode.id}`);
 
       // Wait for content to load before performing actions via action menu.
@@ -174,11 +171,9 @@ describe('delete linode', () => {
     const linodeCreatePayload = createLinodeRequestFactory.build({
       label: randomLabel(),
     });
-    cy.defer(createLinode(linodeCreatePayload)).then((linode) => {
+    cy.defer(() => createTestLinode(linodeCreatePayload)).then((linode) => {
       // catch delete request
-      cy.intercept('DELETE', apiMatcher('linode/instances/*')).as(
-        'deleteLinode'
-      );
+      interceptDeleteLinode(linode.id).as('deleteLinode');
       cy.visitWithLogin(`/linodes`);
 
       cy.findByText(linode.label).should('be.visible');
@@ -224,26 +219,25 @@ describe('delete linode', () => {
 
     const createTwoLinodes = async (): Promise<[Linode, Linode]> => {
       return Promise.all([
-        createLinode(
+        createTestLinode(
           createLinodeRequestFactory.build({ label: randomLabel() })
         ),
-        createLinode(
+        createTestLinode(
           createLinodeRequestFactory.build({ label: randomLabel() })
         ),
       ]);
     };
 
-    cy.intercept('GET', apiMatcher('account/settings'), (req) => {
-      req.reply(mockAccountSettings);
-    }).as('getAccountSettings');
+    mockGetAccountSettings(mockAccountSettings).as('getAccountSettings');
 
-    cy.intercept('DELETE', apiMatcher('linode/instances/*')).as('deleteLinode');
-    cy.defer(createTwoLinodes()).then(([linodeA, linodeB]) => {
+    cy.defer(() => createTwoLinodes()).then(([linodeA, linodeB]) => {
+      interceptDeleteLinode(linodeA.id).as('deleteLinode');
+      interceptDeleteLinode(linodeB.id).as('deleteLinode');
       cy.visitWithLogin('/linodes', { preferenceOverrides });
       cy.wait('@getAccountSettings');
-      getVisible('[data-qa-header="Linodes"]');
+      cy.get('[data-qa-header="Linodes"]').should('be.visible');
       if (!cy.get('[data-qa-sort-label="asc"]')) {
-        getClick('[aria-label="Sort by label"]');
+        cy.get('[aria-label="Sort by label"]').click();
       }
       deleteLinodeFromActionMenu(linodeA.label);
       deleteLinodeFromActionMenu(linodeB.label);

@@ -1,4 +1,3 @@
-import { Volume } from '@linode/api-v4';
 import { useSnackbar } from 'notistack';
 import * as React from 'react';
 
@@ -7,7 +6,9 @@ import { TypeToConfirmDialog } from 'src/components/TypeToConfirmDialog/TypeToCo
 import { Typography } from 'src/components/Typography';
 import { useEventsPollingActions } from 'src/queries/events/events';
 import { useLinodeQuery } from 'src/queries/linodes/linodes';
-import { useDetachVolumeMutation } from 'src/queries/volumes';
+import { useDetachVolumeMutation } from 'src/queries/volumes/volumes';
+
+import type { Volume } from '@linode/api-v4';
 
 interface Props {
   onClose: () => void;
@@ -29,7 +30,7 @@ export const DetachVolumeDialog = (props: Props) => {
 
   const {
     error,
-    isLoading,
+    isPending,
     mutateAsync: detachVolume,
   } = useDetachVolumeMutation();
 
@@ -54,7 +55,7 @@ export const DetachVolumeDialog = (props: Props) => {
         type: 'Volume',
       }}
       label="Volume Label"
-      loading={isLoading}
+      loading={isPending}
       onClick={onDetach}
       onClose={onClose}
       open={open}

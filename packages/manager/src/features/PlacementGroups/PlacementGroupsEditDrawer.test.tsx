@@ -37,7 +37,7 @@ describe('PlacementGroupsCreateDrawer', () => {
     const { getByLabelText, getByRole, getByText } = renderWithTheme(
       <PlacementGroupsEditDrawer
         selectedPlacementGroup={placementGroupFactory.build({
-          affinity_type: 'anti_affinity:local',
+          placement_group_type: 'anti_affinity:local',
           id: 1,
           label: 'PG-to-edit',
           region: 'us-east',
@@ -52,7 +52,7 @@ describe('PlacementGroupsCreateDrawer', () => {
 
     expect(
       getByRole('heading', {
-        name: 'Edit Placement Group PG-to-edit (Anti-affinity)',
+        name: 'Edit Placement Group PG-to-edit',
       })
     ).toBeInTheDocument();
     expect(getByText('Newark, NJ (us-east)')).toBeInTheDocument();

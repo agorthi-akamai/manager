@@ -1,4 +1,3 @@
-import { Firewall, FirewallDevice } from '@linode/api-v4';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -13,6 +12,8 @@ import { useAllFirewallDevicesQuery } from 'src/queries/firewalls';
 import { capitalize } from 'src/utilities/capitalize';
 
 import { NodeBalancerFirewallsActionMenu } from './NodeBalancerFirewallsActionMenu';
+
+import type { Firewall, FirewallDevice } from '@linode/api-v4';
 
 interface Props {
   firewall: Firewall;
@@ -39,11 +40,7 @@ export const NodeBalancerFirewallsRow = (props: Props) => {
   const count = getCountOfRules(rules);
 
   return (
-    <TableRow
-      ariaLabel={`Firewall ${label}`}
-      data-qa-linode-firewall-row
-      key={`firewall-${firewallID}`}
-    >
+    <TableRow data-qa-linode-firewall-row key={`firewall-${firewallID}`}>
       <TableCell data-qa-firewall-label>
         <Link tabIndex={0} to={`/firewalls/${firewallID}`}>
           {label}

@@ -8,7 +8,7 @@ import {
   CardBaseSubheading,
 } from './CardBase.styles';
 
-import type { SxProps } from '@mui/system';
+import type { SxProps, Theme } from '@mui/material/styles';
 
 export interface CardBaseProps {
   checked?: boolean;
@@ -17,10 +17,10 @@ export interface CardBaseProps {
   renderIcon?: () => JSX.Element;
   renderVariant?: () => JSX.Element | null;
   subheadings: (JSX.Element | string | undefined)[];
-  sx?: SxProps;
-  sxHeading?: SxProps;
-  sxIcon?: SxProps;
-  sxSubheading?: SxProps;
+  sx?: SxProps<Theme>;
+  sxHeading?: SxProps<Theme>;
+  sxIcon?: SxProps<Theme>;
+  sxSubheading?: SxProps<Theme>;
 }
 export const CardBase = (props: CardBaseProps) => {
   const {
@@ -37,8 +37,11 @@ export const CardBase = (props: CardBaseProps) => {
   } = props;
 
   const renderSubheadings = subheadings.map((subheading, idx) => {
+    const subHeadingIsString = typeof subheading === 'string';
+
     return (
       <CardBaseSubheading
+        className={subHeadingIsString ? 'cardSubheadingItem' : ''}
         data-qa-select-card-subheading={`subheading-${idx + 1}`}
         key={idx}
         sx={sxSubheading}
@@ -52,7 +55,10 @@ export const CardBase = (props: CardBaseProps) => {
     <CardBaseGrid checked={checked} container spacing={2} sx={sx}>
       {renderIcon && <CardBaseIcon sx={sxIcon}>{renderIcon()}</CardBaseIcon>}
       <CardBaseHeadings sx={sxHeading}>
-        <CardBaseHeading data-qa-select-card-heading={heading}>
+        <CardBaseHeading
+          className="cardSubheadingTitle"
+          data-qa-select-card-heading={heading}
+        >
           {heading}
           {headingDecoration}
         </CardBaseHeading>

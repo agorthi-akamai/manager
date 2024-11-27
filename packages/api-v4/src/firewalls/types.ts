@@ -12,8 +12,8 @@ export interface Firewall {
   label: string;
   tags: string[];
   rules: FirewallRules;
-  created_dt: string;
-  updated_dt: string;
+  created: string;
+  updated: string;
   entities: {
     id: number;
     type: FirewallDeviceEntityType;
@@ -53,6 +53,11 @@ export interface FirewallDevice {
   created: string;
   updated: string;
   entity: FirewallDeviceEntity;
+}
+
+export interface FirewallTemplate {
+  slug: string;
+  rules: FirewallRules;
 }
 
 export interface CreateFirewallPayload {

@@ -1,13 +1,14 @@
-import { APIError, Filter, Linode } from '@linode/api-v4';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { SxProps } from '@mui/system';
 import React from 'react';
 
 import { Autocomplete } from 'src/components/Autocomplete/Autocomplete';
 import { CustomPopper } from 'src/components/Autocomplete/Autocomplete.styles';
 import { useAllLinodesQuery } from 'src/queries/linodes/linodes';
 import { mapIdsToDevices } from 'src/utilities/mapIdsToDevices';
+
+import type { APIError, Filter, Linode } from '@linode/api-v4';
+import type { SxProps, Theme } from '@mui/material/styles';
 
 interface LinodeSelectProps {
   /** Determine whether isOptionEqualToValue prop should be defined for Autocomplete
@@ -23,6 +24,8 @@ interface LinodeSelectProps {
   errorText?: string;
   /** Filter sent to the API when retrieving account Linodes. */
   filter?: Filter;
+  /** Determines if the Linode option should be disabled. */
+  getOptionDisabled?: (linode: Linode) => boolean;
   /** Hint displayed in normal styling. */
   helperText?: string;
   /** The ID of the input. */
@@ -43,14 +46,10 @@ interface LinodeSelectProps {
   optionsFilter?: (linode: Linode) => boolean;
   /* Displayed when the input is blank. */
   placeholder?: string;
-  /* Render a custom option. */
-  renderOption?: (linode: Linode, selected: boolean) => JSX.Element;
-  /* Render a custom option label. */
-  renderOptionLabel?: (linode: Linode) => string;
   /* Displays an indication that the input is required. */
   required?: boolean;
   /* Adds custom styles to the component. */
-  sx?: SxProps;
+  sx?: SxProps<Theme>;
 }
 
 export interface LinodeMultiSelectProps extends LinodeSelectProps {
@@ -83,6 +82,7 @@ export const LinodeSelect = (
     disabled,
     errorText,
     filter,
+    getOptionDisabled,
     helperText,
     id,
     label,
@@ -95,13 +95,11 @@ export const LinodeSelect = (
     options,
     optionsFilter,
     placeholder,
-    renderOption,
-    renderOptionLabel,
     sx,
     value,
   } = props;
 
-  const { data, error, isLoading } = useAllLinodesQuery({}, filter);
+  const { data, error, isFetching } = useAllLinodesQuery({}, filter, !options);
 
   const [inputValue, setInputValue] = React.useState('');
 
@@ -119,16 +117,13 @@ export const LinodeSelect = (
 
   return (
     <Autocomplete
-      getOptionLabel={(linode: Linode) =>
-        renderOptionLabel ? renderOptionLabel(linode) : linode.label
-      }
       isOptionEqualToValue={
         checkIsOptionEqualToValue
           ? (option, value) => option.id === value.id
           : undefined
       }
       noOptionsText={
-        noOptionsMessage ?? getDefaultNoOptionsMessage(error, isLoading)
+        noOptionsMessage ?? getDefaultNoOptionsMessage(error, isFetching)
       }
       onChange={(_, value) =>
         multiple && Array.isArray(value)
@@ -141,17 +136,6 @@ export const LinodeSelect = (
           : multiple
           ? 'Select Linodes'
           : 'Select a Linode'
-      }
-      renderOption={
-        renderOption
-          ? (props, option, { selected }) => {
-              return (
-                <li {...props} data-qa-linode-option>
-                  {renderOption(option, selected)}
-                </li>
-              );
-            }
-          : undefined
       }
       value={
         typeof value === 'function'
@@ -169,11 +153,12 @@ export const LinodeSelect = (
       disablePortal={true}
       disabled={disabled}
       errorText={error?.[0].reason ?? errorText}
+      getOptionDisabled={getOptionDisabled}
       helperText={helperText}
       id={id}
       inputValue={inputValue}
       label={label ? label : multiple ? 'Linodes' : 'Linode'}
-      loading={isLoading || loading}
+      loading={isFetching || loading}
       multiple={multiple}
       noMarginTop={noMarginTop}
       onBlur={onBlur}

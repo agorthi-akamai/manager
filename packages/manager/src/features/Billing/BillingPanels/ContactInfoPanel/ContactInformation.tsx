@@ -1,13 +1,18 @@
-import Grid from '@mui/material/Unstable_Grid2';
+import { Box } from '@linode/ui';
 import { styled } from '@mui/material/styles';
-import countryData from 'country-region-data';
+import Grid from '@mui/material/Unstable_Grid2';
+import { allCountries } from 'country-region-data';
 import * as React from 'react';
 import { useHistory, useRouteMatch } from 'react-router-dom';
 
+import { MaskableText } from 'src/components/MaskableText/MaskableText';
+import { TooltipIcon } from 'src/components/TooltipIcon';
 import { Typography } from 'src/components/Typography';
 import { getRestrictedResourceText } from 'src/features/Account/utils';
 import { EDIT_BILLING_CONTACT } from 'src/features/Billing/constants';
+import { StyledAutorenewIcon } from 'src/features/TopMenu/NotificationMenu/NotificationMenu';
 import { useRestrictedGlobalGrantCheck } from 'src/hooks/useRestrictedGlobalGrantCheck';
+import { useNotificationsQuery } from 'src/queries/account/notifications';
 
 import {
   BillingActionButton,
@@ -74,9 +79,15 @@ const ContactInformation = (props: Props) => {
     setEditContactDrawerOpen,
   ] = React.useState<boolean>(false);
 
+  const { data: notifications } = useNotificationsQuery();
+
   const [focusEmail, setFocusEmail] = React.useState(false);
 
   const isChildUser = Boolean(profile?.user_type === 'child');
+
+  const taxIdIsVerifyingNotification = notifications?.find((notification) => {
+    return notification.type === 'tax_id_verifying';
+  });
 
   const isReadOnly =
     useRestrictedGlobalGrantCheck({
@@ -113,10 +124,23 @@ const ContactInformation = (props: Props) => {
     }
   }, [editContactDrawerOpen, history.location.state]);
 
-  // Finding the country from the countryData JSON
-  const countryName = countryData?.find(
-    (_country) => _country.countryShortCode === country
-  )?.countryName;
+  /**
+   * Finding the country from the countryData JSON
+   * `country-region-data` mapping:
+   *
+   * COUNTRY
+   * - country[0] is the readable name of the country (e.g. "United States")
+   * - country[1] is the ISO 3166-1 alpha-2 code of the country (e.g. "US")
+   * - country[2] is an array of regions for the country
+   *
+   * REGION
+   * - region[0] is the readable name of the region (e.g. "Alabama")
+   * - region[1] is the ISO 3166-2 code of the region (e.g. "AL")
+   */
+  const countryName = allCountries?.find((_country) => {
+    const countryCode = _country[1];
+    return countryCode === country;
+  })?.[0];
 
   const sxGrid = {
     flex: 1,
@@ -166,50 +190,90 @@ const ContactInformation = (props: Props) => {
             country) && (
             <Grid sx={sxGrid}>
               {(firstName || lastName) && (
-                <StyledTypography
-                  data-qa-contact-name
-                  sx={{ wordBreak: 'break-all' }}
+                <MaskableText
+                  text={`${firstName} ${lastName}`}
+                  length="plaintext"
                 >
-                  {firstName} {lastName}
-                </StyledTypography>
+                  <StyledTypography
+                    data-qa-contact-name
+                    sx={{ wordBreak: 'break-all' }}
+                  >
+                    {firstName} {lastName}
+                  </StyledTypography>
+                </MaskableText>
               )}
               {company && (
-                <StyledTypography
-                  data-qa-company
-                  sx={{ wordBreak: 'break-all' }}
-                >
-                  {company}
-                </StyledTypography>
+                <MaskableText text={company} length="plaintext">
+                  <>
+                    {' '}
+                    <StyledTypography
+                      data-qa-company
+                      sx={{ wordBreak: 'break-all' }}
+                    >
+                      {company}
+                    </StyledTypography>
+                  </>
+                </MaskableText>
               )}
               {(address1 || address2 || city || state || zip || country) && (
-                <>
-                  <StyledTypography data-qa-contact-address>
-                    {address1}
-                  </StyledTypography>
-                  <StyledTypography>{address2}</StyledTypography>
-                </>
+                <MaskableText
+                  text={`${address1} ${address2}`}
+                  length="plaintext"
+                >
+                  <>
+                    <StyledTypography data-qa-contact-address>
+                      {address1}
+                    </StyledTypography>
+                    <StyledTypography>{address2}</StyledTypography>
+                  </>
+                </MaskableText>
               )}
-              <StyledTypography>
-                {city}
-                {city && state && ','} {state} {zip}
-              </StyledTypography>
-              <StyledTypography>{countryName}</StyledTypography>
+              <MaskableText text={`${city} ${state} ${zip}`} length="plaintext">
+                <StyledTypography>
+                  {city}
+                  {city && state && ','} {state} {zip}
+                </StyledTypography>
+              </MaskableText>
+              <MaskableText text={countryName}>
+                <StyledTypography>{countryName}</StyledTypography>
+              </MaskableText>
             </Grid>
           )}
           <Grid sx={sxGrid}>
-            <StyledTypography
-              data-qa-contact-email
-              sx={{ wordBreak: 'break-all' }}
-            >
-              {email}
-            </StyledTypography>
+            <MaskableText text={email} length="plaintext">
+              <StyledTypography
+                data-qa-contact-email
+                sx={{ wordBreak: 'break-all' }}
+              >
+                {email}
+              </StyledTypography>
+            </MaskableText>
             {phone && (
-              <StyledTypography data-qa-contact-phone>{phone}</StyledTypography>
+              <MaskableText text={phone} length="plaintext">
+                <StyledTypography data-qa-contact-phone>
+                  {phone}
+                </StyledTypography>
+              </MaskableText>
             )}
             {taxId && (
-              <StyledTypography sx={{ marginTop: 'auto' }}>
-                <strong>Tax ID</strong> {taxId}
-              </StyledTypography>
+              <MaskableText text={taxId} length="plaintext">
+                <Box alignItems="center" display="flex">
+                  <StyledTypography
+                    sx={{
+                      margin: 0,
+                    }}
+                  >
+                    <strong>Tax ID</strong> {taxId}
+                  </StyledTypography>
+                  {taxIdIsVerifyingNotification && (
+                    <TooltipIcon
+                      icon={<StyledAutorenewIcon />}
+                      status="other"
+                      text={taxIdIsVerifyingNotification.label}
+                    />
+                  )}
+                </Box>
+              </MaskableText>
             )}
           </Grid>
         </Grid>

@@ -5,7 +5,7 @@ import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
 import { ConfirmationDialog } from 'src/components/ConfirmationDialog/ConfirmationDialog';
 import { Link } from 'src/components/Link';
 import { Typography } from 'src/components/Typography';
-import { useVolumesMigrateMutation } from 'src/queries/volumesMigrations';
+import { useVolumesMigrateMutation } from 'src/queries/volumes/volumes';
 import { getAPIErrorOrDefault } from 'src/utilities/errorUtils';
 
 import type { Volume } from '@linode/api-v4';
@@ -48,7 +48,7 @@ export const UpgradeVolumeDialog = (props: Props) => {
 
   const {
     error,
-    isLoading,
+    isPending,
     mutateAsync: migrateVolumes,
   } = useVolumesMigrateMutation();
 
@@ -71,7 +71,7 @@ export const UpgradeVolumeDialog = (props: Props) => {
     <ActionsPanel
       primaryButtonProps={{
         label: 'Enter Upgrade Queue',
-        loading: isLoading,
+        loading: isPending,
         onClick: onSubmit,
       }}
       secondaryButtonProps={{ label: 'Cancel', onClick: onClose }}

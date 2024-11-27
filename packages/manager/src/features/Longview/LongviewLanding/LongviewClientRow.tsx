@@ -3,14 +3,14 @@ import { default as Grid } from '@mui/material/Unstable_Grid2/Grid2';
 import * as React from 'react';
 import { compose } from 'recompose';
 
-import { Paper } from 'src/components/Paper';
+import { Paper } from '@linode/ui';
 import withLongviewClients, {
   DispatchProps,
 } from 'src/containers/longview.container';
 import withClientStats, {
   Props as LVDataProps,
 } from 'src/containers/longview.stats.container';
-import { useGrants } from 'src/queries/profile';
+import { useGrants } from 'src/queries/profile/profile';
 
 import { useClientLastUpdated } from '../shared/useClientLastUpdated';
 import { CPUGauge } from './Gauges/CPU';

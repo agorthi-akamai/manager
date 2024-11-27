@@ -1,3 +1,4 @@
+import { Box, Paper } from '@linode/ui';
 import { Typography, useTheme } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { DateTime } from 'luxon';
@@ -9,62 +10,145 @@ import {
   Legend,
   ResponsiveContainer,
   Tooltip,
-  TooltipProps,
   XAxis,
   YAxis,
 } from 'recharts';
 
 import { AccessibleAreaChart } from 'src/components/AreaChart/AccessibleAreaChart';
-import { Box } from 'src/components/Box';
 import MetricsDisplay from 'src/components/LineGraph/MetricsDisplay';
-import { MetricsDisplayRow } from 'src/components/LineGraph/MetricsDisplay';
-import { Paper } from 'src/components/Paper';
 import { StyledBottomLegend } from 'src/features/NodeBalancers/NodeBalancerDetail/NodeBalancerSummary/TablesPanel';
 
-import { tooltipLabelFormatter, tooltipValueFormatter } from './utils';
+import {
+  humanizeLargeData,
+  tooltipLabelFormatter,
+  tooltipValueFormatter,
+} from './utils';
 
-interface AreaProps {
+import type { TooltipProps } from 'recharts';
+import type { MetricsDisplayRow } from 'src/components/LineGraph/MetricsDisplay';
+
+export type ChartVariant = 'area' | 'line';
+
+export interface AreaProps {
+  /**
+   * color for the area
+   */
   color: string;
+
+  /**
+   * datakey for the area
+   */
   dataKey: string;
 }
 
 interface XAxisProps {
+  /**
+   * format for the x-axis timestamp
+   * ex: 'hh' to convert timestamp into hour
+   */
   tickFormat: string;
+
+  /**
+   * represents the pixer gap between two x-axis ticks
+   */
   tickGap: number;
 }
 
-interface AreaChartProps {
+export interface AreaChartProps {
+  /**
+   * list of areas to be displayed
+   */
   areas: AreaProps[];
+
+  /**
+   * arialabel for the graph
+   */
   ariaLabel: string;
+
+  /**
+   * connect nulls value between two data points
+   */
+  connectNulls?: boolean;
+
+  /**
+   * data to be displayed on the graph
+   */
   data: any;
-  height: number;
+
+  /**
+   *
+   */
+  fillOpacity?: number;
+
+  /**
+   * The height of chart container.
+   */
+  height?: number;
+
+  /**
+   * Sets the height of the legend. Overflow scroll if the content exceeds the height.
+   */
+  legendHeight?: string;
+
+  /**
+   * list of legends rows to be displayed
+   */
   legendRows?: Omit<MetricsDisplayRow[], 'handleLegendClick'>;
+
+  /**
+   * The sizes of whitespace around the container.
+   */
+  margin?: { bottom: number; left: number; right: number; top: number };
+
+  /**
+   * true to display legends rows else false to hide
+   * @default false
+   */
   showLegend?: boolean;
+
+  /**
+   * timezone for the timestamp of graph data
+   */
   timezone: string;
+
+  /**
+   * unit to be displayed with data
+   */
   unit: string;
+
+  /**
+   * make chart appear as a line or area chart
+   * @default area
+   */
+  variant?: ChartVariant;
+
+  /**
+   * The width of chart container.
+   */
+  width?: number;
+
+  /**
+   * x-axis properties
+   */
   xAxis: XAxisProps;
 }
-
-const humanizeLargeData = (value: number) => {
-  if (value >= 1000000) {
-    return value / 1000000 + 'M';
-  }
-  if (value >= 1000) {
-    return value / 1000 + 'K';
-  }
-  return `${value}`;
-};
 
 export const AreaChart = (props: AreaChartProps) => {
   const {
     areas,
     ariaLabel,
+    connectNulls,
     data,
-    height,
+    fillOpacity,
+    height = '100%',
+    legendHeight,
     legendRows,
+    margin = { bottom: 0, left: -20, right: 0, top: 0 },
     showLegend,
     timezone,
     unit,
+    variant,
+    width = '100%',
     xAxis,
   } = props;
 
@@ -115,7 +199,7 @@ export const AreaChart = (props: AreaChartProps) => {
     return null;
   };
 
-  const CustomLegend = () => {
+  const CustomLegend = ({ legendHeight }: { legendHeight?: string }) => {
     if (legendRows) {
       const legendRowsWithClickHandler = legendRows.map((legendRow) => ({
         ...legendRow,
@@ -126,6 +210,7 @@ export const AreaChart = (props: AreaChartProps) => {
         <StyledBottomLegend>
           <MetricsDisplay
             hiddenRows={activeSeries}
+            legendHeight={legendHeight}
             rows={legendRowsWithClickHandler}
           />
         </StyledBottomLegend>
@@ -136,10 +221,16 @@ export const AreaChart = (props: AreaChartProps) => {
 
   const accessibleDataKeys = areas.map((area) => area.dataKey);
 
+  const legendStyles = {
+    bottom: 0,
+    left: 0,
+    width: '100%',
+  };
+
   return (
     <>
-      <ResponsiveContainer height={height} width="100%">
-        <_AreaChart aria-label={ariaLabel} data={data}>
+      <ResponsiveContainer height={height} width={width}>
+        <_AreaChart aria-label={ariaLabel} data={data} margin={margin}>
           <CartesianGrid
             stroke={theme.color.grey7}
             strokeDasharray="3 3"
@@ -178,24 +269,22 @@ export const AreaChart = (props: AreaChartProps) => {
                   handleLegendClick(dataKey as string);
                 }
               }}
-              wrapperStyle={{
-                left: 25,
-              }}
               iconType="square"
+              wrapperStyle={legendStyles}
             />
           )}
           {showLegend && legendRows && (
             <Legend
-              wrapperStyle={{
-                left: 20,
-              }}
-              content={<CustomLegend />}
+              content={<CustomLegend legendHeight={legendHeight} />}
+              wrapperStyle={legendStyles}
             />
           )}
           {areas.map(({ color, dataKey }) => (
             <Area
+              connectNulls={connectNulls}
               dataKey={dataKey}
               fill={color}
+              fillOpacity={variant === 'line' ? 0 : fillOpacity ?? 1}
               hide={activeSeries.includes(dataKey)}
               isAnimationActive={false}
               key={dataKey}

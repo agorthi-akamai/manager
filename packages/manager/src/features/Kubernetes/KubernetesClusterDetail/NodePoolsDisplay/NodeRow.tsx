@@ -1,4 +1,3 @@
-import { APIError } from '@linode/api-v4/lib/types';
 import Grid from '@mui/material/Unstable_Grid2';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
@@ -9,9 +8,12 @@ import { TableCell } from 'src/components/TableCell';
 import { Typography } from 'src/components/Typography';
 import { transitionText } from 'src/features/Linodes/transitions';
 import { useInProgressEvents } from 'src/queries/events/events';
+import { usePreferences } from 'src/queries/profile/preferences';
 
 import NodeActionMenu from './NodeActionMenu';
 import { StyledCopyTooltip, StyledTableRow } from './NodeTable.styles';
+
+import type { APIError } from '@linode/api-v4/lib/types';
 
 export interface NodeRow {
   instanceId?: number;
@@ -42,6 +44,7 @@ export const NodeRow = React.memo((props: NodeRowProps) => {
   } = props;
 
   const { data: events } = useInProgressEvents();
+  const { data: preferences } = usePreferences();
 
   const recentEvent = events?.find(
     (event) =>
@@ -70,7 +73,7 @@ export const NodeRow = React.memo((props: NodeRowProps) => {
   const displayIP = ip ?? '';
 
   return (
-    <StyledTableRow ariaLabel={label} data-qa-node-row={nodeId}>
+    <StyledTableRow data-qa-node-row={nodeId}>
       <TableCell>
         <Grid alignItems="center" container wrap="nowrap">
           <Grid>
@@ -100,7 +103,7 @@ export const NodeRow = React.memo((props: NodeRowProps) => {
           </>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell noWrap>
         {linodeError ? (
           <Typography
             sx={(theme) => ({
@@ -111,7 +114,12 @@ export const NodeRow = React.memo((props: NodeRowProps) => {
           </Typography>
         ) : displayIP.length > 0 ? (
           <>
-            <CopyTooltip copyableText text={displayIP} />
+            <CopyTooltip
+              copyableText
+              masked={Boolean(preferences?.maskSensitiveData)}
+              text={displayIP}
+              maskedTextLength="ipv4"
+            />
             <StyledCopyTooltip text={displayIP} />
           </>
         ) : null}

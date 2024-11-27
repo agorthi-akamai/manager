@@ -1,8 +1,8 @@
 import * as React from 'react';
 
-import StackScriptsIcon from 'src/assets/icons/entityIcons/stackscript.svg';
+import LinodeIcon from 'src/assets/icons/entityIcons/linode.svg';
 import { ResourcesSection } from 'src/components/EmptyLandingPageResources/ResourcesSection';
-import { sendEvent } from 'src/utilities/analytics';
+import { sendEvent } from 'src/utilities/analytics/utils';
 
 import {
   gettingStartedGuides,
@@ -35,7 +35,7 @@ export const StackScriptsEmptyLandingState = (props: Props) => {
       ]}
       gettingStartedGuidesData={gettingStartedGuides}
       headers={headers}
-      icon={StackScriptsIcon}
+      icon={LinodeIcon}
       linkAnalyticsEvent={linkAnalyticsEvent}
       youtubeLinkData={youtubeLinkData}
     />

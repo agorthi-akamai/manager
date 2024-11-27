@@ -2,17 +2,15 @@ import { deleteLinodeConfigInterface } from '@linode/api-v4';
 import { useQueryClient } from '@tanstack/react-query';
 import * as React from 'react';
 
-import { configQueryKey, interfaceQueryKey } from 'src/queries/linodes/configs';
-import { queryKey } from 'src/queries/linodes/linodes';
-import { subnetQueryKey, vpcQueryKey } from 'src/queries/vpcs';
+import { vpcQueries } from 'src/queries/vpcs/vpcs';
 
 import type {
   APIError,
   DeleteLinodeConfigInterfacePayload,
 } from '@linode/api-v4';
+import { linodeQueries } from 'src/queries/linodes/linodes';
 
 interface IdsForUnassignLinode extends DeleteLinodeConfigInterfacePayload {
-  subnetId: number;
   vpcId: number;
 }
 
@@ -28,28 +26,18 @@ export const useUnassignLinode = () => {
   >([]);
 
   const invalidateQueries = async ({
-    configId,
     linodeId,
-    subnetId,
     vpcId,
   }: InvalidateSubnetLinodeConfigQueryIds) => {
     const queryKeys = [
-      [vpcQueryKey, 'paginated'],
-      [vpcQueryKey, 'vpc', vpcId],
-      [vpcQueryKey, 'vpc', vpcId, subnetQueryKey],
-      [vpcQueryKey, 'vpc', vpcId, subnetQueryKey, 'subnet', subnetId],
-      [
-        queryKey,
-        'linode',
-        linodeId,
-        configQueryKey,
-        'config',
-        configId,
-        interfaceQueryKey,
-      ],
+      vpcQueries.all.queryKey,
+      vpcQueries.paginated._def,
+      vpcQueries.vpc(vpcId).queryKey,
+      vpcQueries.vpc(vpcId)._ctx.subnets.queryKey,
+      linodeQueries.linode(linodeId)._ctx.configs.queryKey,
     ];
     await Promise.all(
-      queryKeys.map((key) => queryClient.invalidateQueries(key))
+      queryKeys.map((key) => queryClient.invalidateQueries({ queryKey: key }))
     );
   };
 
@@ -57,22 +45,10 @@ export const useUnassignLinode = () => {
     configId,
     interfaceId,
     linodeId,
-    subnetId,
     vpcId,
   }: IdsForUnassignLinode) => {
     await deleteLinodeConfigInterface(linodeId, configId, interfaceId);
-    invalidateQueries({ configId, linodeId, subnetId, vpcId });
-    queryClient.invalidateQueries([
-      queryKey,
-      'linode',
-      linodeId,
-      configQueryKey,
-      'config',
-      configId,
-      interfaceQueryKey,
-      'interface',
-      interfaceId,
-    ]);
+    invalidateQueries({ configId, linodeId, vpcId });
   };
 
   return {

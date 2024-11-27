@@ -1,5 +1,3 @@
-import { KubeNodePoolResponse, Region } from '@linode/api-v4';
-import { Theme } from '@mui/material/styles';
 import * as React from 'react';
 import { makeStyles } from 'tss-react/mui';
 
@@ -7,11 +5,13 @@ import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
 import { CircleProgress } from 'src/components/CircleProgress';
 import { Drawer } from 'src/components/Drawer';
 import { EnhancedNumberInput } from 'src/components/EnhancedNumberInput/EnhancedNumberInput';
+import { ErrorMessage } from 'src/components/ErrorMessage';
 import { Notice } from 'src/components/Notice/Notice';
 import { Typography } from 'src/components/Typography';
 import { useUpdateNodePoolMutation } from 'src/queries/kubernetes';
 import { useSpecificTypes } from 'src/queries/types';
 import { extendType } from 'src/utilities/extendType';
+import { isNumber } from 'src/utilities/isNumber';
 import { pluralize } from 'src/utilities/pluralize';
 import { PRICES_RELOAD_ERROR_NOTICE_TEXT } from 'src/utilities/pricing/constants';
 import { renderMonthlyPriceToCorrectDecimalPlace } from 'src/utilities/pricing/dynamicPricing';
@@ -20,7 +20,9 @@ import { getLinodeRegionPrice } from 'src/utilities/pricing/linodes';
 
 import { nodeWarning } from '../../kubeUtils';
 import { hasInvalidNodePoolPrice } from './utils';
-import { isNumber } from 'lodash';
+
+import type { KubeNodePoolResponse, Region } from '@linode/api-v4';
+import type { Theme } from '@mui/material/styles';
 
 const useStyles = makeStyles()((theme: Theme) => ({
   helperText: {
@@ -64,9 +66,12 @@ export const ResizeNodePoolDrawer = (props: Props) => {
 
   const {
     error,
-    isLoading,
+    isPending,
     mutateAsync: updateNodePool,
   } = useUpdateNodePoolMutation(kubernetesClusterId, nodePool?.id ?? -1);
+  const [resizeNodePoolError, setResizeNodePoolError] = React.useState<string>(
+    ''
+  );
 
   const [updatedCount, setUpdatedCount] = React.useState<number>(
     nodePool?.count ?? 0
@@ -78,12 +83,19 @@ export const ResizeNodePoolDrawer = (props: Props) => {
     }
     if (open) {
       setUpdatedCount(nodePool.count);
+      setResizeNodePoolError('');
     }
   }, [nodePool, open]);
 
   const handleChange = (value: number) => {
     setUpdatedCount(Math.min(100, Math.floor(value)));
   };
+
+  React.useEffect(() => {
+    if (error) {
+      setResizeNodePoolError(error?.[0].reason);
+    }
+  }, [error]);
 
   if (!nodePool) {
     // This should never happen, but it keeps TypeScript happy and avoids crashing if we
@@ -139,7 +151,14 @@ export const ResizeNodePoolDrawer = (props: Props) => {
             </Typography>
           </div>
 
-          {error && <Notice text={error?.[0].reason} variant="error" />}
+          {resizeNodePoolError && (
+            <Notice variant="error">
+              <ErrorMessage
+                entity={{ id: kubernetesClusterId, type: 'lkecluster_id' }}
+                message={resizeNodePoolError}
+              />
+            </Notice>
+          )}
 
           <div className={classes.section}>
             <Typography className={classes.helperText}>
@@ -186,7 +205,7 @@ export const ResizeNodePoolDrawer = (props: Props) => {
               'data-testid': 'submit',
               disabled: updatedCount === nodePool.count || hasInvalidPrice,
               label: 'Save Changes',
-              loading: isLoading,
+              loading: isPending,
               onClick: handleSubmit,
             }}
           />

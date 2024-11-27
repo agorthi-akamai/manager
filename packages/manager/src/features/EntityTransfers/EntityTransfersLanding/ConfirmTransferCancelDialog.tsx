@@ -12,7 +12,7 @@ import { ConfirmationDialog } from 'src/components/ConfirmationDialog/Confirmati
 import { Notice } from 'src/components/Notice/Notice';
 import { Typography } from 'src/components/Typography';
 import { queryKey } from 'src/queries/entityTransfers';
-import { sendEntityTransferCancelEvent } from 'src/utilities/analytics';
+import { sendEntityTransferCancelEvent } from 'src/utilities/analytics/customEventAnalytics';
 import { getAPIErrorOrDefault } from 'src/utilities/errorUtils';
 
 export interface Props {
@@ -55,7 +55,9 @@ export const ConfirmTransferCancelDialog = React.memo((props: Props) => {
         sendEntityTransferCancelEvent();
 
         // Refresh the query for Entity Transfers.
-        queryClient.invalidateQueries([queryKey]);
+        queryClient.invalidateQueries({
+          queryKey: [queryKey],
+        });
 
         onClose();
         setSubmitting(false);

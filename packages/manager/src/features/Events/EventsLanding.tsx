@@ -1,3 +1,4 @@
+import { createLazyRoute } from '@tanstack/react-router';
 import * as React from 'react';
 import { Waypoint } from 'react-waypoint';
 
@@ -10,6 +11,7 @@ import { TableRow } from 'src/components/TableRow';
 import { TableRowEmpty } from 'src/components/TableRowEmpty/TableRowEmpty';
 import { TableRowError } from 'src/components/TableRowError/TableRowError';
 import { TableRowLoading } from 'src/components/TableRowLoading/TableRowLoading';
+import { EVENTS_LIST_FILTER } from 'src/features/Events/constants';
 import { useEventsInfiniteQuery } from 'src/queries/events/events';
 
 import { EventRow } from './EventRow';
@@ -30,7 +32,7 @@ interface Props {
 export const EventsLanding = (props: Props) => {
   const { emptyMessage, entityId } = props;
 
-  const filter: Filter = { action: { '+neq': 'profile_update' } };
+  const filter: Filter = { ...EVENTS_LIST_FILTER };
 
   if (entityId) {
     filter['entity.id'] = entityId;
@@ -93,13 +95,15 @@ export const EventsLanding = (props: Props) => {
       <Table aria-label="List of Events">
         <TableHead>
           <TableRow>
-            <Hidden smDown>
-              <TableCell style={{ padding: 0, width: '1%' }} />
-            </Hidden>
             <StyledLabelTableCell>Event</StyledLabelTableCell>
-            <StyledTableCell>Relative Date</StyledTableCell>
+            <Hidden smDown>
+              <TableCell data-qa-events-username-header sx={{ width: 150 }}>
+                User
+              </TableCell>
+            </Hidden>
+            <StyledTableCell sx={{ width: 175 }}>Relative Date</StyledTableCell>
             <Hidden mdDown>
-              <StyledTableCell data-qa-events-time-header>
+              <StyledTableCell data-qa-events-time-header sx={{ width: 150 }}>
                 Absolute Date
               </StyledTableCell>
             </Hidden>
@@ -120,3 +124,7 @@ export const EventsLanding = (props: Props) => {
     </>
   );
 };
+
+export const eventsLandingLazyRoute = createLazyRoute('/events')({
+  component: EventsLanding,
+});

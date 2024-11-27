@@ -1,7 +1,6 @@
-import { default as _TableRow } from '@mui/material/TableRow';
+import { omittedProps } from '@linode/ui';
 import { styled } from '@mui/material/styles';
-
-import { omittedProps } from 'src/utilities/omittedProps';
+import { default as _TableRow } from '@mui/material/TableRow';
 
 import type { TableRowProps } from './TableRow';
 
@@ -9,9 +8,6 @@ export const StyledTableRow = styled(_TableRow, {
   label: 'StyledTableRow',
   shouldForwardProp: omittedProps(['forceIndex']),
 })<TableRowProps>(({ theme, ...props }) => ({
-  backgroundColor: theme.bg.bgPaper,
-  borderLeft: `1px solid ${theme.borderColors.borderTable}`,
-  borderRight: `1px solid ${theme.borderColors.borderTable}`,
   [theme.breakpoints.up('md')]: {
     boxShadow: `inset 3px 0 0 transparent`,
   },
@@ -38,14 +34,14 @@ export const StyledTableRow = styled(_TableRow, {
   ...(props.selected && {
     '& td': {
       '&:first-of-type': {
-        borderLeft: `1px solid ${theme.palette.primary.light}`,
+        borderLeft: `1px solid ${theme.borderColors.borderTable}`,
       },
-      borderBottomColor: theme.palette.primary.light,
-      borderTop: `1px solid ${theme.palette.primary.light}`,
+      borderBottomColor: theme.borderColors.borderTable,
+      borderTop: `1px solid ${theme.borderColors.borderTable}`,
       position: 'relative',
       [theme.breakpoints.down('lg')]: {
         '&:last-child': {
-          borderRight: `1px solid ${theme.palette.primary.light}`,
+          borderRight: `1px solid ${theme.borderColors.borderTable}`,
         },
       },
     },
@@ -62,16 +58,12 @@ export const StyledTableRow = styled(_TableRow, {
   ...(props.highlight && {
     backgroundColor: theme.bg.lightBlue1,
   }),
-  ...(props.disabled && {
-    '& td': {
+  '&.disabled-row': {
+    '& td:not(.hasTooltip *), & td:has(.hasTooltip):not(.MuiRadio-root)': {
       color:
-        theme.palette.mode === 'dark'
-          ? theme.color.grey6
-          : theme.color.disabledText,
+        theme.palette.mode === 'dark' ? theme.color.grey6 : theme.color.grey1,
     },
-    backgroundColor:
-      theme.palette.mode === 'dark' ? '#32363c' : 'rgba(247, 247, 247, 0.25)',
-  }),
+  },
 }));
 
 export const StyledTableDataCell = styled('td', {

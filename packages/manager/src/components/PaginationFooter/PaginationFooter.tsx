@@ -1,8 +1,9 @@
+import { Box } from '@linode/ui';
 import { styled, useTheme } from '@mui/material/styles';
 import * as React from 'react';
 
-import { Box } from '../Box';
-import Select from '../EnhancedSelect/Select';
+import { Autocomplete } from 'src/components/Autocomplete/Autocomplete';
+
 import { PaginationControls } from '../PaginationControls/PaginationControls';
 
 export const MIN_PAGE_SIZE = 25;
@@ -66,9 +67,9 @@ export const PaginationFooter = (props: Props) => {
         background: theme.bg.bgPaper,
       }}
       alignItems="center"
+      data-qa-table-pagination
       display="flex"
       justifyContent="space-between"
-      data-qa-table-pagination
     >
       {!isShowingAll && (
         <PaginationControls
@@ -80,16 +81,13 @@ export const PaginationFooter = (props: Props) => {
       )}
       {!fixedSize ? (
         <PageSizeSelectContainer data-qa-pagination-page-size>
-          <Select
-            defaultValue={defaultPagination}
-            hideLabel
-            isClearable={false}
+          <Autocomplete
+            disableClearable
             label="Number of items to show"
-            medium
-            menuPlacement="top"
-            noMarginTop
-            onChange={({ value }) => handleSizeChange(value)}
+            onChange={(_, selected) => handleSizeChange(selected.value)}
             options={finalOptions}
+            textFieldProps={{ hideLabel: true, noMarginTop: true }}
+            value={defaultPagination}
           />
         </PageSizeSelectContainer>
       ) : null}

@@ -1,27 +1,29 @@
-import { IPv6Prefix } from '@linode/api-v4/lib/networking';
+import { Box, Tooltip } from '@linode/ui';
 import { styled } from '@mui/material/styles';
 import * as React from 'react';
 
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
-import { Box } from 'src/components/Box';
 import { Divider } from 'src/components/Divider';
 import { Drawer } from 'src/components/Drawer';
-import { Item } from 'src/components/EnhancedSelect/Select';
 import { FormControlLabel } from 'src/components/FormControlLabel';
 import { Link } from 'src/components/Link';
 import { Notice } from 'src/components/Notice/Notice';
 import { Radio } from 'src/components/Radio/Radio';
 import { RadioGroup } from 'src/components/RadioGroup';
 import { Stack } from 'src/components/Stack';
-import { Tooltip } from 'src/components/Tooltip';
 import { Typography } from 'src/components/Typography';
 import {
   useAllocateIPMutation,
-  useCreateIPv6RangeMutation,
   useLinodeIPsQuery,
 } from 'src/queries/linodes/networking';
+import { useCreateIPv6RangeMutation } from 'src/queries/networking/networking';
 
-type IPType = 'v4Private' | 'v4Public';
+import { ExplainerCopy } from './ExplainerCopy';
+
+import type { IPv6Prefix } from '@linode/api-v4/lib/networking';
+import type { Item } from 'src/components/EnhancedSelect/Select';
+
+export type IPType = 'v4Private' | 'v4Public';
 
 const ipOptions: Item<IPType>[] = [
   { label: 'Public', value: 'v4Public' },
@@ -32,27 +34,6 @@ const prefixOptions = [
   { label: '/64', value: '64' },
   { label: '/56', value: '56' },
 ];
-
-// @todo: Pre-fill support tickets.
-const explainerCopy: Record<IPType, JSX.Element> = {
-  v4Private: (
-    <>
-      Add a private IP address to your Linode. Data sent explicitly to and from
-      private IP addresses in the same data center does not incur transfer quota
-      usage. To ensure that the private IP is properly configured once added,
-      it&rsquo;s best to reboot your Linode.
-    </>
-  ),
-  v4Public: (
-    <>
-      Public IP addresses, over and above the one included with each Linode,
-      incur an additional monthly charge. If you need an additional Public IP
-      Address you must request one. Please open a{' '}
-      <Link to="support/tickets">Support Ticket</Link> if you have not done so
-      already.
-    </>
-  ),
-};
 
 const IPv6ExplanatoryCopy = {
   56: (
@@ -69,32 +50,38 @@ const IPv6ExplanatoryCopy = {
   ),
 };
 
-const tooltipCopy: Record<IPType, string | null> = {
+const tooltipCopy: Record<IPType, null | string> = {
   v4Private: 'This Linode already has a private IP address.',
   v4Public: null,
 };
 
 interface Props {
   linodeId: number;
-  linodeIsInEdgeRegion?: boolean;
+  linodeIsInDistributedRegion?: boolean;
   onClose: () => void;
   open: boolean;
   readOnly: boolean;
 }
 
 export const AddIPDrawer = (props: Props) => {
-  const { linodeId, linodeIsInEdgeRegion, onClose, open, readOnly } = props;
+  const {
+    linodeId,
+    linodeIsInDistributedRegion,
+    onClose,
+    open,
+    readOnly,
+  } = props;
 
   const {
     error: ipv4Error,
-    isLoading: ipv4Loading,
+    isPending: ipv4Loading,
     mutateAsync: allocateIPAddress,
     reset: resetIPv4,
   } = useAllocateIPMutation(linodeId);
 
   const {
     error: ipv6Error,
-    isLoading: ipv6Loading,
+    isPending: ipv6Loading,
     mutateAsync: createIPv6Range,
     reset: resetIPv6,
   } = useCreateIPv6RangeMutation();
@@ -179,10 +166,10 @@ export const AddIPDrawer = (props: Props) => {
           onChange={handleIPv4Change}
           value={selectedIPv4}
         >
-          {linodeIsInEdgeRegion && (
+          {linodeIsInDistributedRegion && (
             <Notice
               sx={{ fontSize: 15 }}
-              text="Private IP is currently not available for Edge regions."
+              text="Private IP is currently not available for distributed regions."
               variant="warning"
             />
           )}
@@ -190,9 +177,11 @@ export const AddIPDrawer = (props: Props) => {
           <Box>
             {ipOptions.map((option, idx) => (
               <FormControlLabel
+                disabled={
+                  option.value === 'v4Private' && linodeIsInDistributedRegion
+                }
                 control={<Radio />}
                 data-qa-radio={option.label}
-                disabled={option.value === 'v4Private' && linodeIsInEdgeRegion}
                 key={idx}
                 label={option.label}
                 value={option.value}
@@ -200,7 +189,11 @@ export const AddIPDrawer = (props: Props) => {
             ))}
           </Box>
         </StyledRadioGroup>
-        {selectedIPv4 && <Typography>{explainerCopy[selectedIPv4]}</Typography>}
+        {selectedIPv4 && (
+          <Typography>
+            <ExplainerCopy ipType={selectedIPv4} linodeId={linodeId} />
+          </Typography>
+        )}
 
         {_tooltipCopy ? (
           <Tooltip placement="bottom-end" title={_tooltipCopy}>
@@ -259,7 +252,7 @@ export const AddIPDrawer = (props: Props) => {
         <Typography>
           IPv6 addresses are allocated as ranges, which you can choose to
           distribute and further route yourself.{' '}
-          <Link to="https://www.linode.com/docs/guides/an-overview-of-ipv6-on-linode/">
+          <Link to="https://techdocs.akamai.com/cloud-computing/docs/an-overview-of-ipv6-on-linode">
             Learn more
           </Link>
           .

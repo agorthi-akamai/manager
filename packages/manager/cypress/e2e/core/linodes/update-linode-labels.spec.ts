@@ -1,5 +1,4 @@
-import { createLinode } from 'support/api/linodes';
-import { containsVisible } from 'support/helpers';
+import { createTestLinode } from 'support/util/linodes';
 import { ui } from 'support/ui';
 import { cleanUp } from 'support/util/cleanup';
 import { authenticate } from 'support/api/authentication';
@@ -9,13 +8,14 @@ authenticate();
 describe('update linode label', () => {
   beforeEach(() => {
     cleanUp(['linodes']);
+    cy.tag('method:e2e');
   });
 
   it('updates a linode label from details page', () => {
-    createLinode().then((linode) => {
+    cy.defer(() => createTestLinode({ booted: true })).then((linode) => {
       const newLinodeLabel = randomLabel();
       cy.visitWithLogin(`/linodes/${linode.id}`);
-      containsVisible('RUNNING');
+      cy.contains('RUNNING').should('be.visible');
 
       cy.get(`[aria-label="Edit ${linode.label}"]`).click();
       cy.get(`[id="edit-${linode.label}-label"]`)
@@ -29,10 +29,10 @@ describe('update linode label', () => {
   });
 
   it('updates a linode label from the "Settings" tab', () => {
-    createLinode().then((linode) => {
+    cy.defer(() => createTestLinode({ booted: true })).then((linode) => {
       const newLinodeLabel = randomLabel();
       cy.visitWithLogin(`/linodes/${linode.id}`);
-      containsVisible('RUNNING');
+      cy.contains('RUNNING').should('be.visible');
 
       cy.visitWithLogin(`/linodes/${linode.id}/settings`);
       cy.get('[id="label"]').click().clear().type(`${newLinodeLabel}{enter}`);

@@ -1,11 +1,18 @@
 import ErrorOutline from '@mui/icons-material/ErrorOutline';
-import Grid from '@mui/material/Unstable_Grid2';
 import { styled, useTheme } from '@mui/material/styles';
+import Grid from '@mui/material/Unstable_Grid2';
 import * as React from 'react';
 
+import { Button } from 'src/components/Button/Button';
 import { Typography } from 'src/components/Typography';
 
-import { SvgIconProps } from '../SvgIcon';
+import type { SvgIconProps } from '../SvgIcon';
+import type { SxProps, Theme } from '@mui/material/styles';
+
+export interface ActionButtonProps {
+  onClick: () => void;
+  text: string;
+}
 
 export interface ErrorStateProps {
   /**
@@ -16,18 +23,22 @@ export interface ErrorStateProps {
    * CSS properties to apply to the custom icon.
    */
   CustomIconStyles?: React.CSSProperties;
+  actionButtonProps?: ActionButtonProps;
+
   /**
    * Reduces the padding on the root element.
    */
   compact?: boolean;
-  /**
-   * The error text to display.
-   */
   errorText: JSX.Element | string;
+
+  /**
+   * Styles applied to the error text
+   */
+  typographySx?: SxProps<Theme>;
 }
 
 export const ErrorState = (props: ErrorStateProps) => {
-  const { CustomIcon, compact } = props;
+  const { CustomIcon, actionButtonProps, compact, typographySx } = props;
   const theme = useTheme();
 
   const sxIcon = {
@@ -60,6 +71,7 @@ export const ErrorState = (props: ErrorStateProps) => {
           <Typography
             data-qa-error-msg
             style={{ textAlign: 'center' }}
+            sx={typographySx}
             variant="h3"
           >
             {props.errorText}
@@ -67,6 +79,18 @@ export const ErrorState = (props: ErrorStateProps) => {
         ) : (
           <div style={{ textAlign: 'center' }}>{props.errorText}</div>
         )}
+        {actionButtonProps ? (
+          <div style={{ textAlign: 'center' }}>
+            <Button
+              onClick={() => {
+                actionButtonProps.onClick?.();
+              }}
+              title={actionButtonProps.text}
+            >
+              {actionButtonProps.text}
+            </Button>
+          </div>
+        ) : null}
       </Grid>
     </ErrorStateRoot>
   );

@@ -7,7 +7,6 @@ import { Typography } from 'src/components/Typography';
 export const StyledTableCell = styled(TableCell, {
   label: 'StyledTableCell',
 })(({ theme }) => ({
-  color: theme.textColors.tableHeader,
   fontFamily: theme.font.bold,
   fontSize: '0.875rem',
 }));
@@ -15,15 +14,14 @@ export const StyledTableCell = styled(TableCell, {
 export const StyledLabelTableCell = styled(TableCell, {
   label: 'StyledLabelTableCell',
 })(({ theme }) => ({
-  color: theme.textColors.tableHeader,
   fontFamily: theme.font.bold,
   fontSize: '0.875rem',
   minWidth: 200,
   paddingLeft: 10,
   [theme.breakpoints.down('sm')]: {
-    width: '70%',
+    width: 'calc(100% - 250px)',
   },
-  width: '60%',
+  width: 'calc(100% - 400px)',
 }));
 
 export const StyledH1Header = styled(H1Header, {

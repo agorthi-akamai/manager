@@ -1,6 +1,6 @@
-import { ObjectStorageBucketSSLRequest } from '@linode/api-v4/lib/object-storage';
-import Grid from '@mui/material/Unstable_Grid2';
+import { Paper } from '@linode/ui';
 import { useTheme } from '@mui/material/styles';
+import Grid from '@mui/material/Unstable_Grid2';
 import { useFormik } from 'formik';
 import { useSnackbar } from 'notistack';
 import * as React from 'react';
@@ -12,14 +12,13 @@ import { ConfirmationDialog } from 'src/components/ConfirmationDialog/Confirmati
 import { ErrorState } from 'src/components/ErrorState/ErrorState';
 import { Link } from 'src/components/Link';
 import { Notice } from 'src/components/Notice/Notice';
-import { Paper } from 'src/components/Paper';
 import { TextField } from 'src/components/TextField';
 import { Typography } from 'src/components/Typography';
 import {
   useBucketSSLDeleteMutation,
   useBucketSSLMutation,
   useBucketSSLQuery,
-} from 'src/queries/objectStorage';
+} from 'src/queries/object-storage/queries';
 import { getErrorMap } from 'src/utilities/errorUtils';
 
 import {
@@ -28,6 +27,8 @@ import {
   StyledHelperText,
   StyledKeyWrapper,
 } from './BucketSSL.styles';
+
+import type { CreateObjectStorageBucketSSLPayload } from '@linode/api-v4';
 
 interface Props {
   bucketName: string;
@@ -47,7 +48,7 @@ export const BucketSSL = (props: Props) => {
         upload a custom certificate that will be used for the TLS portion of the
         HTTPS request instead. For more information, please see our guide on
         using{' '}
-        <Link to="https://www.linode.com/docs/platform/object-storage/enable-ssl-for-object-storage/">
+        <Link to="https://techdocs.akamai.com/cloud-computing/docs/configure-a-custom-domain-with-a-tls-ssl-certificate">
           custom certificates for Object Storage buckets
         </Link>
         .
@@ -80,12 +81,12 @@ export const SSLBody = (props: Props) => {
 const AddCertForm = (props: Props) => {
   const { bucketName, clusterId } = props;
   const { enqueueSnackbar } = useSnackbar();
-  const { error, isLoading, mutateAsync } = useBucketSSLMutation(
+  const { error, isPending, mutateAsync } = useBucketSSLMutation(
     clusterId,
     bucketName
   );
 
-  const formik = useFormik<ObjectStorageBucketSSLRequest>({
+  const formik = useFormik<CreateObjectStorageBucketSSLPayload>({
     initialValues: {
       certificate: '',
       private_key: '',
@@ -145,7 +146,7 @@ const AddCertForm = (props: Props) => {
         <ActionsPanel
           primaryButtonProps={{
             label: 'Upload Certificate',
-            loading: isLoading,
+            loading: isPending,
             type: 'submit',
           }}
         />
@@ -160,7 +161,7 @@ const RemoveCertForm = (props: Props) => {
   const { enqueueSnackbar } = useSnackbar();
   const {
     error,
-    isLoading,
+    isPending,
     mutateAsync: deleteSSLCert,
   } = useBucketSSLDeleteMutation(clusterId, bucketName);
 
@@ -177,11 +178,11 @@ const RemoveCertForm = (props: Props) => {
     <ActionsPanel
       primaryButtonProps={{
         label: 'Remove certificate',
-        loading: isLoading,
+        loading: isPending,
         onClick: removeCertificate,
       }}
       secondaryButtonProps={{
-        disabled: isLoading,
+        disabled: isPending,
         label: 'Cancel',
         onClick: () => setOpen(false),
       }}

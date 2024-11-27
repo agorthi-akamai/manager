@@ -1,4 +1,5 @@
-import { Disk, Linode } from '@linode/api-v4/lib/linodes';
+import { InputAdornment } from '@linode/ui';
+import { FormHelperText } from '@linode/ui';
 import {
   CreateLinodeDiskFromImageSchema,
   CreateLinodeDiskSchema,
@@ -10,10 +11,7 @@ import * as React from 'react';
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
 import { Autocomplete } from 'src/components/Autocomplete/Autocomplete';
 import { Drawer } from 'src/components/Drawer';
-import { Item } from 'src/components/EnhancedSelect/Select';
-import { FormHelperText } from 'src/components/FormHelperText';
-import { InputAdornment } from 'src/components/InputAdornment';
-import { Mode, ModeSelect } from 'src/components/ModeSelect/ModeSelect';
+import { ModeSelect } from 'src/components/ModeSelect/ModeSelect';
 import { Notice } from 'src/components/Notice/Notice';
 import { TextField } from 'src/components/TextField';
 import { useEventsPollingActions } from 'src/queries/events/events';
@@ -25,6 +23,10 @@ import { useLinodeQuery } from 'src/queries/linodes/linodes';
 import { handleAPIErrors } from 'src/utilities/formikErrorUtils';
 
 import { ImageAndPassword } from '../LinodeSettings/ImageAndPassword';
+
+import type { Image } from '@linode/api-v4';
+import type { Disk, Linode } from '@linode/api-v4/lib/linodes';
+import type { Mode } from 'src/components/ModeSelect/ModeSelect';
 
 type FileSystem = 'ext3' | 'ext4' | 'initrd' | 'raw' | 'swap';
 
@@ -171,8 +173,8 @@ export const CreateDiskDrawer = (props: Props) => {
             imageFieldError={
               formik.touched.image ? formik.errors.image : undefined
             }
-            onImageChange={(selected: Item) =>
-              formik.setFieldValue('image', selected?.value ?? null)
+            onImageChange={(image: Image) =>
+              formik.setFieldValue('image', image?.id ?? null)
             }
             onPasswordChange={(root_pass: string) =>
               formik.setFieldValue('root_pass', root_pass)
@@ -186,6 +188,7 @@ export const CreateDiskDrawer = (props: Props) => {
             authorizedUsers={formik.values.authorized_users}
             linodeId={linodeId}
             password={formik.values.root_pass}
+            selectedImage={formik.values.image}
           />
         )}
         <TextField

@@ -1,14 +1,23 @@
+import { Tooltip } from '@linode/ui';
 import { styled } from '@mui/material/styles';
 import * as React from 'react';
 
-import { Tooltip } from 'src/components/Tooltip';
 import { Typography } from 'src/components/Typography';
 
-import type { SxProps } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material';
 import type { TooltipProps } from '@mui/material/Tooltip';
 import type { TypographyProps } from 'src/components/Typography';
 
 export interface TextTooltipProps {
+  /**
+   * Props to pass to the Popper component
+   */
+  PopperProps?: TooltipProps['PopperProps'];
+  /**
+   * The data-qa-tooltip attribute for the tooltip.
+   * Defaults to the tooltip title, but will be undefined if the title is a JSX element.
+   */
+  dataQaTooltip?: string;
   /** The text to hover on to display the tooltip */
   displayText: string;
   /** If true, the tooltip will not have a min-width of 375px
@@ -21,7 +30,7 @@ export interface TextTooltipProps {
    */
   placement?: TooltipProps['placement'];
   /** Optional custom styles */
-  sxTypography?: SxProps;
+  sxTypography?: SxProps<Theme>;
   /** The text to display inside the tooltip */
   tooltipText: JSX.Element | string;
   /**
@@ -36,6 +45,8 @@ export interface TextTooltipProps {
  */
 export const TextTooltip = (props: TextTooltipProps) => {
   const {
+    PopperProps,
+    dataQaTooltip,
     displayText,
     minWidth,
     placement,
@@ -47,14 +58,18 @@ export const TextTooltip = (props: TextTooltipProps) => {
   return (
     <StyledRootTooltip
       PopperProps={{
+        ...PopperProps,
         sx: {
+          ...PopperProps?.sx,
           '& > div': {
             minWidth: minWidth ? minWidth : 375,
           },
         },
       }}
+      data-qa-tooltip={dataQaTooltip}
       enterTouchDelay={0}
       placement={placement ? placement : 'bottom'}
+      tabIndex={0}
       title={tooltipText}
     >
       <Typography component="span" sx={sxTypography} variant={variant}>
@@ -67,10 +82,13 @@ export const TextTooltip = (props: TextTooltipProps) => {
 const StyledRootTooltip = styled(Tooltip, {
   label: 'StyledRootTooltip',
 })(({ theme }) => ({
+  '&:hover': {
+    color: theme.textColors.linkHover,
+  },
   borderRadius: 4,
-  color: theme.palette.primary.main,
+  color: theme.textColors.linkActiveLight,
   cursor: 'pointer',
   position: 'relative',
-  textDecoration: `underline dotted ${theme.palette.primary.main}`,
+  textDecoration: `underline dotted ${theme.textColors.linkActiveLight}`,
   textUnderlineOffset: 4,
 }));

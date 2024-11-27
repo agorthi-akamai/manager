@@ -549,7 +549,10 @@ class DomainRecords extends React.Component<Props, State> {
     /** TXT Record */
     {
       columns: [
-        { render: (r: DomainRecord) => r.name, title: 'Hostname' },
+        {
+          render: (r: DomainRecord) => r.name || this.props.domain.domain,
+          title: 'Hostname',
+        },
         {
           render: (r: DomainRecord) => truncateEnd(r.target, 100),
           title: 'Value',
@@ -584,10 +587,10 @@ class DomainRecords extends React.Component<Props, State> {
     /** SRV Record */
     {
       columns: [
-        { render: (r: DomainRecord) => r.name, title: 'Name' },
+        { render: (r: DomainRecord) => r.name, title: 'Service/Protocol' },
         {
           render: () => this.props.domain.domain,
-          title: 'Domain',
+          title: 'Name',
         },
         {
           render: (r: DomainRecord) => String(r.priority),

@@ -1,7 +1,7 @@
+import { Paper } from '@linode/ui';
 import React from 'react';
 
 import { Divider } from './Divider';
-import { Paper } from './Paper';
 import { Stack } from './Stack';
 
 import type { Meta, StoryObj } from '@storybook/react';
@@ -55,7 +55,7 @@ export const WithDivider: StoryObj<typeof Stack> = {
 
 const meta: Meta<typeof Stack> = {
   component: Stack,
-  title: 'Components/Stack',
+  title: 'Foundations/Stack',
 };
 
 export default meta;

@@ -2,7 +2,7 @@ import { signAgreement } from '@linode/api-v4';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { reportException } from 'src/exceptionReporting';
-import { useProfile } from 'src/queries/profile';
+import { useProfile } from 'src/queries/profile/profile';
 
 import { queryPresets } from '../base';
 import { accountQueries } from './queries';
@@ -38,8 +38,10 @@ export const useMutateAccountAgreements = () => {
           const newAgreements = { ...previousData };
 
           for (const key in variables) {
-            if (variables[key] !== undefined) {
-              newAgreements[key] = variables[key];
+            if (variables[key as keyof Agreements] !== undefined) {
+              newAgreements[key as keyof Agreements] = variables[
+                key as keyof Agreements
+              ]!;
             }
           }
 

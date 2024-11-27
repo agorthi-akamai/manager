@@ -1,5 +1,6 @@
-import { Theme } from '@mui/material/styles';
 import { makeStyles } from 'tss-react/mui';
+
+import type { Theme } from '@mui/material/styles';
 
 // TODO jss-to-tss-react codemod: usages of this hook outside of this file will not be converted.
 export const useStyles = makeStyles()((theme: Theme) => ({
@@ -93,7 +94,7 @@ export const useStyles = makeStyles()((theme: Theme) => ({
       },
       backgroundColor: theme.bg.white,
       border: `1px solid transparent`,
-      borderRadius: 0,
+      borderRadius: theme.tokens.borderRadius.None,
       boxShadow: 'none',
       minHeight: `calc(${theme.spacing(5)} - 2)`,
     },
@@ -121,7 +122,7 @@ export const useStyles = makeStyles()((theme: Theme) => ({
     },
     '& .react-select__menu': {
       border: `1px solid ${theme.palette.primary.main}`,
-      borderRadius: 0,
+      borderRadius: theme.tokens.borderRadius.None,
       boxShadow: 'none',
       margin: '-1px 0 0 0',
       maxWidth: 415,
@@ -168,7 +169,7 @@ export const useStyles = makeStyles()((theme: Theme) => ({
       },
       '&:hover': {
         '& svg': {
-          color: 'white',
+          color: theme.tokens.color.Neutrals.White,
         },
         backgroundColor: theme.palette.primary.main,
       },
@@ -201,7 +202,7 @@ export const useStyles = makeStyles()((theme: Theme) => ({
     },
     '& .react-select__option--is-focused': {
       backgroundColor: theme.palette.primary.main,
-      color: 'white',
+      color: theme.tokens.color.Neutrals.White,
     },
     '& .react-select__option--is-selected': {
       '&.react-select__option--is-focused': {
@@ -225,6 +226,9 @@ export const useStyles = makeStyles()((theme: Theme) => ({
       },
       width: '100%',
     },
+    '& .select-placeholder': {
+      color: theme.color.grey1,
+    },
     '& [class*="MuiFormHelperText-error"]': {
       paddingBottom: theme.spacing(1),
     },
@@ -247,7 +251,7 @@ export const useStyles = makeStyles()((theme: Theme) => ({
     '& .tag': {
       '&:hover': {
         backgroundColor: theme.palette.primary.main,
-        color: 'white',
+        color: theme.tokens.color.Neutrals.White,
       },
       backgroundColor: theme.bg.lightBlue1,
       color: theme.palette.text.primary,
@@ -294,7 +298,7 @@ export const reactSelectStyles = (theme: Theme) => ({
     },
     backgroundColor: theme.bg.white,
     border: `1px solid transparent`,
-    borderRadius: 0,
+    borderRadius: theme.tokens.borderRadius.None,
     boxShadow: 'none',
     minHeight: `calc(${theme.spacing(5)} - 2)`,
   }),
@@ -326,7 +330,7 @@ export const reactSelectStyles = (theme: Theme) => ({
   menu: (base: any) => ({
     ...base,
     border: `1px solid ${theme.palette.primary.main}`,
-    borderRadius: 0,
+    borderRadius: theme.tokens.borderRadius.None,
     boxShadow: 'none',
     left: -1,
     margin: 0,
@@ -373,7 +377,7 @@ export const reactSelectStyles = (theme: Theme) => ({
     },
     '&:hover': {
       '& svg': {
-        color: 'white',
+        color: theme.tokens.color.Neutrals.White,
       },
       backgroundColor: theme.palette.primary.main,
     },
@@ -404,7 +408,7 @@ export const reactSelectStyles = (theme: Theme) => ({
       return {
         ...optionStyles,
         backgroundColor: theme.palette.primary.main,
-        color: 'white',
+        color: theme.tokens.color.Neutrals.White,
       };
     }
     if (state.isSelected) {

@@ -1,6 +1,5 @@
+import { latoWeb } from '@linode/ui';
 import { styled } from '@mui/material/styles';
-
-import { latoWeb } from 'src/foundations/fonts';
 
 import { Button } from './Button';
 
@@ -15,10 +14,12 @@ export const StyledActionButton = styled(Button, {
 })(({ theme, ...props }) => ({
   ...(!props.disabled && {
     '&:hover': {
-      backgroundColor: theme.palette.primary.main,
-      color: theme.name === 'dark' ? theme.color.black : theme.color.white,
+      backgroundColor: theme.color.buttonPrimaryHover,
+      color: theme.color.white,
     },
   }),
+  background: 'transparent',
+  color: theme.textColors.linkActiveLight,
   fontFamily: latoWeb.normal,
   fontSize: '14px',
   lineHeight: '16px',

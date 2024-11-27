@@ -2,8 +2,9 @@ import * as React from 'react';
 
 import { TableRowEmpty } from 'src/components/TableRowEmpty/TableRowEmpty';
 
-import { RenderLinodesProps } from './DisplayLinodes';
 import { LinodeRow } from './LinodeRow/LinodeRow';
+
+import type { RenderLinodesProps } from './DisplayLinodes';
 
 export const ListView = (props: RenderLinodesProps) => {
   const { data, openDialog, openPowerActionDialog } = props;
@@ -46,15 +47,17 @@ export const ListView = (props: RenderLinodesProps) => {
           ipv6={linode.ipv6 || ''}
           key={`linode-row-${idx}`}
           label={linode.label}
+          lke_cluster_id={linode.lke_cluster_id}
+          maintenance={linode.maintenance}
           placement_group={linode.placement_group}
           region={linode.region}
+          site_type={linode.site_type}
           specs={linode.specs}
           status={linode.status}
           tags={linode.tags}
           type={linode.type}
           updated={linode.updated}
           watchdog_enabled={linode.watchdog_enabled}
-          maintenance={linode.maintenance}
         />
       ))}
     </>

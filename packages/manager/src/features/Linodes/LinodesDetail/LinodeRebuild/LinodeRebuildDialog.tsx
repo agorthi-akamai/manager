@@ -1,12 +1,16 @@
 import { styled, useTheme } from '@mui/material/styles';
 import * as React from 'react';
 
+import { Autocomplete } from 'src/components/Autocomplete/Autocomplete';
 import { Dialog } from 'src/components/Dialog/Dialog';
-import EnhancedSelect, { Item } from 'src/components/EnhancedSelect/Select';
+import { ErrorMessage } from 'src/components/ErrorMessage';
 import { Notice } from 'src/components/Notice/Notice';
+import { getIsDistributedRegion } from 'src/components/RegionSelect/RegionSelect.utils';
 import { Typography } from 'src/components/Typography';
 import { useLinodeQuery } from 'src/queries/linodes/linodes';
-import { useGrants, useProfile } from 'src/queries/profile';
+import { useGrants, useProfile } from 'src/queries/profile/profile';
+import { useRegionsQuery } from 'src/queries/regions/regions';
+import { scrollErrorIntoViewV2 } from 'src/utilities/scrollErrorIntoViewV2';
 
 import { HostMaintenanceError } from '../HostMaintenanceError';
 import { LinodePermissionsError } from '../LinodePermissionsError';
@@ -15,6 +19,7 @@ import { RebuildFromStackScript } from './RebuildFromStackScript';
 
 interface Props {
   linodeId: number | undefined;
+  linodeLabel: string | undefined;
   onClose: () => void;
   open: boolean;
 }
@@ -24,7 +29,10 @@ type MODES =
   | 'fromCommunityStackScript'
   | 'fromImage';
 
-const options = [
+const options: {
+  label: string;
+  value: MODES;
+}[] = [
   { label: 'From Image', value: 'fromImage' },
   { label: 'From Community StackScript', value: 'fromCommunityStackScript' },
   { label: 'From Account StackScript', value: 'fromAccountStackScript' },
@@ -33,7 +41,8 @@ const options = [
 const passwordHelperText = 'Set a password for your rebuilt Linode.';
 
 export const LinodeRebuildDialog = (props: Props) => {
-  const { linodeId, onClose, open } = props;
+  const { linodeId, linodeLabel, onClose, open } = props;
+  const modalRef = React.useRef<HTMLDivElement>(null);
 
   const { data: profile } = useProfile();
   const { data: grants } = useGrants();
@@ -41,6 +50,8 @@ export const LinodeRebuildDialog = (props: Props) => {
     linodeId ?? -1,
     linodeId !== undefined && open
   );
+
+  const { data: regionsData } = useRegionsQuery();
 
   const isReadOnly =
     Boolean(profile?.restricted) &&
@@ -51,10 +62,23 @@ export const LinodeRebuildDialog = (props: Props) => {
   const unauthorized = isReadOnly;
   const disabled = hostMaintenance || unauthorized;
 
+  // LDE-related checks
+  const isEncrypted = linode?.disk_encryption === 'enabled';
+  const isLKELinode = Boolean(linode?.lke_cluster_id);
+  const linodeIsInDistributedRegion = getIsDistributedRegion(
+    regionsData ?? [],
+    linode?.region ?? ''
+  );
+
   const theme = useTheme();
 
   const [mode, setMode] = React.useState<MODES>('fromImage');
   const [rebuildError, setRebuildError] = React.useState<string>('');
+
+  const [
+    diskEncryptionEnabled,
+    setDiskEncryptionEnabled,
+  ] = React.useState<boolean>(isEncrypted);
 
   const onExitDrawer = () => {
     setRebuildError('');
@@ -63,6 +87,11 @@ export const LinodeRebuildDialog = (props: Props) => {
 
   const handleRebuildError = (status: string) => {
     setRebuildError(status);
+    scrollErrorIntoViewV2(modalRef);
+  };
+
+  const toggleDiskEncryptionEnabled = () => {
+    setDiskEncryptionEnabled(!diskEncryptionEnabled);
   };
 
   return (
@@ -73,12 +102,23 @@ export const LinodeRebuildDialog = (props: Props) => {
       maxWidth="md"
       onClose={onClose}
       open={open}
-      title={`Rebuild Linode ${linode?.label ?? ''}`}
+      ref={modalRef}
+      title={`Rebuild Linode ${linodeLabel ?? ''}`}
     >
       <StyledDiv>
         {unauthorized && <LinodePermissionsError />}
         {hostMaintenance && <HostMaintenanceError />}
-        {rebuildError && <Notice variant="error">{rebuildError}</Notice>}
+        {rebuildError && (
+          <Notice variant="error">
+            <ErrorMessage
+              entity={{
+                id: linodeId,
+                type: 'linode_id',
+              }}
+              message={rebuildError}
+            />
+          </Notice>
+        )}
         <Typography
           data-qa-rebuild-desc
           sx={{ paddingBottom: theme.spacing(2) }}
@@ -92,15 +132,17 @@ export const LinodeRebuildDialog = (props: Props) => {
             Linode.
           </strong>
         </Typography>
-        <EnhancedSelect
-          onChange={(selected: Item<MODES>) => {
-            setMode(selected.value);
+        <Autocomplete
+          onChange={(_, selected) => {
+            setMode(selected?.value ?? 'fromImage');
             setRebuildError('');
           }}
+          textFieldProps={{
+            hideLabel: true,
+          }}
           defaultValue={options.find((option) => option.value === mode)}
+          disableClearable
           disabled={disabled}
-          hideLabel
-          isClearable={false}
           label="From Image"
           options={options}
         />
@@ -108,33 +150,47 @@ export const LinodeRebuildDialog = (props: Props) => {
       {mode === 'fromImage' && (
         <RebuildFromImage
           disabled={disabled}
+          diskEncryptionEnabled={diskEncryptionEnabled}
           handleRebuildError={handleRebuildError}
+          isLKELinode={isLKELinode}
           linodeId={linodeId ?? -1}
+          linodeIsInDistributedRegion={linodeIsInDistributedRegion}
           linodeLabel={linode?.label}
           linodeRegion={linode?.region}
           onClose={onClose}
           passwordHelperText={passwordHelperText}
+          toggleDiskEncryptionEnabled={toggleDiskEncryptionEnabled}
         />
       )}
       {mode === 'fromCommunityStackScript' && (
         <RebuildFromStackScript
           disabled={disabled}
+          diskEncryptionEnabled={diskEncryptionEnabled}
           handleRebuildError={handleRebuildError}
+          isLKELinode={isLKELinode}
           linodeId={linodeId ?? -1}
+          linodeIsInDistributedRegion={linodeIsInDistributedRegion}
           linodeLabel={linode?.label}
+          linodeRegion={linode?.region}
           onClose={onClose}
           passwordHelperText={passwordHelperText}
+          toggleDiskEncryptionEnabled={toggleDiskEncryptionEnabled}
           type="community"
         />
       )}
       {mode === 'fromAccountStackScript' && (
         <RebuildFromStackScript
           disabled={disabled}
+          diskEncryptionEnabled={diskEncryptionEnabled}
           handleRebuildError={handleRebuildError}
+          isLKELinode={isLKELinode}
           linodeId={linodeId ?? -1}
+          linodeIsInDistributedRegion={linodeIsInDistributedRegion}
           linodeLabel={linode?.label}
+          linodeRegion={linode?.region}
           onClose={onClose}
           passwordHelperText={passwordHelperText}
+          toggleDiskEncryptionEnabled={toggleDiskEncryptionEnabled}
           type="account"
         />
       )}

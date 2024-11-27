@@ -1,14 +1,13 @@
-import { ManagedServiceMonitor } from '@linode/api-v4/lib/managed';
+import { Tooltip } from '@linode/ui';
 import Grid from '@mui/material/Unstable_Grid2';
 import * as React from 'react';
 
 import TicketIcon from 'src/assets/icons/ticket.svg';
 import { TableCell } from 'src/components/TableCell';
-import { Tooltip } from 'src/components/Tooltip';
 import { Typography } from 'src/components/Typography';
-import { ExtendedIssue } from 'src/queries/managed/types';
 
 import ActionMenu from './MonitorActionMenu';
+import { statusIconMap, statusTextMap } from './monitorMaps';
 import {
   StyledGrid,
   StyledLink,
@@ -16,7 +15,9 @@ import {
   StyledTableRow,
   StyledTypography,
 } from './MonitorRow.styles';
-import { statusIconMap, statusTextMap } from './monitorMaps';
+
+import type { ManagedServiceMonitor } from '@linode/api-v4/lib/managed';
+import type { ExtendedIssue } from 'src/queries/managed/types';
 
 interface MonitorRowProps {
   issues: ExtendedIssue[];
@@ -45,7 +46,6 @@ export const MonitorRow = (props: MonitorRowProps) => {
 
   return (
     <StyledTableRow
-      ariaLabel={`Monitor ${monitor.label}`}
       data-qa-monitor-cell={monitor.id}
       data-testid={'monitor-row'}
       key={monitor.id}

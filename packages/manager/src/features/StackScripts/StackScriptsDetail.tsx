@@ -12,7 +12,7 @@ import { LandingHeader } from 'src/components/LandingHeader';
 import { NotFound } from 'src/components/NotFound';
 import { StackScript as _StackScript } from 'src/components/StackScript/StackScript';
 import { useAccountManagement } from 'src/hooks/useAccountManagement';
-import { useGrants } from 'src/queries/profile';
+import { useGrants } from 'src/queries/profile/profile';
 import { getAPIErrorOrDefault, getErrorMap } from 'src/utilities/errorUtils';
 
 import {
@@ -138,7 +138,7 @@ export const StackScriptsDetail = () => {
         createButtonText="Deploy New Linode"
         disabledCreateButton={userCannotAddLinodes}
         docsLabel="Docs"
-        docsLink="https://www.linode.com/docs/platform/stackscripts"
+        docsLink="https://techdocs.akamai.com/cloud-computing/docs/stackscripts"
         onButtonClick={handleCreateClick}
         title={stackScript.label}
       />

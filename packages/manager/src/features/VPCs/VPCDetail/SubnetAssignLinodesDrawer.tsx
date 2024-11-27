@@ -1,16 +1,15 @@
 import { appendConfigInterface } from '@linode/api-v4';
+import { Box, FormHelperText } from '@linode/ui';
 import { useTheme } from '@mui/material/styles';
 import { useFormik } from 'formik';
 import * as React from 'react';
 
 import { Autocomplete } from 'src/components/Autocomplete/Autocomplete';
-import { Box } from 'src/components/Box';
 import { Button } from 'src/components/Button/Button';
 import { Checkbox } from 'src/components/Checkbox';
 import { DownloadCSV } from 'src/components/DownloadCSV/DownloadCSV';
 import { Drawer } from 'src/components/Drawer';
 import { FormControlLabel } from 'src/components/FormControlLabel';
-import { FormHelperText } from 'src/components/FormHelperText';
 import { Link } from 'src/components/Link';
 import { Notice } from 'src/components/Notice/Notice';
 import { RemovableSelectionsListTable } from 'src/components/RemovableSelectionsList/RemovableSelectionsListTable';
@@ -18,7 +17,6 @@ import { TextField } from 'src/components/TextField';
 import { TooltipIcon } from 'src/components/TooltipIcon';
 import { Typography } from 'src/components/Typography';
 import { LinodeSelect } from 'src/features/Linodes/LinodeSelect/LinodeSelect';
-import { defaultPublicInterface } from 'src/features/Linodes/LinodesCreate/LinodeCreate';
 import {
   VPC_AUTO_ASSIGN_IPV4_TOOLTIP,
   VPC_MULTIPLE_CONFIGURATIONS_LEARN_MORE_LINK,
@@ -27,9 +25,8 @@ import { useFormattedDate } from 'src/hooks/useFormattedDate';
 import { useUnassignLinode } from 'src/hooks/useUnassignLinode';
 import { useAllLinodesQuery } from 'src/queries/linodes/linodes';
 import { getAllLinodeConfigs } from 'src/queries/linodes/requests';
-import { useGrants, useProfile } from 'src/queries/profile';
+import { useGrants, useProfile } from 'src/queries/profile/profile';
 import { getErrorMap } from 'src/utilities/errorUtils';
-import { ExtendedIP } from 'src/utilities/ipUtils';
 import { SUBNET_LINODE_CSV_HEADERS } from 'src/utilities/subnets';
 
 import {
@@ -48,6 +45,7 @@ import type {
   Linode,
   Subnet,
 } from '@linode/api-v4';
+import type { ExtendedIP } from 'src/utilities/ipUtils';
 
 // @TODO VPC: if all subnet action menu item related components use (most of) this as their props, might be worth
 // putting this in a common file and naming it something like SubnetActionMenuItemProps or something
@@ -200,7 +198,6 @@ export const SubnetAssignLinodesDrawer = (
       await invalidateQueries({
         configId,
         linodeId: selectedLinode?.id ?? -1,
-        subnetId: subnet?.id ?? -1,
         vpcId,
       });
     } catch (errors) {
@@ -244,7 +241,6 @@ export const SubnetAssignLinodesDrawer = (
         configId,
         interfaceId: interfaceData?.id ?? -1,
         linodeId,
-        subnetId: subnet?.id ?? -1,
         vpcId,
       });
     } catch (errors) {
@@ -550,7 +546,7 @@ export const SubnetAssignLinodesDrawer = (
           handleUnassignLinode(data as LinodeAndConfigData);
           setUnassignLinodesErrors([]);
         }}
-        headerText={`Linodes Assigned to Subnet (${assignedLinodesAndConfigData.length})`}
+        headerText={`Linodes recently assigned to Subnet (${assignedLinodesAndConfigData.length})`}
         noDataText={'No Linodes have been assigned.'}
         preferredDataLabel="linodeConfigLabel"
         selectionData={assignedLinodesAndConfigData}
@@ -581,4 +577,10 @@ export const SubnetAssignLinodesDrawer = (
       </StyledButtonBox>
     </Drawer>
   );
+};
+
+const defaultPublicInterface: InterfacePayload = {
+  ipam_address: '',
+  label: '',
+  purpose: 'public',
 };

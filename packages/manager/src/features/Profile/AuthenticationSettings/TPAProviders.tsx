@@ -1,13 +1,12 @@
-import { TPAProvider } from '@linode/api-v4/lib/profile';
-import Grid from '@mui/material/Unstable_Grid2';
+import { Box } from '@linode/ui';
 import { useTheme } from '@mui/material/styles';
+import Grid from '@mui/material/Unstable_Grid2';
 import * as React from 'react';
 
 import EnabledIcon from 'src/assets/icons/checkmark-enabled.svg';
 import AkamaiWaveOnlyIcon from 'src/assets/icons/providers/akamai-logo-rgb-waveOnly.svg';
 import GitHubIcon from 'src/assets/icons/providers/github-logo.svg';
 import GoogleIcon from 'src/assets/icons/providers/google-logo.svg';
-import { Box } from 'src/components/Box';
 import { Divider } from 'src/components/Divider';
 import { Link } from 'src/components/Link';
 import { Typography } from 'src/components/Typography';
@@ -22,6 +21,8 @@ import {
   StyledProvidersListGrid,
   StyledRootContainer,
 } from './TPAProviders.styles';
+
+import type { TPAProvider } from '@linode/api-v4/lib/profile';
 
 interface Props {
   authType: TPAProvider;
@@ -69,7 +70,7 @@ export const TPAProviders = (props: Props) => {
           You can use your Cloud Manager credentials or another provider such as
           Google or GitHub to log in to your Cloud Manager account. More
           information is available in{' '}
-          <Link to="https://www.linode.com/docs/guides/third-party-authentication/">
+          <Link to="https://techdocs.akamai.com/cloud-computing/docs/enable-third-party-authentication">
             How to Enable Third Party Authentication on Your User Account
           </Link>
           . We strongly recommend setting up Two-Factor Authentication (2FA).

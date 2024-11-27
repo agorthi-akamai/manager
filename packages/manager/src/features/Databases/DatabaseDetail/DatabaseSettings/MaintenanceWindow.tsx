@@ -1,6 +1,4 @@
-import { Database, UpdatesSchedule } from '@linode/api-v4/lib/databases';
-import { APIError } from '@linode/api-v4/lib/types';
-import { Theme } from '@mui/material/styles';
+import { FormControl } from '@linode/ui';
 import { useFormik } from 'formik';
 import { DateTime } from 'luxon';
 import { useSnackbar } from 'notistack';
@@ -9,17 +7,19 @@ import { Link } from 'react-router-dom';
 import { makeStyles } from 'tss-react/mui';
 
 import { Button } from 'src/components/Button/Button';
-import Select, { Item } from 'src/components/EnhancedSelect/Select';
+import Select from 'src/components/EnhancedSelect/Select';
+import { FormControlLabel } from 'src/components/FormControlLabel';
 import { Notice } from 'src/components/Notice/Notice';
 import { Radio } from 'src/components/Radio/Radio';
+import { RadioGroup } from 'src/components/RadioGroup';
 import { TooltipIcon } from 'src/components/TooltipIcon';
 import { Typography } from 'src/components/Typography';
-import { FormControl } from 'src/components/FormControl';
-import { FormControlLabel } from 'src/components/FormControlLabel';
-import { RadioGroup } from 'src/components/RadioGroup';
-import { useDatabaseMutation } from 'src/queries/databases';
+import { useDatabaseMutation } from 'src/queries/databases/databases';
 
-// import { updateDatabaseSchema } from '@linode/validation/src/databases.schema';
+import type { Database, UpdatesSchedule } from '@linode/api-v4/lib/databases';
+import type { APIError } from '@linode/api-v4/lib/types';
+import type { Theme } from '@mui/material/styles';
+import type { Item } from 'src/components/EnhancedSelect/Select';
 
 const useStyles = makeStyles()((theme: Theme) => ({
   formControlDropdown: {
@@ -64,11 +64,12 @@ const useStyles = makeStyles()((theme: Theme) => ({
 
 interface Props {
   database: Database;
+  disabled?: boolean;
   timezone?: string;
 }
 
 export const MaintenanceWindow = (props: Props) => {
-  const { database, timezone } = props;
+  const { database, disabled, timezone } = props;
 
   const [maintenanceUpdateError, setMaintenanceUpdateError] = React.useState<
     APIError[]
@@ -172,12 +173,22 @@ export const MaintenanceWindow = (props: Props) => {
     onSubmit: handleSaveMaintenanceWindow,
   });
 
+  const isLegacy = database.platform === 'rdbms-legacy';
+
+  const typographyLegacyDatabase =
+    'Select when you want the required OS and database engine updates to take place. The maintenance may cause downtime on clusters with less than 3 nodes (non high-availability clusters).';
+
+  const typographyDatabase =
+    "OS and database engine updates will be performed on the schedule below. Select the frequency, day, and time you'd prefer maintenance to occur.";
+
   return (
     <form onSubmit={handleSubmit}>
       <div className={classes.topSection}>
         <div className={classes.sectionTitleAndText}>
           <Typography className={classes.sectionTitle} variant="h3">
-            Maintenance Window
+            {isLegacy
+              ? 'Maintenance Window'
+              : 'Set a Weekly Maintenance Window'}
           </Typography>
           {maintenanceUpdateError ? (
             <Notice spacingTop={8} variant="error">
@@ -185,9 +196,7 @@ export const MaintenanceWindow = (props: Props) => {
             </Notice>
           ) : null}
           <Typography className={classes.sectionText}>
-            OS and DB engine updates will be performed on the schedule below.
-            Select the frequency, day, and time you&rsquo;d prefer maintenance
-            to occur.{' '}
+            {isLegacy ? typographyLegacyDatabase : typographyDatabase}{' '}
             {database.cluster_size !== 3
               ? 'For non-HA plans, expect downtime during this window.'
               : null}
@@ -217,6 +226,7 @@ export const MaintenanceWindow = (props: Props) => {
                 value={daySelectionMap.find(
                   (thisOption) => thisOption.value === values.day_of_week
                 )}
+                disabled={disabled}
                 errorText={touched.day_of_week ? errors.day_of_week : undefined}
                 isClearable={false}
                 label="Day of Week"
@@ -248,17 +258,18 @@ export const MaintenanceWindow = (props: Props) => {
                   value={hourSelectionMap.find(
                     (thisOption) => thisOption.value === values.hour_of_day
                   )}
+                  disabled={disabled}
                   isClearable={false}
-                  label="Time of Day (UTC)"
+                  label="Time"
                   menuPlacement="top"
-                  name="Time of Day"
+                  name="Time"
                   noMarginTop
                   options={hourSelectionMap}
                   placeholder="Choose a time"
                 />
                 <TooltipIcon
                   sxTooltipIcon={{
-                    marginTop: '1.25rem',
+                    marginTop: '1.75rem',
                     padding: '0px 8px',
                   }}
                   text={
@@ -269,49 +280,51 @@ export const MaintenanceWindow = (props: Props) => {
                       your timezone settings.
                     </Typography>
                   }
-                  interactive
                   status="help"
                 />
               </div>
             </FormControl>
           </div>
-          <FormControl
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              setFormTouched(true);
-              setFieldValue('frequency', e.target.value);
-              if (e.target.value === 'weekly') {
-                // If the frequency is weekly, set the 'week_of_month' field to null since that should only be specified for a monthly frequency.
-                setFieldValue('week_of_month', null);
-              }
+          {isLegacy && (
+            <FormControl
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setFormTouched(true);
+                setFieldValue('frequency', e.target.value);
+                if (e.target.value === 'weekly') {
+                  // If the frequency is weekly, set the 'week_of_month' field to null since that should only be specified for a monthly frequency.
+                  setFieldValue('week_of_month', null);
+                }
 
-              if (e.target.value === 'monthly') {
-                const dayOfWeek =
-                  daySelectionMap.find(
-                    (option) => option.value === values.day_of_week
-                  ) ?? daySelectionMap[0];
+                if (e.target.value === 'monthly') {
+                  const dayOfWeek =
+                    daySelectionMap.find(
+                      (option) => option.value === values.day_of_week
+                    ) ?? daySelectionMap[0];
 
-                weekSelectionModifier(dayOfWeek.label, weekSelectionMap);
-                setFieldValue(
-                  'week_of_month',
-                  modifiedWeekSelectionMap[0].value
-                );
-              }
-            }}
-          >
-            <RadioGroup
-              style={{ marginBottom: 0, marginTop: 0 }}
-              value={values.frequency}
+                  weekSelectionModifier(dayOfWeek.label, weekSelectionMap);
+                  setFieldValue(
+                    'week_of_month',
+                    modifiedWeekSelectionMap[0].value
+                  );
+                }
+              }}
+              disabled={disabled}
             >
-              {maintenanceFrequencyMap.map((option) => (
-                <FormControlLabel
-                  control={<Radio />}
-                  key={option.value}
-                  label={option.key}
-                  value={option.value}
-                />
-              ))}
-            </RadioGroup>
-          </FormControl>
+              <RadioGroup
+                style={{ marginBottom: 0, marginTop: 0 }}
+                value={values.frequency}
+              >
+                {maintenanceFrequencyMap.map((option) => (
+                  <FormControlLabel
+                    control={<Radio />}
+                    key={option.value}
+                    label={option.key}
+                    value={option.value}
+                  />
+                ))}
+              </RadioGroup>
+            </FormControl>
+          )}
           <div>
             {values.frequency === 'monthly' ? (
               <FormControl
@@ -351,8 +364,9 @@ export const MaintenanceWindow = (props: Props) => {
           buttonType="primary"
           className={classes.sectionButton}
           compactX
-          disabled={!formTouched || isSubmitting}
+          disabled={!formTouched || isSubmitting || disabled}
           loading={isSubmitting}
+          title="Save Changes"
           type="submit"
         >
           Save Changes
@@ -418,7 +432,7 @@ const weekSelectionMap = [
 ];
 
 const utcOffsetText = (utcOffsetInHours: number) => {
-  return utcOffsetInHours < 0
+  return utcOffsetInHours <= 0
     ? `+${Math.abs(utcOffsetInHours)}`
     : `-${utcOffsetInHours}`;
 };

@@ -1,6 +1,6 @@
+import { Box } from '@linode/ui';
 import * as React from 'react';
 
-import { Box } from 'src/components/Box';
 import { CircleProgress } from 'src/components/CircleProgress';
 import { Typography } from 'src/components/Typography';
 import { useAccountNetworkTransfer } from 'src/queries/account/transfer';
@@ -43,7 +43,7 @@ export const TransferDisplay = React.memo(({ spacingTop }: Props) => {
         {isLoading ? (
           <>
             <Typography>Loading transfer data...</Typography>
-            <CircleProgress mini />
+            <CircleProgress size="sm" />
           </>
         ) : (
           <>

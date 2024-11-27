@@ -7,18 +7,21 @@
  */
 
 import { PureComponent } from 'react';
-import { MapDispatchToProps, connect } from 'react-redux';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { compose } from 'recompose';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
 
 import { handleStartSession } from 'src/store/authentication/authentication.actions';
 import { getQueryParamsFromQueryString } from 'src/utilities/queryParams';
+
+import type { MapDispatchToProps } from 'react-redux';
+import type { RouteComponentProps } from 'react-router-dom';
+import type { BaseQueryParams } from 'src/utilities/queryParams';
 
 interface LoginAsCustomerCallbackProps
   extends DispatchProps,
     RouteComponentProps {}
 
-interface QueryParams {
+interface QueryParams extends BaseQueryParams {
   access_token: string;
   destination: string;
   expires_in: string;
@@ -46,9 +49,9 @@ export class LoginAsCustomerCallback extends PureComponent<LoginAsCustomerCallba
       return history.push('/');
     }
 
-    const hashParams = (getQueryParamsFromQueryString(
+    const hashParams = getQueryParamsFromQueryString<QueryParams>(
       location.hash.substr(1)
-    ) as unknown) as QueryParams;
+    );
 
     const {
       access_token: accessToken,
@@ -117,7 +120,4 @@ const mapDispatchToProps: MapDispatchToProps<DispatchProps, {}> = (
 
 const connected = connect(undefined, mapDispatchToProps);
 
-export default compose<LoginAsCustomerCallbackProps, {}>(
-  connected,
-  withRouter
-)(LoginAsCustomerCallback);
+export default connected(withRouter(LoginAsCustomerCallback));

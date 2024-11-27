@@ -1,11 +1,11 @@
+import { Box } from '@linode/ui';
 import { useTheme } from '@mui/material/styles';
 import * as React from 'react';
 
-import { Box } from 'src/components/Box';
 import { TableCell } from 'src/components/TableCell';
 import { TableRow } from 'src/components/TableRow';
 
-import { LongviewPackage } from './request.types';
+import type { LongviewPackage } from './request.types';
 
 interface Props {
   lvPackage: LongviewPackage;
@@ -16,7 +16,7 @@ export const LongviewPackageRow = (props: Props) => {
   const theme = useTheme();
 
   return (
-    <TableRow ariaLabel={lvPackage.name}>
+    <TableRow>
       <TableCell parentColumn={'Package'}>{lvPackage.name}</TableCell>
       <TableCell parentColumn="Installed Version / Latest Version">
         <div>{lvPackage.current}</div>

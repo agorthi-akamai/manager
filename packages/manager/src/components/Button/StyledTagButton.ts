@@ -1,3 +1,4 @@
+import { omittedProps } from '@linode/ui';
 import { styled } from '@mui/material/styles';
 
 import Plus from 'src/assets/icons/plusSign.svg';
@@ -12,16 +13,23 @@ import { Button } from './Button';
  */
 export const StyledTagButton = styled(Button, {
   label: 'StyledTagButton',
-})(({ theme, ...props }) => ({
+  shouldForwardProp: omittedProps(['panel']),
+})<{ panel?: boolean }>(({ theme, ...props }) => ({
   border: 'none',
   fontSize: '0.875rem',
+  minHeight: 30,
+  whiteSpace: 'nowrap',
+  ...(props.panel && {
+    height: 34,
+  }),
   ...(!props.disabled && {
     '&:hover, &:focus': {
-      backgroundColor: theme.color.tagButton,
+      backgroundColor: theme.color.tagButtonBg,
       border: 'none',
+      color: theme.color.tagButtonText,
     },
-    backgroundColor: theme.color.tagButton,
-    color: theme.textColors.linkActiveLight,
+    backgroundColor: theme.color.tagButtonBg,
+    color: theme.color.tagButtonText,
   }),
 }));
 

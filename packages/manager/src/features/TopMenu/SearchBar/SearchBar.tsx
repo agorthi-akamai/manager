@@ -6,29 +6,24 @@ import { useHistory } from 'react-router-dom';
 import { components } from 'react-select';
 import { debounce } from 'throttle-debounce';
 
-import EnhancedSelect, { Item } from 'src/components/EnhancedSelect/Select';
+import EnhancedSelect from 'src/components/EnhancedSelect/Select';
+import { useIsDatabasesEnabled } from 'src/features/Databases/utilities';
 import { getImageLabelForLinode } from 'src/features/Images/utils';
 import { useAPISearch } from 'src/features/Search/useAPISearch';
-import withStoreSearch, {
-  SearchProps,
-} from 'src/features/Search/withStoreSearch';
-import { useAccountManagement } from 'src/hooks/useAccountManagement';
-import { useFlags } from 'src/hooks/useFlags';
+import withStoreSearch from 'src/features/Search/withStoreSearch';
 import { useIsLargeAccount } from 'src/hooks/useIsLargeAccount';
+import { useAllDatabasesQuery } from 'src/queries/databases/databases';
 import { useAllDomainsQuery } from 'src/queries/domains';
+import { useAllFirewallsQuery } from 'src/queries/firewalls';
 import { useAllImagesQuery } from 'src/queries/images';
 import { useAllKubernetesClustersQuery } from 'src/queries/kubernetes';
 import { useAllLinodesQuery } from 'src/queries/linodes/linodes';
 import { useAllNodeBalancersQuery } from 'src/queries/nodebalancers';
-import {
-  useObjectStorageBuckets,
-  useObjectStorageClusters,
-} from 'src/queries/objectStorage';
+import { useObjectStorageBuckets } from 'src/queries/object-storage/queries';
 import { useRegionsQuery } from 'src/queries/regions/regions';
 import { useSpecificTypes } from 'src/queries/types';
-import { useAllVolumesQuery } from 'src/queries/volumes';
+import { useAllVolumesQuery } from 'src/queries/volumes/volumes';
 import { formatLinode } from 'src/store/selectors/getSearchEntities';
-import { isFeatureEnabled } from 'src/utilities/accountCapabilities';
 import { getAPIErrorOrDefault } from 'src/utilities/errorUtils';
 import { extendTypesQueryResult } from 'src/utilities/extendType';
 import { isNilOrEmpty } from 'src/utilities/isNilOrEmpty';
@@ -40,6 +35,9 @@ import {
   StyledSearchBarWrapperDiv,
 } from './SearchBar.styles';
 import { SearchSuggestion } from './SearchSuggestion';
+
+import type { Item } from 'src/components/EnhancedSelect/Select';
+import type { SearchProps } from 'src/features/Search/withStoreSearch';
 
 const Control = (props: any) => <components.Control {...props} />;
 
@@ -90,49 +88,34 @@ const SearchBar = (props: SearchProps) => {
   const [apiSearchLoading, setAPILoading] = React.useState<boolean>(false);
   const history = useHistory();
   const isLargeAccount = useIsLargeAccount(searchActive);
-  const { account } = useAccountManagement();
-  const flags = useFlags();
-  const isObjMultiClusterEnabled = isFeatureEnabled(
-    'Object Storage Access Key Regions',
-    Boolean(flags.objMultiCluster),
-    account?.capabilities ?? []
-  );
+  const { isDatabasesEnabled } = useIsDatabasesEnabled();
 
   // Only request things if the search bar is open/active and we
   // know if the account is large or not
   const shouldMakeRequests =
     searchActive && isLargeAccount !== undefined && !isLargeAccount;
 
-  // Data fetching
-  const { data: objectStorageClusters } = useObjectStorageClusters(
-    shouldMakeRequests && !isObjMultiClusterEnabled
-  );
+  const shouldMakeDBRequests =
+    shouldMakeRequests && Boolean(isDatabasesEnabled);
 
   const { data: regions } = useRegionsQuery();
 
-  const regionsSupportingObjectStorage = regions?.filter((region) =>
-    region.capabilities.includes('Object Storage')
+  const { data: objectStorageBuckets } = useObjectStorageBuckets(
+    shouldMakeRequests
   );
-
-  /*
-   @TODO OBJ Multicluster:'region' will become required, and the
-   'cluster' field will be deprecated once the feature is fully rolled out in production.
-   As part of the process of cleaning up after the 'objMultiCluster' feature flag, we will
-   remove 'cluster' and retain 'regions'.
-  */
-  const { data: objectStorageBuckets } = useObjectStorageBuckets({
-    clusters: isObjMultiClusterEnabled ? undefined : objectStorageClusters,
-    enabled: shouldMakeRequests,
-    isObjMultiClusterEnabled,
-    regions: isObjMultiClusterEnabled
-      ? regionsSupportingObjectStorage
-      : undefined,
-  });
 
   const { data: domains } = useAllDomainsQuery(shouldMakeRequests);
   const { data: clusters } = useAllKubernetesClustersQuery(shouldMakeRequests);
   const { data: volumes } = useAllVolumesQuery({}, {}, shouldMakeRequests);
   const { data: nodebalancers } = useAllNodeBalancersQuery(shouldMakeRequests);
+  const { data: firewalls } = useAllFirewallsQuery(shouldMakeRequests);
+
+  /*
+  @TODO DBaaS: Change the passed argument to 'shouldMakeRequests' and
+  remove 'isDatabasesEnabled' once DBaaS V2 is fully rolled out.
+  */
+  const { data: databases } = useAllDatabasesQuery(shouldMakeDBRequests);
+
   const { data: _privateImages, isLoading: imagesLoading } = useAllImagesQuery(
     {},
     { is_public: false }, // We want to display private images (i.e., not Debian, Ubuntu, etc. distros)
@@ -215,7 +198,9 @@ const SearchBar = (props: SearchProps) => {
         _privateImages ?? [],
         regions ?? [],
         searchableLinodes ?? [],
-        nodebalancers ?? []
+        nodebalancers ?? [],
+        firewalls ?? [],
+        databases ?? []
       );
     }
   }, [
@@ -230,6 +215,8 @@ const SearchBar = (props: SearchProps) => {
     _privateImages,
     regions,
     nodebalancers,
+    firewalls,
+    databases,
   ]);
 
   const handleSearchChange = (_searchText: string): void => {
@@ -317,7 +304,7 @@ const SearchBar = (props: SearchProps) => {
   const finalOptions = createFinalOptions(
     isLargeAccount ? apiResults : combinedResults,
     searchText,
-    apiSearchLoading || linodesLoading || imagesLoading,
+    isLargeAccount ? apiSearchLoading : linodesLoading || imagesLoading,
     // Ignore "Unauthorized" errors, since these will always happen on LKE
     // endpoints for restricted users. It's not really an "error" in this case.
     // We still want these users to be able to use the search feature.
@@ -343,9 +330,6 @@ const SearchBar = (props: SearchProps) => {
           Main search
         </label>
         <EnhancedSelect
-          placeholder={
-            'Search for Linodes, Volumes, NodeBalancers, Domains, Buckets, Tags...'
-          }
           blurInputOnSelect
           components={{ Control, Option }}
           filterOption={filterResults}
@@ -365,6 +349,7 @@ const SearchBar = (props: SearchProps) => {
           openMenuOnClick={false}
           openMenuOnFocus={false}
           options={finalOptions}
+          placeholder="Search Products, IP Addresses, Tags..."
           styles={selectStyles}
           value={value}
         />

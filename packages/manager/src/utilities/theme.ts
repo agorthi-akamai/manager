@@ -1,11 +1,11 @@
-import { Theme } from '@mui/material/styles';
+import { dark, light } from '@linode/ui';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
-import { dark, light } from 'src/foundations/themes';
-
-import type { ThemeName } from 'src/foundations/themes';
 import { useAuthentication } from 'src/hooks/useAuthentication';
-import { usePreferences } from 'src/queries/preferences';
+import { usePreferences } from 'src/queries/profile/preferences';
+
+import type { ThemeName } from '@linode/ui';
+import type { Theme } from '@mui/material/styles';
 
 export type ThemeChoice = 'dark' | 'light' | 'system';
 
@@ -30,7 +30,7 @@ export const getNextThemeValue = (currentTheme: string | undefined) => {
  * Use this to validate if a value in a user's preferences is a valid value
  */
 export const isValidTheme = (value: unknown): boolean => {
-  return typeof value === 'string' && themes[value] !== undefined;
+  return typeof value === 'string' && value in themes;
 };
 
 /**

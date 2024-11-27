@@ -1,4 +1,3 @@
-import { AccountCapability } from '@linode/api-v4';
 import { waitFor } from '@testing-library/react';
 import * as React from 'react';
 
@@ -9,14 +8,16 @@ import {
   subnetFactory,
   vpcFactory,
 } from 'src/factories';
-import { makeResourcePage } from 'src/mocks/serverHandlers';
 import { HttpResponse, http, server } from 'src/mocks/testServer';
 import { queryClientFactory } from 'src/queries/base';
 import { mockMatchMedia, renderWithTheme } from 'src/utilities/testHelpers';
 
+import { encryptionStatusTestId } from '../Kubernetes/KubernetesClusterDetail/NodePoolsDisplay/NodeTable';
 import { LinodeEntityDetail } from './LinodeEntityDetail';
 import { getSubnetsString } from './LinodeEntityDetailBody';
-import { LinodeHandlers } from './LinodesLanding/LinodesLanding';
+
+import type { LinodeHandlers } from './LinodesLanding/LinodesLanding';
+import type { AccountCapability } from '@linode/api-v4';
 
 const queryClient = queryClientFactory();
 
@@ -34,6 +35,29 @@ describe('Linode Entity Detail', () => {
 
   const vpcSectionTestId = 'vpc-section-title';
   const assignedVPCLabelTestId = 'assigned-vpc-label';
+
+  const mocks = vi.hoisted(() => {
+    return {
+      useIsDiskEncryptionFeatureEnabled: vi.fn(),
+    };
+  });
+
+  vi.mock('src/components/Encryption/utils.ts', async () => {
+    const actual = await vi.importActual<any>(
+      'src/components/Encryption/utils.ts'
+    );
+    return {
+      ...actual,
+      __esModule: true,
+      useIsDiskEncryptionFeatureEnabled: mocks.useIsDiskEncryptionFeatureEnabled.mockImplementation(
+        () => {
+          return {
+            isDiskEncryptionFeatureEnabled: false, // indicates the feature flag is off or account capability is absent
+          };
+        }
+      ),
+    };
+  });
 
   it('should not display the VPC section if the linode is not assigned to a VPC', async () => {
     const account = accountFactory.build({
@@ -54,18 +78,13 @@ describe('Linode Entity Detail', () => {
         return HttpResponse.json(account);
       }),
 
-      http.get('*/vpcs', () => {
-        return HttpResponse.json(makeResourcePage([vpc]));
+      http.get('*/vpcs/:vpcId', () => {
+        return HttpResponse.json(vpc);
       })
     );
 
     const { queryByTestId } = renderWithTheme(
-      <LinodeEntityDetail
-        handlers={handlers}
-        id={5}
-        linode={linode}
-        openTagDrawer={vi.fn()}
-      />
+      <LinodeEntityDetail handlers={handlers} id={5} linode={linode} />
     );
 
     await waitFor(() => {
@@ -80,25 +99,16 @@ describe('Linode Entity Detail', () => {
       linodes: [subnetAssignedLinodeDataFactory.build({ id: linode.id })],
     });
 
-    const _vpcs = vpcFactory.buildList(3);
-    const vpcs = [
-      ..._vpcs,
-      vpcFactory.build({ label: 'test-vpc', subnets: [subnet] }),
-    ];
+    const vpc = vpcFactory.build({ label: 'test-vpc', subnets: [subnet] });
 
     server.use(
-      http.get('*/vpcs', () => {
-        return HttpResponse.json(makeResourcePage(vpcs));
+      http.get('*/vpcs/:vpcId', () => {
+        return HttpResponse.json(vpc);
       })
     );
 
     const { getByTestId } = renderWithTheme(
-      <LinodeEntityDetail
-        handlers={handlers}
-        id={10}
-        linode={linode}
-        openTagDrawer={vi.fn()}
-      />,
+      <LinodeEntityDetail handlers={handlers} id={10} linode={linode} />,
       {
         queryClient,
       }
@@ -108,6 +118,31 @@ describe('Linode Entity Detail', () => {
       expect(getByTestId(vpcSectionTestId)).toBeInTheDocument();
       expect(getByTestId(assignedVPCLabelTestId).innerHTML).toEqual('test-vpc');
     });
+  });
+
+  it('should not display the encryption status of the linode if the account lacks the capability or the feature flag is off', () => {
+    // situation where isDiskEncryptionFeatureEnabled === false
+    const { queryByTestId } = renderWithTheme(
+      <LinodeEntityDetail handlers={handlers} id={10} linode={linode} />
+    );
+    const encryptionStatusFragment = queryByTestId(encryptionStatusTestId);
+
+    expect(encryptionStatusFragment).not.toBeInTheDocument();
+  });
+
+  it('should display the encryption status of the linode when Disk Encryption is enabled and the user has the account capability', () => {
+    mocks.useIsDiskEncryptionFeatureEnabled.mockImplementationOnce(() => {
+      return {
+        isDiskEncryptionFeatureEnabled: true,
+      };
+    });
+
+    const { queryByTestId } = renderWithTheme(
+      <LinodeEntityDetail handlers={handlers} id={10} linode={linode} />
+    );
+    const encryptionStatusFragment = queryByTestId(encryptionStatusTestId);
+
+    expect(encryptionStatusFragment).toBeInTheDocument();
   });
 });
 

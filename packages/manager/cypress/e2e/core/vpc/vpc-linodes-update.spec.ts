@@ -3,11 +3,6 @@
  */
 
 import {
-  mockAppendFeatureFlags,
-  mockGetFeatureFlagClientstream,
-} from 'support/intercepts/feature-flags';
-import { makeFeatureFlagData } from 'support/util/feature-flags';
-import {
   mockGetSubnets,
   mockCreateSubnet,
   mockGetVPC,
@@ -59,6 +54,7 @@ describe('VPC assign/unassign flows', () => {
     const mockSubnet = subnetFactory.build({
       id: randomNumber(2),
       label: randomLabel(),
+      linodes: [],
     });
 
     const mockVPC = vpcFactory.build({
@@ -81,17 +77,14 @@ describe('VPC assign/unassign flows', () => {
       subnets: [mockSubnetAfterLinodeAssignment],
     });
 
-    mockAppendFeatureFlags({
-      vpc: makeFeatureFlagData(true),
-    }).as('getFeatureFlags');
-    mockGetFeatureFlagClientstream().as('getClientStream');
     mockGetVPCs(mockVPCs).as('getVPCs');
     mockGetVPC(mockVPC).as('getVPC');
     mockGetSubnets(mockVPC.id, []).as('getSubnets');
     mockCreateSubnet(mockVPC.id).as('createSubnet');
+    mockGetLinodes([mockLinode]).as('getLinodes');
 
     cy.visitWithLogin(`/vpcs/${mockVPC.id}`);
-    cy.wait(['@getFeatureFlags', '@getClientStream', '@getVPC', '@getSubnets']);
+    cy.wait(['@getVPC', '@getSubnets']);
 
     // confirm that vpc and subnet details get displayed
     cy.findByText(mockVPC.label).should('be.visible');
@@ -118,7 +111,7 @@ describe('VPC assign/unassign flows', () => {
           .click();
       });
 
-    cy.wait(['@createSubnet', '@getVPC', '@getSubnets']);
+    cy.wait(['@createSubnet', '@getVPC', '@getSubnets', '@getLinodes']);
 
     // confirm that newly created subnet should now appear on VPC's detail page
     cy.findByText(mockVPC.label).should('be.visible');
@@ -131,12 +124,10 @@ describe('VPC assign/unassign flows', () => {
       .should('be.visible')
       .click();
 
-    mockGetLinodes([mockLinode]).as('getLinodes');
     ui.actionMenuItem
       .findByTitle('Assign Linodes')
       .should('be.visible')
       .click();
-    cy.wait('@getLinodes');
 
     ui.drawer
       .findByTitle(`Assign Linodes to subnet: ${mockSubnet.label} (0.0.0.0/0)`)
@@ -191,8 +182,8 @@ describe('VPC assign/unassign flows', () => {
           .click();
       });
 
-    cy.get('[aria-label="View Details"]')
-      .closest('tbody')
+    cy.get('[data-qa-table-row="collapsible-table-headers-row"]')
+      .siblings('tbody')
       .within(() => {
         // after assigning Linode(s) to a VPC, VPC page increases number in 'Linodes' column
         cy.findByText('1').should('be.visible');
@@ -229,16 +220,13 @@ describe('VPC assign/unassign flows', () => {
       ],
     });
 
-    mockAppendFeatureFlags({
-      vpc: makeFeatureFlagData(true),
-    }).as('getFeatureFlags');
-    mockGetFeatureFlagClientstream().as('getClientStream');
     mockGetVPCs(mockVPCs).as('getVPCs');
     mockGetVPC(mockVPC).as('getVPC');
     mockGetSubnets(mockVPC.id, [mockSubnet]).as('getSubnets');
+    mockGetLinodes([mockLinode, mockSecondLinode]).as('getLinodes');
 
     cy.visitWithLogin(`/vpcs/${mockVPC.id}`);
-    cy.wait(['@getFeatureFlags', '@getClientStream', '@getVPC', '@getSubnets']);
+    cy.wait(['@getVPC', '@getSubnets', '@getLinodes']);
 
     // confirm that subnet should get displayed on VPC's detail page
     cy.findByText(mockVPC.label).should('be.visible');
@@ -251,12 +239,10 @@ describe('VPC assign/unassign flows', () => {
       .should('be.visible')
       .click();
 
-    mockGetLinodes([mockLinode, mockSecondLinode]).as('getLinodes');
     ui.actionMenuItem
       .findByTitle('Unassign Linodes')
       .should('be.visible')
       .click();
-    cy.wait('@getLinodes');
 
     ui.drawer
       .findByTitle(

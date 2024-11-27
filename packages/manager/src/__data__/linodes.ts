@@ -1,4 +1,4 @@
-import { Linode } from '@linode/api-v4/lib/linodes';
+import type { Linode } from '@linode/api-v4/lib/linodes';
 
 export const linode1: Linode = {
   alerts: {
@@ -24,13 +24,15 @@ export const linode1: Linode = {
   ipv4: ['97.107.143.78', '98.107.143.78', '99.107.143.78'],
   ipv6: '2600:3c03::f03c:91ff:fe0a:109a/64',
   label: 'test',
+  lke_cluster_id: null,
   placement_group: {
-    affinity_type: 'anti_affinity:local',
     id: 1,
-    is_strict: true,
     label: 'pg-1',
+    placement_group_policy: 'strict',
+    placement_group_type: 'anti_affinity:local',
   },
   region: 'us-east',
+  site_type: 'core',
   specs: {
     disk: 20480,
     gpus: 0,
@@ -69,13 +71,15 @@ export const linode2: Linode = {
   ipv4: ['97.107.143.49'],
   ipv6: '2600:3c03::f03c:91ff:fe0a:0d7a/64',
   label: 'another-test',
+  lke_cluster_id: null,
   placement_group: {
-    affinity_type: 'anti_affinity:local',
     id: 1,
-    is_strict: true,
     label: 'pg-1',
+    placement_group_policy: 'strict',
+    placement_group_type: 'anti_affinity:local',
   },
   region: 'us-east',
+  site_type: 'core',
   specs: {
     disk: 30720,
     gpus: 0,
@@ -114,13 +118,15 @@ export const linode3: Linode = {
   ipv4: ['97.107.143.49'],
   ipv6: '2600:3c03::f03c:91ff:fe0a:0d7a/64',
   label: 'another-test',
+  lke_cluster_id: null,
   placement_group: {
-    affinity_type: 'anti_affinity:local',
     id: 1,
-    is_strict: true,
     label: 'pg-1',
+    placement_group_policy: 'strict',
+    placement_group_type: 'anti_affinity:local',
   },
   region: 'us-east',
+  site_type: 'core',
   specs: {
     disk: 30720,
     gpus: 0,
@@ -159,13 +165,15 @@ export const linode4: Linode = {
   ipv4: ['97.107.143.49'],
   ipv6: '2600:3c03::f03c:91ff:fe0a:0d7a/64',
   label: 'another-test-eu',
+  lke_cluster_id: null,
   placement_group: {
-    affinity_type: 'anti_affinity:local',
     id: 1,
-    is_strict: true,
     label: 'pg-1',
+    placement_group_policy: 'strict',
+    placement_group_type: 'anti_affinity:local',
   },
   region: 'eu-west',
+  site_type: 'core',
   specs: {
     disk: 30720,
     gpus: 0,

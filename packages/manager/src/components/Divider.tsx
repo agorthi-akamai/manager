@@ -1,8 +1,9 @@
-import _Divider, { DividerProps as _DividerProps } from '@mui/material/Divider';
+import { omittedProps } from '@linode/ui';
+import _Divider from '@mui/material/Divider';
 import { styled } from '@mui/material/styles';
 import * as React from 'react';
 
-import { omittedProps } from 'src/utilities/omittedProps';
+import type { DividerProps as _DividerProps } from '@mui/material/Divider';
 
 export interface DividerProps extends _DividerProps {
   dark?: boolean;
@@ -24,13 +25,6 @@ const StyledDivider = styled(_Divider, {
     'dark',
   ]),
 })<DividerProps>(({ theme, ...props }) => ({
-  borderColor: props.dark
-    ? theme.color.border2
-    : props.light
-    ? theme.name === 'light'
-      ? '#e3e5e8'
-      : '#2e3238'
-    : '',
   marginBottom: props.spacingBottom,
   marginTop: props.spacingTop,
 }));

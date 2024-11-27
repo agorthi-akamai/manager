@@ -1,11 +1,20 @@
-import type { Doc } from './features/OneClickApps/types';
+import type { OCA } from './features/OneClickApps/types';
 import type { TPAProvider } from '@linode/api-v4/lib/profile';
 import type { NoticeVariant } from 'src/components/Notice/Notice';
 
 // These flags should correspond with active features flags in LD
 
 export interface TaxDetail {
+  qi_registration?: string;
   tax_id: string;
+  tax_ids?: Record<
+    'B2B' | 'B2C',
+    {
+      tax_id: string;
+      tax_name: string;
+    }
+  >;
+  tax_info?: string;
   tax_name: string;
 }
 
@@ -37,46 +46,101 @@ interface TaxCollectionBanner {
   regions?: TaxCollectionRegion[];
 }
 
-interface PlacementGroupsFlag {
+interface BaseFeatureFlag {
+  enabled: boolean;
+}
+
+interface BetaFeatureFlag extends BaseFeatureFlag {
+  beta: boolean;
+}
+
+interface GeckoFeatureFlag extends BaseFeatureFlag {
+  ga: boolean;
+  la: boolean;
+}
+
+interface AclpFlag {
   beta: boolean;
   enabled: boolean;
 }
 
-type OneClickApp = Record<string, string>;
+export interface CloudPulseResourceTypeMapFlag {
+  dimensionKey: string;
+  serviceType: string;
+}
 
+interface gpuV2 {
+  egressBanner: boolean;
+  planDivider: boolean;
+}
+
+interface DesignUpdatesBannerFlag extends BaseFeatureFlag {
+  key: string;
+  link: string;
+}
+
+interface AclpAlerting {
+  alertDefinitions: boolean;
+  notificationChannels: boolean;
+  recentActivity: boolean;
+}
 export interface Flags {
-  aclb: boolean;
-  aclbFullCreateFlow: boolean;
+  aclp: AclpFlag;
+  aclpAlerting: AclpAlerting;
+  aclpReadEndpoint: string;
+  aclpResourceTypeMap: CloudPulseResourceTypeMapFlag[];
   apiMaintenance: APIMaintenance;
+  apicliButtonCopy: string;
+  apl: boolean;
+  blockStorageEncryption: boolean;
+  cloudManagerDesignUpdatesBanner: DesignUpdatesBannerFlag;
   databaseBeta: boolean;
   databaseResize: boolean;
   databases: boolean;
+  dbaasV2: BetaFeatureFlag;
+  dbaasV2MonitorMetrics: BetaFeatureFlag;
   disableLargestGbPlans: boolean;
-  firewallNodebalancer: boolean;
-  gecko: boolean;
+  disallowImageUploadToNonObjRegions: boolean;
+  gecko2: GeckoFeatureFlag;
+  gpuv2: gpuV2;
+  imageServiceGen2: boolean;
+  imageServiceGen2Ga: boolean;
   ipv6Sharing: boolean;
-  linodeCloneUiChanges: boolean;
-  linodeCreateRefactor: boolean;
-  linodeCreateWithFirewall: boolean;
+  linodeDiskEncryption: boolean;
   mainContentBanner: MainContentBanner;
+  marketplaceAppOverrides: MarketplaceAppOverride[];
   metadata: boolean;
   objMultiCluster: boolean;
-  oneClickApps: OneClickApp;
-  oneClickAppsDocsOverride: Record<string, Doc[]>;
-  parentChildAccountAccess: boolean;
-  placementGroups: PlacementGroupsFlag;
+  objectStorageGen2: BaseFeatureFlag;
   productInformationBanners: ProductInformationBannerFlag[];
   promos: boolean;
   promotionalOffers: PromotionalOffer[];
-  recharts: boolean;
-  referralBannerText: ReferralBannerText;
+  referralBannerText: BannerContent;
+  secureVmCopy: SecureVMCopy;
   selfServeBetas: boolean;
   soldOutChips: boolean;
   supportTicketSeverity: boolean;
   taxBanner: TaxBanner;
   taxCollectionBanner: TaxCollectionBanner;
+  taxId: BaseFeatureFlag;
   taxes: Taxes;
   tpaProviders: Provider[];
+}
+
+interface MarketplaceAppOverride {
+  /**
+   * Define app details that should be overwritten
+   *
+   * If you are adding an app that is not already defined in "oneClickApps.ts",
+   * you *must* include all required OCA properties or Cloud Manager could crash.
+   *
+   * Pass `null` to hide the marketplace app
+   */
+  details: Partial<OCA> | null;
+  /**
+   * The ID of the StackScript that powers this Marketplace app
+   */
+  stackscriptId: number;
 }
 
 type PromotionalOfferFeature =
@@ -125,12 +189,24 @@ export interface Provider {
   name: TPAProvider;
 }
 
-interface ReferralBannerText {
+interface BannerContent {
   link?: {
     text: string;
     url: string;
   };
   text: string;
+}
+
+interface SecureVMCopy {
+  bannerLabel?: string;
+  firewallAuthorizationLabel?: string;
+  firewallAuthorizationWarning?: string;
+  firewallDetails?: BannerContent;
+  generateActionText?: string;
+  generateDocsLink: string;
+  generatePrompt?: BannerContent;
+  generateSuccess?: BannerContent;
+  linodeCreate?: BannerContent;
 }
 
 export type ProductInformationBannerLocation =

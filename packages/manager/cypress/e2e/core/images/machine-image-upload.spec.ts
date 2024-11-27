@@ -8,7 +8,6 @@ import { authenticate } from 'support/api/authentication';
 import { fbtVisible, getClick } from 'support/helpers';
 import {
   mockDeleteImage,
-  mockGetAllImages,
   mockGetCustomImages,
   mockUpdateImage,
 } from 'support/intercepts/images';
@@ -82,9 +81,7 @@ const eventIntercept = (
  * @param message - Expected failure message.
  */
 const assertFailed = (label: string, id: string, message: string) => {
-  ui.toast.assertMessage(
-    `There was a problem uploading image ${label}: ${message}`
-  );
+  ui.toast.assertMessage(`Image ${label} could not be uploaded: ${message}`);
 
   cy.get(`[data-qa-image-cell="${id}"]`).within(() => {
     fbtVisible(label);
@@ -115,7 +112,7 @@ const assertProcessing = (label: string, id: string) => {
  * @param label - Label to apply to uploaded image.
  */
 const uploadImage = (label: string) => {
-  const region = chooseRegion();
+  const region = chooseRegion({ capabilities: ['Object Storage'] });
   const upload = 'machine-images/test-image.gz';
   cy.visitWithLogin('/images/create/upload');
   getClick('[id="label"][data-testid="textfield-input"]').type(label);
@@ -132,7 +129,14 @@ const uploadImage = (label: string) => {
       mimeType: 'application/x-gzip',
     });
   });
+
   cy.intercept('POST', apiMatcher('images/upload')).as('imageUpload');
+
+  ui.button
+    .findByAttribute('type', 'submit')
+    .should('be.enabled')
+    .should('be.visible')
+    .click();
 };
 
 authenticate();
@@ -249,7 +253,7 @@ describe('machine image', () => {
     cy.wait('@imageUpload').then((xhr) => {
       const imageId = xhr.response?.body.image.id;
       assertProcessing(label, imageId);
-      mockGetAllImages([
+      mockGetCustomImages([
         imageFactory.build({ label, id: imageId, status: 'available' }),
       ]).as('getImages');
       eventIntercept(label, imageId, status);

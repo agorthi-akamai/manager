@@ -1,20 +1,20 @@
+import { Box } from '@linode/ui';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import * as React from 'react';
 
-import AddNewLink from 'src/components/AddNewLink';
-import { Box } from 'src/components/Box';
+import { Button } from 'src/components/Button/Button';
 import { DocumentTitleSegment } from 'src/components/DocumentTitle';
 import { PaginationFooter } from 'src/components/PaginationFooter/PaginationFooter';
 import { Table } from 'src/components/Table';
 import { TableBody } from 'src/components/TableBody';
 import { Typography } from 'src/components/Typography';
 import { PARENT_USER } from 'src/features/Account/constants';
-import { useFlags } from 'src/hooks/useFlags';
 import { useOrder } from 'src/hooks/useOrder';
 import { usePagination } from 'src/hooks/usePagination';
+import { useRestrictedGlobalGrantCheck } from 'src/hooks/useRestrictedGlobalGrantCheck';
 import { useAccountUsers } from 'src/queries/account/users';
-import { useProfile } from 'src/queries/profile';
+import { useProfile } from 'src/queries/profile/profile';
 
 import CreateUserDrawer from './CreateUserDrawer';
 import { UserDeleteConfirmationDialog } from './UserDeleteConfirmationDialog';
@@ -23,7 +23,6 @@ import { UsersLandingTableBody } from './UsersLandingTableBody';
 import { UsersLandingTableHead } from './UsersLandingTableHead';
 
 import type { Filter } from '@linode/api-v4';
-import { useRestrictedGlobalGrantCheck } from 'src/hooks/useRestrictedGlobalGrantCheck';
 
 export const UsersLanding = () => {
   const theme = useTheme();
@@ -32,7 +31,6 @@ export const UsersLanding = () => {
   );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [selectedUsername, setSelectedUsername] = React.useState('');
-  const flags = useFlags();
   const { data: profile } = useProfile();
   const matchesSmDown = useMediaQuery(theme.breakpoints.down('sm'));
   const matchesLgUp = useMediaQuery(theme.breakpoints.up('lg'));
@@ -41,8 +39,7 @@ export const UsersLanding = () => {
   const order = useOrder();
 
   const showProxyUserTable =
-    flags.parentChildAccountAccess &&
-    (profile?.user_type === 'child' || profile?.user_type === 'proxy');
+    profile?.user_type === 'child' || profile?.user_type === 'proxy';
 
   const usersFilter: Filter = {
     ['+order']: order.order,
@@ -67,8 +64,7 @@ export const UsersLanding = () => {
     error: proxyUserError,
     isInitialLoading: isLoadingProxyUser,
   } = useAccountUsers({
-    enabled:
-      flags.parentChildAccountAccess && showProxyUserTable && !isRestrictedUser,
+    enabled: showProxyUserTable && !isRestrictedUser,
     filters: { user_type: 'proxy' },
   });
 
@@ -77,9 +73,7 @@ export const UsersLanding = () => {
   });
 
   const showChildAccountAccessCol = Boolean(
-    flags.parentChildAccountAccess &&
-      profile?.user_type === 'parent' &&
-      !isChildAccountAccessRestricted
+    profile?.user_type === 'parent' && !isChildAccountAccessRestricted
   );
 
   // Parent/Child accounts include additional "child account access" column.
@@ -152,16 +146,18 @@ export const UsersLanding = () => {
             User Settings
           </Typography>
         )}
-        <AddNewLink
-          disabledReason={
+        <Button
+          tooltipText={
             isRestrictedUser
               ? 'You cannot create other users as a restricted user.'
               : undefined
           }
+          buttonType="primary"
           disabled={isRestrictedUser}
-          label="Add a User"
           onClick={() => setIsCreateDrawerOpen(true)}
-        />
+        >
+          Add a User
+        </Button>
       </Box>
       <Table aria-label="List of Users">
         <UsersLandingTableHead

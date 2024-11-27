@@ -1,38 +1,62 @@
-import { APIError, Linode, Volume } from '@linode/api-v4';
+import { Box } from '@linode/ui';
 import { CreateVolumeSchema } from '@linode/validation/lib/volumes.schema';
 import { useFormik } from 'formik';
 import { useSnackbar } from 'notistack';
 import * as React from 'react';
 
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
+import {
+  BLOCK_STORAGE_ENCRYPTION_GENERAL_DESCRIPTION,
+  BLOCK_STORAGE_ENCRYPTION_OVERHEAD_CAVEAT,
+  BLOCK_STORAGE_ENCRYPTION_UNAVAILABLE_IN_LINODE_REGION_COPY,
+  BLOCK_STORAGE_USER_SIDE_ENCRYPTION_CAVEAT,
+} from 'src/components/Encryption/constants';
+import { Encryption } from 'src/components/Encryption/Encryption';
+import { useIsBlockStorageEncryptionFeatureEnabled } from 'src/components/Encryption/utils';
 import { Notice } from 'src/components/Notice/Notice';
 import { TagsInput } from 'src/components/TagsInput/TagsInput';
 import { TextField } from 'src/components/TextField';
 import { Typography } from 'src/components/Typography';
 import { MAX_VOLUME_SIZE } from 'src/constants';
+import { useRestrictedGlobalGrantCheck } from 'src/hooks/useRestrictedGlobalGrantCheck';
 import { useEventsPollingActions } from 'src/queries/events/events';
-import { useGrants, useProfile } from 'src/queries/profile';
-import { useCreateVolumeMutation } from 'src/queries/volumes';
-import { sendCreateVolumeEvent } from 'src/utilities/analytics';
+import { useRegionsQuery } from 'src/queries/regions/regions';
+import {
+  useCreateVolumeMutation,
+  useVolumeTypesQuery,
+} from 'src/queries/volumes/volumes';
+import { sendCreateVolumeEvent } from 'src/utilities/analytics/customEventAnalytics';
+import { doesRegionSupportFeature } from 'src/utilities/doesRegionSupportFeature';
 import { getErrorStringOrDefault } from 'src/utilities/errorUtils';
 import {
   handleFieldErrors,
   handleGeneralErrors,
 } from 'src/utilities/formikErrorUtils';
 import { maybeCastToNumber } from 'src/utilities/maybeCastToNumber';
+import { PRICES_RELOAD_ERROR_NOTICE_TEXT } from 'src/utilities/pricing/constants';
 
 import { ConfigSelect } from './ConfigSelect';
 import { PricePanel } from './PricePanel';
 import { SizeField } from './SizeField';
 
+import type {
+  APIError,
+  Linode,
+  Volume,
+  VolumeEncryption,
+} from '@linode/api-v4';
+
 interface Props {
   linode: Linode;
+  linodeSupportsBlockStorageEncryption: boolean | undefined;
   onClose: () => void;
   openDetails: (volume: Volume) => void;
+  setClientLibraryCopyVisible: (visible: boolean) => void;
 }
 
 interface FormState {
   config_id: number;
+  encryption: VolumeEncryption | undefined;
   label: string;
   linode_id: number;
   region: string;
@@ -42,6 +66,7 @@ interface FormState {
 
 const initialValues: FormState = {
   config_id: -1,
+  encryption: 'disabled',
   label: '',
   linode_id: -1,
   region: 'none',
@@ -50,16 +75,44 @@ const initialValues: FormState = {
 };
 
 export const LinodeVolumeCreateForm = (props: Props) => {
-  const { linode, onClose, openDetails } = props;
+  const {
+    linode,
+    linodeSupportsBlockStorageEncryption,
+    onClose,
+    openDetails,
+    setClientLibraryCopyVisible,
+  } = props;
+
   const { enqueueSnackbar } = useSnackbar();
 
-  const { data: profile } = useProfile();
-  const { data: grants } = useGrants();
   const { mutateAsync: createVolume } = useCreateVolumeMutation();
+  const { data: types, isError, isLoading } = useVolumeTypesQuery();
 
   const { checkForNewEvents } = useEventsPollingActions();
 
-  const disabled = profile?.restricted && !grants?.global.add_volumes;
+  const isVolumesGrantReadOnly = useRestrictedGlobalGrantCheck({
+    globalGrantType: 'add_volumes',
+  });
+
+  const {
+    isBlockStorageEncryptionFeatureEnabled,
+  } = useIsBlockStorageEncryptionFeatureEnabled();
+
+  const { data: regions } = useRegionsQuery();
+
+  const toggleVolumeEncryptionEnabled = (
+    encryption: VolumeEncryption | undefined
+  ) => {
+    if (encryption === 'enabled') {
+      setFieldValue('encryption', 'disabled');
+      setClientLibraryCopyVisible(false);
+    } else {
+      setFieldValue('encryption', 'enabled');
+      setClientLibraryCopyVisible(true);
+    }
+  };
+
+  const isInvalidPrice = !types || isError;
 
   const {
     errors,
@@ -75,16 +128,25 @@ export const LinodeVolumeCreateForm = (props: Props) => {
   } = useFormik({
     initialValues,
     async onSubmit(values, { setErrors, setStatus }) {
-      const { config_id, label, size, tags } = values;
+      const { config_id, encryption, label, size, tags } = values;
 
       /** Status holds our a general error message */
       setStatus(undefined);
+
+      // If the BSE feature is not enabled or the selected region does not support BSE, set `encryption` in the payload to undefined.
+      // Otherwise, set it to `enabled` if the checkbox is checked, or `disabled` if it is not
+      const blockStorageEncryptionPayloadValue =
+        !isBlockStorageEncryptionFeatureEnabled ||
+        !regionSupportsBlockStorageEncryption
+          ? undefined
+          : encryption;
 
       try {
         const volume = await createVolume({
           config_id:
             // If the config_id still set to default value of -1, set this to undefined, so volume gets created on back-end according to the API logic
             config_id === -1 ? undefined : maybeCastToNumber(config_id),
+          encryption: blockStorageEncryptionPayloadValue,
           label,
           linode_id: maybeCastToNumber(linode.id),
           size: maybeCastToNumber(size),
@@ -110,14 +172,20 @@ export const LinodeVolumeCreateForm = (props: Props) => {
     validationSchema: CreateVolumeSchema,
   });
 
+  const regionSupportsBlockStorageEncryption = doesRegionSupportFeature(
+    linode.region,
+    regions ?? [],
+    'Block Storage Encryption'
+  );
+
   return (
     <form onSubmit={handleSubmit}>
-      {disabled && (
+      {isVolumesGrantReadOnly && (
         <Notice
           text={
             "You don't have permissions to create a new Volume. Please contact an account administrator for details."
           }
-          important
+          variant="error"
         />
       )}
       {error && <Notice text={error} variant="error" />}
@@ -145,7 +213,7 @@ export const LinodeVolumeCreateForm = (props: Props) => {
       </Typography>
       <TextField
         data-qa-volume-label
-        disabled={disabled}
+        disabled={isVolumesGrantReadOnly}
         errorText={touched.label ? errors.label : undefined}
         label="Label"
         name="label"
@@ -155,7 +223,7 @@ export const LinodeVolumeCreateForm = (props: Props) => {
         value={values.label}
       />
       <SizeField
-        disabled={disabled}
+        disabled={isVolumesGrantReadOnly}
         error={touched.size ? errors.size : undefined}
         isFromLinode
         name="size"
@@ -165,7 +233,7 @@ export const LinodeVolumeCreateForm = (props: Props) => {
         value={values.size}
       />
       <ConfigSelect
-        disabled={disabled}
+        disabled={isVolumesGrantReadOnly}
         error={touched.config_id ? errors.config_id : undefined}
         key={linode.id}
         linodeId={linode.id}
@@ -191,11 +259,33 @@ export const LinodeVolumeCreateForm = (props: Props) => {
               : undefined
             : undefined
         }
-        disabled={disabled}
+        disabled={isVolumesGrantReadOnly}
         label="Tags"
         name="tags"
         value={values.tags.map((tag) => ({ label: tag, value: tag }))}
       />
+      {isBlockStorageEncryptionFeatureEnabled && (
+        <Box paddingTop={2}>
+          <Encryption
+            disabledReason={
+              BLOCK_STORAGE_ENCRYPTION_UNAVAILABLE_IN_LINODE_REGION_COPY
+            }
+            notices={
+              values.encryption === 'enabled'
+                ? [
+                    BLOCK_STORAGE_ENCRYPTION_OVERHEAD_CAVEAT,
+                    BLOCK_STORAGE_USER_SIDE_ENCRYPTION_CAVEAT,
+                  ]
+                : []
+            }
+            descriptionCopy={BLOCK_STORAGE_ENCRYPTION_GENERAL_DESCRIPTION}
+            disabled={!regionSupportsBlockStorageEncryption}
+            entityType="Volume"
+            isEncryptEntityChecked={values.encryption === 'enabled'}
+            onChange={() => toggleVolumeEncryptionEnabled(values.encryption)}
+          />
+        </Box>
+      )}
       <PricePanel
         currentSize={10}
         regionId={linode.region}
@@ -203,9 +293,15 @@ export const LinodeVolumeCreateForm = (props: Props) => {
       />
       <ActionsPanel
         primaryButtonProps={{
-          disabled,
+          disabled:
+            isVolumesGrantReadOnly ||
+            isInvalidPrice ||
+            (!linodeSupportsBlockStorageEncryption &&
+              values.encryption === 'enabled'),
           label: 'Create Volume',
           loading: isSubmitting,
+          tooltipText:
+            !isLoading && isInvalidPrice ? PRICES_RELOAD_ERROR_NOTICE_TEXT : '',
           type: 'submit',
         }}
         secondaryButtonProps={{

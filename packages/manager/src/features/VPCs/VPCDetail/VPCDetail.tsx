@@ -1,29 +1,28 @@
+import { Box } from '@linode/ui';
 import { Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { createLazyRoute } from '@tanstack/react-router';
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 
-import { Box } from 'src/components/Box';
 import { StyledLinkButton } from 'src/components/Button/StyledLinkButton';
 import { CircleProgress } from 'src/components/CircleProgress/CircleProgress';
-import { DismissibleBanner } from 'src/components/DismissibleBanner/DismissibleBanner';
 import { DocumentTitleSegment } from 'src/components/DocumentTitle';
 import { EntityHeader } from 'src/components/EntityHeader/EntityHeader';
 import { ErrorState } from 'src/components/ErrorState/ErrorState';
 import { LandingHeader } from 'src/components/LandingHeader';
 import { VPC_DOCS_LINK, VPC_LABEL } from 'src/features/VPCs/constants';
 import { useRegionsQuery } from 'src/queries/regions/regions';
-import { useVPCQuery } from 'src/queries/vpcs';
+import { useVPCQuery } from 'src/queries/vpcs/vpcs';
 import { truncate } from 'src/utilities/truncate';
 
+import { getUniqueLinodesFromSubnets } from '../utils';
 import { VPCDeleteDialog } from '../VPCLanding/VPCDeleteDialog';
 import { VPCEditDrawer } from '../VPCLanding/VPCEditDrawer';
-import { REBOOT_LINODE_WARNING_VPCDETAILS } from '../constants';
-import { getUniqueLinodesFromSubnets } from '../utils';
 import {
   StyledActionButton,
+  StyledBox,
   StyledDescriptionBox,
-  StyledPaper,
   StyledSummaryBox,
   StyledSummaryTextTypography,
 } from './VPCDetail.styles';
@@ -133,7 +132,7 @@ const VPCDetail = () => {
           </StyledActionButton>
         </Box>
       </EntityHeader>
-      <StyledPaper>
+      <StyledBox>
         <StyledSummaryBox data-qa-vpc-summary display="flex" flex={1}>
           {summaryData.map((col) => {
             return (
@@ -174,7 +173,7 @@ const VPCDetail = () => {
             </Typography>
           </StyledDescriptionBox>
         )}
-      </StyledPaper>
+      </StyledBox>
       <VPCDeleteDialog
         id={vpc.id}
         label={vpc.label}
@@ -198,20 +197,13 @@ const VPCDetail = () => {
           Subnets ({vpc.subnets.length})
         </Typography>
       </Box>
-      {numLinodes > 0 && (
-        <DismissibleBanner
-          preferenceKey={`reboot-linodes-warning-banner`}
-          sx={{ marginBottom: theme.spacing(2) }}
-          variant="warning"
-        >
-          <Typography variant="body1">
-            {REBOOT_LINODE_WARNING_VPCDETAILS}
-          </Typography>
-        </DismissibleBanner>
-      )}
       <VPCSubnetsTable vpcId={vpc.id} vpcRegion={vpc.region} />
     </>
   );
 };
+
+export const vpcDetailLazyRoute = createLazyRoute('/vpcs/$vpcId')({
+  component: VPCDetail,
+});
 
 export default VPCDetail;

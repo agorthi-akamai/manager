@@ -127,6 +127,42 @@ export const mockUpdateDatabase = (
 };
 
 /**
+ * Intercepts POST request to reset an active database's password and mocks response.
+ *
+ * @param id - Database ID.
+ * @param engine - Database engine type.
+ *
+ * @returns Cypress chainable.
+ */
+
+export const mockResize = (
+  id: number,
+  engine: string,
+  responseData: any = {}
+): Cypress.Chainable<null> => {
+  return cy.intercept(
+    'PUT',
+    apiMatcher(`databases/${engine}/instances/${id}`),
+    responseData
+  );
+};
+
+export const mockResizeProvisioningDatabase = (
+  id: number,
+  engine: string,
+  responseErrorMessage?: string | undefined
+): Cypress.Chainable<null> => {
+  const error = makeErrorResponse(
+    responseErrorMessage || defaultErrorMessageProvisioning
+  );
+  return cy.intercept(
+    'PUT',
+    apiMatcher(`databases/${engine}/instances/${id}`),
+    error
+  );
+};
+
+/**
  * Intercepts PUT request to update a provisioning database and mocks response.
  *
  * @param id - Database ID.
@@ -267,5 +303,27 @@ export const mockGetDatabaseEngines = (
     'GET',
     apiMatcher('databases/engines*'),
     paginateResponse(engines)
+  );
+};
+
+/**
+ * Mocks an error response for the GET request to retrieve database instances in CloudPulse.
+ *
+ * This function intercepts the 'GET' request made to the CloudPulse API endpoint for retrieving database instances
+ * and simulates an error response with a customizable error message and HTTP status code.
+ *
+ * @param {string} errorMessage - The error message to include in the mock response body.
+ * @param {number} [status=500] - The HTTP status code for the mock response (defaults to 500 if not provided).
+ *
+ * @returns {Cypress.Chainable<null>} - A Cypress chainable object, indicating that the interception is part of a Cypress test chain.
+ */
+export const mockGetDatabasesError = (
+  errorMessage: string,
+  status: number = 500
+): Cypress.Chainable<null> => {
+  return cy.intercept(
+    'GET',
+    apiMatcher('databases/instances*'),
+    makeErrorResponse(errorMessage, status)
   );
 };

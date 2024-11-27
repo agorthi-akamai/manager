@@ -3,7 +3,7 @@ import * as React from 'react';
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
 import { ConfirmationDialog } from 'src/components/ConfirmationDialog/ConfirmationDialog';
 import { Typography } from 'src/components/Typography';
-import { useDisableTwoFactorMutation } from 'src/queries/profile';
+import { useDisableTwoFactorMutation } from 'src/queries/profile/profile';
 
 interface Props {
   onClose: () => void;
@@ -16,7 +16,7 @@ export const DisableTwoFactorDialog = (props: Props) => {
 
   const {
     error,
-    isLoading,
+    isPending,
     mutateAsync: disableTwoFactor,
     reset,
   } = useDisableTwoFactorMutation();
@@ -38,7 +38,7 @@ export const DisableTwoFactorDialog = (props: Props) => {
       primaryButtonProps={{
         'data-testid': 'submit',
         label: 'Disable Two-factor Authentication',
-        loading: isLoading,
+        loading: isPending,
         onClick: handleDisableTFA,
       }}
       secondaryButtonProps={{

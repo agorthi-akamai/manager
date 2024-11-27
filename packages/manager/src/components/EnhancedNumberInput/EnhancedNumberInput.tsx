@@ -1,4 +1,4 @@
-import { Box } from 'src/components/Box';
+import { Box } from '@linode/ui';
 import { styled } from '@mui/material/styles';
 import * as React from 'react';
 
@@ -9,14 +9,14 @@ import { TextField } from 'src/components/TextField';
 
 const sxTextFieldBase = {
   '&::-webkit-inner-spin-button': {
-    '-webkit-appearance': 'none',
+    WebkitAppearance: 'none',
     margin: 0,
   },
   '&::-webkit-outer-spin-button': {
-    '-webkit-appearance': 'none',
+    WebkitAppearance: 'none',
     margin: 0,
   },
-  '-moz-appearance': 'textfield',
+  MozAppearance: 'textfield',
   padding: '0 8px',
   textAlign: 'right',
 };
@@ -145,7 +145,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
     border: 'none',
   },
   border: 'none',
-  borderRadius: 0,
+  borderRadius: theme.tokens.borderRadius.None,
   height: 34,
   minHeight: 'fit-content',
   minWidth: 30,

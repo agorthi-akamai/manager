@@ -1,21 +1,25 @@
-import { Volume } from '@linode/api-v4';
+import { Box, FormHelperText } from '@linode/ui';
+import { styled } from '@mui/material/styles';
 import { useFormik } from 'formik';
 import { useSnackbar } from 'notistack';
 import * as React from 'react';
 import { number, object } from 'yup';
 
 import { ActionsPanel } from 'src/components/ActionsPanel/ActionsPanel';
+import { Checkbox } from 'src/components/Checkbox';
 import { Drawer } from 'src/components/Drawer';
-import Select, { Item } from 'src/components/EnhancedSelect';
-import { FormControl } from 'src/components/FormControl';
-import { FormHelperText } from 'src/components/FormHelperText';
+import { BLOCK_STORAGE_ENCRYPTION_SETTING_IMMUTABLE_COPY } from 'src/components/Encryption/constants';
+import { useIsBlockStorageEncryptionFeatureEnabled } from 'src/components/Encryption/utils';
 import { Notice } from 'src/components/Notice/Notice';
 import { LinodeSelect } from 'src/features/Linodes/LinodeSelect/LinodeSelect';
 import { useEventsPollingActions } from 'src/queries/events/events';
-import { useAllLinodeConfigsQuery } from 'src/queries/linodes/configs';
-import { useGrants } from 'src/queries/profile';
-import { useAttachVolumeMutation } from 'src/queries/volumes';
+import { useGrants } from 'src/queries/profile/profile';
+import { useAttachVolumeMutation } from 'src/queries/volumes/volumes';
 import { getAPIErrorFor } from 'src/utilities/getAPIErrorFor';
+
+import { ConfigSelect } from './VolumeDrawer/ConfigSelect';
+
+import type { Volume } from '@linode/api-v4';
 
 interface Props {
   onClose: () => void;
@@ -43,6 +47,10 @@ export const AttachVolumeDrawer = React.memo((props: Props) => {
 
   const { error, mutateAsync: attachVolume } = useAttachVolumeMutation();
 
+  const {
+    isBlockStorageEncryptionFeatureEnabled,
+  } = useIsBlockStorageEncryptionFeatureEnabled();
+
   const formik = useFormik({
     initialValues: { config_id: -1, linode_id: -1 },
     async onSubmit(values) {
@@ -58,26 +66,9 @@ export const AttachVolumeDrawer = React.memo((props: Props) => {
       });
     },
     validateOnBlur: false,
-    validateOnChange: false,
+    validateOnChange: true,
     validationSchema: AttachVolumeValidationSchema,
   });
-
-  const { data, isLoading: configsLoading } = useAllLinodeConfigsQuery(
-    formik.values.linode_id,
-    formik.values.linode_id !== -1
-  );
-
-  const configs = data ?? [];
-
-  const configChoices = configs.map((config) => {
-    return { label: config.label, value: `${config.id}` };
-  });
-
-  React.useEffect(() => {
-    if (configs.length === 1) {
-      formik.setFieldValue('config_id', configs[0].id);
-    }
-  }, [configs]);
 
   const reset = () => {
     formik.resetForm();
@@ -115,12 +106,17 @@ export const AttachVolumeDrawer = React.memo((props: Props) => {
       <form onSubmit={formik.handleSubmit}>
         {isReadOnly && (
           <Notice
-            text="You don't have permission to edit this volume."
+            text="You don't have permission to attach this volume."
             variant="error"
           />
         )}
         {generalError && <Notice text={generalError} variant="error" />}
         <LinodeSelect
+          errorText={
+            formik.touched.linode_id && formik.errors.linode_id
+              ? formik.errors.linode_id
+              : linodeError
+          }
           onSelectionChange={(linode) => {
             if (linode !== null) {
               formik.setFieldValue('linode_id', linode.id);
@@ -128,7 +124,6 @@ export const AttachVolumeDrawer = React.memo((props: Props) => {
           }}
           clearable={false}
           disabled={isReadOnly}
-          errorText={formik.errors.linode_id ?? linodeError}
           filter={{ region: volume?.region }}
           noMarginTop
           value={formik.values.linode_id}
@@ -138,27 +133,38 @@ export const AttachVolumeDrawer = React.memo((props: Props) => {
             Only Linodes in this Volume&rsquo;s region are displayed.
           </FormHelperText>
         )}
-        {/* Config Selection */}
-        <FormControl fullWidth>
-          <Select
-            onChange={(item: Item<string>) =>
-              formik.setFieldValue('config_id', Number(item.value))
-            }
-            value={configChoices.find(
-              (item) => item.value === String(formik.values.config_id)
-            )}
-            disabled={isReadOnly || formik.values.linode_id === -1}
-            errorText={formik.errors.config_id ?? configError}
-            id="config_id"
-            isClearable={false}
-            isLoading={configsLoading}
-            label="Config"
-            name="config_id"
-            noMarginTop
-            options={configChoices}
-            placeholder="Select a Config"
-          />
-        </FormControl>
+        <StyledConfigSelect
+          error={
+            formik.touched.config_id && formik.errors.config_id
+              ? formik.errors.config_id
+              : configError
+          }
+          linodeId={
+            formik.values.linode_id === -1 ? null : formik.values.linode_id
+          }
+          onChange={(id: number) => {
+            formik.setFieldValue('config_id', +id);
+          }}
+          disabled={isReadOnly || formik.values.linode_id === -1}
+          name="configId"
+          onBlur={() => null}
+          value={formik.values.config_id}
+        />
+        {isBlockStorageEncryptionFeatureEnabled && (
+          <Box
+            sx={{
+              marginLeft: '2px',
+              marginTop: '16px',
+            }}
+          >
+            <Checkbox
+              checked={volume?.encryption === 'enabled'}
+              disabled
+              text="Encrypt Volume"
+              toolTipText={BLOCK_STORAGE_ENCRYPTION_SETTING_IMMUTABLE_COPY}
+            />
+          </Box>
+        )}
         <ActionsPanel
           primaryButtonProps={{
             'data-testid': 'submit',
@@ -177,3 +183,9 @@ export const AttachVolumeDrawer = React.memo((props: Props) => {
     </Drawer>
   );
 });
+
+const StyledConfigSelect = styled(ConfigSelect, {
+  label: 'StyledConfigSelect',
+})(() => ({
+  p: { marginLeft: 0 },
+}));

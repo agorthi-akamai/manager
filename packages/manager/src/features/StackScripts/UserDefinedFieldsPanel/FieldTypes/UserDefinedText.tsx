@@ -1,11 +1,12 @@
-import { UserDefinedField } from '@linode/api-v4/lib/stackscripts';
+import { omittedProps } from '@linode/ui';
 import { styled } from '@mui/material/styles';
 import * as React from 'react';
 
 import { AccessPanel } from 'src/components/AccessPanel/AccessPanel';
 import { RenderGuard } from 'src/components/RenderGuard';
 import { TextField } from 'src/components/TextField';
-import { omittedProps } from 'src/utilities/omittedProps';
+
+import type { UserDefinedField } from '@linode/api-v4/lib/stackscripts';
 
 interface Props {
   error?: string;
@@ -14,22 +15,11 @@ interface Props {
   isPassword?: boolean;
   placeholder?: string;
   tooltip?: JSX.Element;
-  tooltipInteractive?: boolean;
   updateFormState: (key: string, value: any) => void;
   value: string;
 }
 
 class UserDefinedText extends React.Component<Props, {}> {
-  render() {
-    return (
-      <div>
-        {this.props.isPassword
-          ? this.renderPasswordField()
-          : this.renderTextField()}
-      </div>
-    );
-  }
-
   handleUpdatePassword = (value: string) => {
     const { field, updateFormState } = this.props;
     updateFormState(field.name, value);
@@ -41,14 +31,7 @@ class UserDefinedText extends React.Component<Props, {}> {
   };
 
   renderPasswordField = () => {
-    const {
-      error,
-      field,
-      isOptional,
-      placeholder,
-      tooltip,
-      tooltipInteractive,
-    } = this.props;
+    const { error, field, isOptional, placeholder, tooltip } = this.props;
 
     return (
       <StyledAccessPanel
@@ -61,7 +44,6 @@ class UserDefinedText extends React.Component<Props, {}> {
         password={this.props.value}
         placeholder={placeholder}
         required={!isOptional}
-        tooltipInteractive={tooltipInteractive}
       />
     );
   };
@@ -80,6 +62,16 @@ class UserDefinedText extends React.Component<Props, {}> {
       />
     );
   };
+
+  render() {
+    return (
+      <div>
+        {this.props.isPassword
+          ? this.renderPasswordField()
+          : this.renderTextField()}
+      </div>
+    );
+  }
 }
 
 type StyledAccessPanelProps = Pick<Props, 'isOptional'>;

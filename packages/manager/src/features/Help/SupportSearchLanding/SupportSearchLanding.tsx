@@ -1,21 +1,24 @@
+import { Box, InputAdornment } from '@linode/ui';
 import Search from '@mui/icons-material/Search';
 import Grid from '@mui/material/Unstable_Grid2';
-import { Theme } from '@mui/material/styles';
+import { createLazyRoute } from '@tanstack/react-router';
 import * as React from 'react';
 import { useHistory } from 'react-router-dom';
 import { makeStyles } from 'tss-react/mui';
 
-import { Box } from 'src/components/Box';
 import { H1Header } from 'src/components/H1Header/H1Header';
-import { InputAdornment } from 'src/components/InputAdornment';
 import { Notice } from 'src/components/Notice/Notice';
 import { TextField } from 'src/components/TextField';
 import { COMMUNITY_SEARCH_URL, DOCS_SEARCH_URL } from 'src/constants';
 import { getQueryParamFromQueryString } from 'src/utilities/queryParams';
 
-import withSearch, { AlgoliaState as AlgoliaProps } from '../SearchHOC';
-import { DocumentationResults, SearchResult } from './DocumentationResults';
+import withSearch from '../SearchHOC';
+import { DocumentationResults } from './DocumentationResults';
 import HelpResources from './HelpResources';
+
+import type { AlgoliaState as AlgoliaProps } from '../SearchHOC';
+import type { SearchResult } from './DocumentationResults';
+import type { Theme } from '@mui/material/styles';
 
 const useStyles = makeStyles()((theme: Theme) => ({
   searchBar: {
@@ -121,4 +124,10 @@ const SupportSearchLanding = (props: AlgoliaProps) => {
 
 export default withSearch({ highlight: false, hitsPerPage: 5 })(
   SupportSearchLanding
+);
+
+export const supportSearchLandingLazyRoute = createLazyRoute('/support/search')(
+  {
+    component: SupportSearchLanding,
+  }
 );

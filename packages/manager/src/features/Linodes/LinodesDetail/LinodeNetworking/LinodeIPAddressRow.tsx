@@ -1,23 +1,24 @@
-import { IPAddress, IPRange } from '@linode/api-v4/lib/networking';
 import { styled } from '@mui/material/styles';
-import { useTheme } from '@mui/material/styles';
-import { IPv6, parse as parseIP } from 'ipaddr.js';
+import { parse as parseIP } from 'ipaddr.js';
 import * as React from 'react';
 
 import { CircleProgress } from 'src/components/CircleProgress';
 import { CopyTooltip } from 'src/components/CopyTooltip/CopyTooltip';
+import { LinkButton } from 'src/components/LinkButton';
 import { TableCell } from 'src/components/TableCell';
 import { Typography } from 'src/components/Typography';
 import { StyledTableRow } from 'src/features/Linodes/LinodeEntityDetail.styles';
-import { IPDisplay } from 'src/features/Linodes/LinodesDetail/LinodeNetworking/LinodeIPAddresses';
 import { useLinodeQuery } from 'src/queries/linodes/linodes';
-import {
-  useAllIPsQuery,
-  useLinodeIPsQuery,
-} from 'src/queries/linodes/networking';
+import { useLinodeIPsQuery } from 'src/queries/linodes/networking';
+import { useAllIPsQuery } from 'src/queries/networking/networking';
+import { usePreferences } from 'src/queries/profile/preferences';
 
-import { StyledActionTableCell } from './LinodeIPAddresses.styles';
 import { LinodeNetworkingActionMenu } from './LinodeNetworkingActionMenu';
+
+import type { IPAddress, IPRange } from '@linode/api-v4';
+import type { IPv6 } from 'ipaddr.js';
+import type { IPDisplay } from 'src/features/Linodes/LinodesDetail/LinodeNetworking/LinodeIPAddresses';
+
 export interface IPAddressRowHandlers {
   handleOpenEditRDNS: (ip: IPAddress) => void;
   handleOpenEditRDNSForRange: (range: IPRange) => void;
@@ -52,6 +53,7 @@ export const LinodeIPAddressRow = (props: LinodeIPAddressRowProps) => {
   } = props;
 
   const { data: ips } = useLinodeIPsQuery(linodeId);
+  const { data: preferences } = usePreferences();
 
   const isOnlyPublicIP =
     ips?.ipv4.public.length === 1 && type === 'IPv4 – Public';
@@ -67,7 +69,13 @@ export const LinodeIPAddressRow = (props: LinodeIPAddressRowProps) => {
         parentColumn="Address"
         sx={{ whiteSpace: 'nowrap' }}
       >
-        <CopyTooltip copyableText disabled={isVPCOnlyLinode} text={address} />
+        <CopyTooltip
+          copyableText
+          disabled={isVPCOnlyLinode}
+          masked={Boolean(preferences?.maskSensitiveData)}
+          maskedTextLength={type.includes('IPv6') ? 'ipv6' : 'ipv4'}
+          text={address}
+        />
         {!isVPCOnlyLinode && <StyledCopyToolTip text={address} />}
       </TableCell>
       <TableCell
@@ -91,7 +99,7 @@ export const LinodeIPAddressRow = (props: LinodeIPAddressRowProps) => {
           rdns
         )}
       </TableCell>
-      <StyledActionTableCell data-qa-action>
+      <TableCell actionCell data-qa-action>
         {_ip ? (
           <LinodeNetworkingActionMenu
             ipAddress={_ip}
@@ -113,7 +121,7 @@ export const LinodeIPAddressRow = (props: LinodeIPAddressRowProps) => {
             readOnly={readOnly}
           />
         ) : null}
-      </StyledActionTableCell>
+      </TableCell>
     </StyledTableRow>
   );
 };
@@ -136,7 +144,6 @@ const RangeRDNSCell = (props: {
   range: IPRange;
 }) => {
   const { linodeId, onViewDetails, range } = props;
-  const theme = useTheme();
 
   const { data: linode } = useLinodeQuery(linodeId);
 
@@ -151,7 +158,7 @@ const RangeRDNSCell = (props: {
   const ipsWithRDNS = listIPv6InRange(range.range, range.prefix, ipsInRegion);
 
   if (ipv6Loading) {
-    return <CircleProgress mini noPadding />;
+    return <CircleProgress size="sm" />;
   }
 
   // We don't show anything if there are no addresses.
@@ -169,21 +176,12 @@ const RangeRDNSCell = (props: {
   }
 
   return (
-    <button
+    <LinkButton
       aria-label={`View the ${ipsWithRDNS.length} RDNS Addresses`}
       onClick={onViewDetails}
     >
-      <Typography
-        sx={{
-          '&:hover': {
-            color: theme.palette.primary.light,
-          },
-          color: theme.palette.primary.main,
-        }}
-      >
-        {ipsWithRDNS.length} Addresses2
-      </Typography>
-    </button>
+      {ipsWithRDNS.length} Addresses
+    </LinkButton>
   );
 };
 

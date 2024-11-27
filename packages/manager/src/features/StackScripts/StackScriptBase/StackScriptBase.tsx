@@ -219,6 +219,7 @@ const withStackScriptBase = (options: WithStackScriptBaseOptions) => (
                   label="Search by Label, Username, or Description"
                   onSearch={this.handleSearch}
                   placeholder="Search by Label, Username, or Description"
+                  value={query ?? ''}
                 />
               </StyledContentDiv>
               <StyledTable
@@ -249,7 +250,7 @@ const withStackScriptBase = (options: WithStackScriptBaseOptions) => (
                */}
               {gettingMoreStackScripts && !isSorting && (
                 <div style={{ margin: '32px 0 32px 0', textAlign: 'center' }}>
-                  <CircleProgress mini />
+                  <CircleProgress size="sm" />
                 </div>
               )}
             </React.Fragment>
@@ -543,7 +544,7 @@ const withStackScriptBase = (options: WithStackScriptBaseOptions) => (
           } else {
             this.setState({
               allStackScriptsLoaded: false,
-              currentSearchFilter: [],
+              currentSearchFilter: {},
             });
           }
         })

@@ -1,4 +1,3 @@
-import { UpdateVPCPayload, VPC } from '@linode/api-v4/lib/vpcs/types';
 import { updateVPCSchema } from '@linode/validation/lib/vpcs.schema';
 import { useFormik } from 'formik';
 import * as React from 'react';
@@ -8,10 +7,12 @@ import { Drawer } from 'src/components/Drawer';
 import { Notice } from 'src/components/Notice/Notice';
 import { RegionSelect } from 'src/components/RegionSelect/RegionSelect';
 import { TextField } from 'src/components/TextField';
-import { useGrants, useProfile } from 'src/queries/profile';
+import { useGrants, useProfile } from 'src/queries/profile/profile';
 import { useRegionsQuery } from 'src/queries/regions/regions';
-import { useUpdateVPCMutation } from 'src/queries/vpcs';
+import { useUpdateVPCMutation } from 'src/queries/vpcs/vpcs';
 import { getErrorMap } from 'src/utilities/errorUtils';
+
+import type { UpdateVPCPayload, VPC } from '@linode/api-v4/lib/vpcs/types';
 
 interface Props {
   onClose: () => void;
@@ -37,7 +38,7 @@ export const VPCEditDrawer = (props: Props) => {
 
   const {
     error,
-    isLoading,
+    isPending,
     mutateAsync: updateVPC,
     reset,
   } = useUpdateVPCMutation(vpc?.id ?? -1);
@@ -62,7 +63,7 @@ export const VPCEditDrawer = (props: Props) => {
 
   const handleFieldChange = (field: string, value: string) => {
     form.setFieldValue(field, value);
-    if (form.errors[field]) {
+    if (form.errors[field as keyof UpdateVPCPayloadWithNone]) {
       form.setFieldError(field, undefined);
     }
   };
@@ -120,10 +121,10 @@ export const VPCEditDrawer = (props: Props) => {
             currentCapability="VPCs"
             disabled // the Region field will not be editable during beta
             errorText={(regionsError && regionsError[0].reason) || undefined}
-            handleSelection={() => null}
             helperText={REGION_HELPER_TEXT}
+            onChange={() => null}
             regions={regionsData}
-            selectedId={vpc?.region ?? null}
+            value={vpc?.region}
           />
         )}
         <ActionsPanel
@@ -131,7 +132,7 @@ export const VPCEditDrawer = (props: Props) => {
             'data-testid': 'save-button',
             disabled: !form.dirty || readOnly,
             label: 'Save',
-            loading: isLoading,
+            loading: isPending,
             type: 'submit',
           }}
           secondaryButtonProps={{ label: 'Cancel', onClick: onClose }}

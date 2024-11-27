@@ -1,28 +1,39 @@
+import { Tooltip } from '@linode/ui';
+import { Box } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 import * as React from 'react';
 import { useLocation } from 'react-router-dom';
 
 import GridView from 'src/assets/icons/grid-view.svg';
 import GroupByTag from 'src/assets/icons/group-by-tag.svg';
-import { OrderByProps } from 'src/components/OrderBy';
-import Paginate, { PaginationProps } from 'src/components/Paginate';
+import Paginate from 'src/components/Paginate';
 import { getMinimumPageSizeForNumberOfItems } from 'src/components/PaginationFooter/PaginationFooter';
 import { PaginationFooter } from 'src/components/PaginationFooter/PaginationFooter';
+import { Paper } from '@linode/ui';
+import { useIsGeckoEnabled } from 'src/components/RegionSelect/RegionSelect.utils';
 import { TableBody } from 'src/components/TableBody';
-import { Tooltip } from 'src/components/Tooltip';
-import { Action } from 'src/features/Linodes/PowerActionsDialogOrDrawer';
-import { DialogType } from 'src/features/Linodes/types';
 import { useInfinitePageSize } from 'src/hooks/useInfinitePageSize';
-import { LinodeWithMaintenance } from 'src/utilities/linodes';
 import { getQueryParamsFromQueryString } from 'src/utilities/queryParams';
 
 import {
   StyledControlHeader,
   StyledToggleButton,
 } from './DisplayLinodes.styles';
+import { RegionTypeFilter } from './RegionTypeFilter';
 import TableWrapper from './TableWrapper';
 
 import type { Config } from '@linode/api-v4/lib/linodes';
+import type { OrderByProps } from 'src/components/OrderBy';
+import type { PaginationProps } from 'src/components/Paginate';
+import type { Action } from 'src/features/Linodes/PowerActionsDialogOrDrawer';
+import type { DialogType } from 'src/features/Linodes/types';
+import type { LinodeWithMaintenance } from 'src/utilities/linodes';
+import type { BaseQueryParams } from 'src/utilities/queryParams';
+import type { RegionFilter } from 'src/utilities/storage';
+
+interface QueryParams extends BaseQueryParams {
+  page: string;
+}
 
 export interface RenderLinodesProps
   extends PaginationProps<LinodeWithMaintenance> {
@@ -36,6 +47,7 @@ interface DisplayLinodesProps extends OrderByProps<LinodeWithMaintenance> {
   component: React.ComponentType<RenderLinodesProps>;
   data: LinodeWithMaintenance[];
   display: 'grid' | 'list';
+  handleRegionFilter: (regionFilter: RegionFilter) => void;
   linodeViewPreference: 'grid' | 'list';
   linodesAreGrouped: boolean;
   openDialog: (type: DialogType, linodeID: number, linodeLabel: string) => void;
@@ -57,6 +69,7 @@ export const DisplayLinodes = React.memo((props: DisplayLinodesProps) => {
     data,
     display,
     handleOrderChange,
+    handleRegionFilter,
     linodeViewPreference,
     linodesAreGrouped,
     order,
@@ -69,8 +82,8 @@ export const DisplayLinodes = React.memo((props: DisplayLinodesProps) => {
 
   const displayViewDescriptionId = React.useId();
   const groupByDescriptionId = React.useId();
-
   const { infinitePageSize, setInfinitePageSize } = useInfinitePageSize();
+
   const numberOfLinodesWithMaintenance = React.useMemo(() => {
     return data.reduce((acc, thisLinode) => {
       if (thisLinode.maintenance) {
@@ -79,7 +92,9 @@ export const DisplayLinodes = React.memo((props: DisplayLinodesProps) => {
       return acc;
     }, 0);
   }, [JSON.stringify(data)]);
+
   const count = data.length;
+
   const pageSize =
     numberOfLinodesWithMaintenance > infinitePageSize
       ? getMinimumPageSizeForNumberOfItems(numberOfLinodesWithMaintenance)
@@ -87,8 +102,10 @@ export const DisplayLinodes = React.memo((props: DisplayLinodesProps) => {
   const maxPageNumber = Math.ceil(count / pageSize);
 
   const { search } = useLocation();
-  const params = getQueryParamsFromQueryString(search);
+  const params = getQueryParamsFromQueryString<QueryParams>(search);
   const queryPage = Math.min(Number(params.page), maxPageNumber) || 1;
+
+  const { isGeckoLAEnabled } = useIsGeckoEnabled();
 
   return (
     <Paginate
@@ -126,58 +143,76 @@ export const DisplayLinodes = React.memo((props: DisplayLinodesProps) => {
         return (
           <React.Fragment>
             {display === 'list' && (
-              <TableWrapper
-                {...tableWrapperProps}
-                linodeViewPreference={linodeViewPreference}
-                linodesAreGrouped={linodesAreGrouped}
-                toggleGroupLinodes={toggleGroupLinodes}
-                toggleLinodeView={toggleLinodeView}
-              >
-                <TableBody>
-                  <Component showHead {...componentProps} />
-                </TableBody>
-              </TableWrapper>
+              <>
+                {isGeckoLAEnabled && (
+                  <Paper sx={{ padding: 1 }}>
+                    <RegionTypeFilter handleRegionFilter={handleRegionFilter} />
+                  </Paper>
+                )}
+                <TableWrapper
+                  {...tableWrapperProps}
+                  linodeViewPreference={linodeViewPreference}
+                  linodesAreGrouped={linodesAreGrouped}
+                  toggleGroupLinodes={toggleGroupLinodes}
+                  toggleLinodeView={toggleLinodeView}
+                >
+                  <TableBody>
+                    <Component showHead {...componentProps} />
+                  </TableBody>
+                </TableWrapper>
+              </>
             )}
             {display === 'grid' && (
               <>
                 <Grid className={'px0'} xs={12}>
-                  <StyledControlHeader isGroupedByTag={linodesAreGrouped}>
+                  {isGeckoLAEnabled && (
+                    <Paper sx={{ padding: 1 }}>
+                      <RegionTypeFilter
+                        handleRegionFilter={handleRegionFilter}
+                      />
+                    </Paper>
+                  )}
+                  <StyledControlHeader>
                     <div
                       className="visually-hidden"
                       id={displayViewDescriptionId}
                     >
                       Currently in {linodeViewPreference} view
                     </div>
-                    <Tooltip placement="top" title="List view">
-                      <StyledToggleButton
-                        aria-describedby={displayViewDescriptionId}
-                        aria-label="Toggle display"
-                        disableRipple
-                        isActive={true}
-                        onClick={toggleLinodeView}
-                        size="large"
+                    <Box>
+                      <Tooltip placement="top" title="List view">
+                        <StyledToggleButton
+                          aria-describedby={displayViewDescriptionId}
+                          aria-label="Toggle display"
+                          disableRipple
+                          isActive={true}
+                          onClick={toggleLinodeView}
+                          size="large"
+                        >
+                          <GridView />
+                        </StyledToggleButton>
+                      </Tooltip>
+                      <div
+                        className="visually-hidden"
+                        id={groupByDescriptionId}
                       >
-                        <GridView />
-                      </StyledToggleButton>
-                    </Tooltip>
-
-                    <div className="visually-hidden" id={groupByDescriptionId}>
-                      {linodesAreGrouped
-                        ? 'group by tag is currently enabled'
-                        : 'group by tag is currently disabled'}
-                    </div>
-                    <Tooltip placement="top-end" title="Group by tag">
-                      <StyledToggleButton
-                        aria-describedby={groupByDescriptionId}
-                        aria-label={`Toggle group by tag`}
-                        disableRipple
-                        isActive={linodesAreGrouped}
-                        onClick={toggleGroupLinodes}
-                        size="large"
-                      >
-                        <GroupByTag />
-                      </StyledToggleButton>
-                    </Tooltip>
+                        {linodesAreGrouped
+                          ? 'group by tag is currently enabled'
+                          : 'group by tag is currently disabled'}
+                      </div>
+                      <Tooltip placement="top-end" title="Group by tag">
+                        <StyledToggleButton
+                          aria-describedby={groupByDescriptionId}
+                          aria-label="Toggle group by tag"
+                          disableRipple
+                          isActive={linodesAreGrouped}
+                          onClick={toggleGroupLinodes}
+                          size="large"
+                        >
+                          <GroupByTag />
+                        </StyledToggleButton>
+                      </Tooltip>
+                    </Box>
                   </StyledControlHeader>
                 </Grid>
                 <Component showHead {...componentProps} />

@@ -22,7 +22,7 @@ import {
   Engine,
   SSLFields,
   UpdateDatabasePayload,
-  UpdateDatabaseResponse,
+  DatabaseFork,
 } from './types';
 
 /**
@@ -153,7 +153,7 @@ export const updateDatabase = (
   databaseID: number,
   data: UpdateDatabasePayload
 ) =>
-  Request<UpdateDatabaseResponse>(
+  Request<Database>(
     setURL(
       `${API_ROOT}/databases/${encodeURIComponent(
         engine
@@ -161,6 +161,21 @@ export const updateDatabase = (
     ),
     setMethod('PUT'),
     setData(data, updateDatabaseSchema)
+  );
+
+/**
+ * patchDatabase
+ *
+ * Patch security updates for the database (outside of the maintenance window)
+ */
+export const patchDatabase = (engine: Engine, databaseID: number) =>
+  Request<void>(
+    setURL(
+      `${API_ROOT}/databases/${encodeURIComponent(
+        engine
+      )}/instances/${encodeURIComponent(databaseID)}/patch`
+    ),
+    setMethod('POST')
   );
 
 /**
@@ -224,11 +239,11 @@ export const getDatabaseBackup = (
   );
 
 /**
- * restoreWithBackup
+ * legacyRestoreWithBackup
  *
  * Fully restore a backup to the cluster
  */
-export const restoreWithBackup = (
+export const legacyRestoreWithBackup = (
   engine: Engine,
   databaseID: number,
   backupID: number
@@ -242,6 +257,18 @@ export const restoreWithBackup = (
       )}/backups/${encodeURIComponent(backupID)}/restore`
     ),
     setMethod('POST')
+  );
+
+/**
+ * restoreWithBackup for the New Database
+ *
+ * Fully restore a backup to the cluster
+ */
+export const restoreWithBackup = (engine: Engine, fork: DatabaseFork) =>
+  Request<Database>(
+    setURL(`${API_ROOT}/databases/${encodeURIComponent(engine)}/instances`),
+    setMethod('POST'),
+    setData({ fork })
   );
 
 /**

@@ -10,12 +10,10 @@ import { PlacementGroupsSelect } from './PlacementGroupsSelect';
 import type { PlacementGroupsSelectProps } from './PlacementGroupsSelect';
 
 const props: PlacementGroupsSelectProps = {
-  errorText: '',
   handlePlacementGroupChange: vi.fn(),
-  id: '',
   label: 'Placement Groups in Atlanta, GA (us-southeast)',
   noOptionsMessage: '',
-  selectedPlacementGroup: null,
+  selectedPlacementGroupId: null,
   selectedRegion: regionFactory.build({ id: 'us-southeast' }),
 };
 
@@ -36,10 +34,10 @@ describe('PlacementGroupSelect', () => {
     queryMocks.useAllPlacementGroupsQuery.mockReturnValue({
       data: [
         placementGroupFactory.build({
-          affinity_type: 'affinity:local',
+          placement_group_type: 'affinity:local',
           id: 1,
           is_compliant: true,
-          is_strict: true,
+          placement_group_policy: 'strict',
           label: 'my-placement-group',
           members: [
             {
@@ -69,10 +67,10 @@ describe('PlacementGroupSelect', () => {
     queryMocks.useAllPlacementGroupsQuery.mockReturnValue({
       data: [
         placementGroupFactory.build({
-          affinity_type: 'affinity:local',
+          placement_group_type: 'affinity:local',
           id: 1,
           is_compliant: true,
-          is_strict: true,
+          placement_group_policy: 'strict',
           label: 'my-placement-group',
           members: [
             {
@@ -90,20 +88,22 @@ describe('PlacementGroupSelect', () => {
         selectedRegion={regionFactory.build({
           capabilities: ['Placement Group'],
           id: 'ca-central',
-          maximum_vms_per_pg: 1,
+          placement_group_limits: {
+            maximum_linodes_per_pg: 1,
+          },
         })}
       />
     );
 
-    const select = getByPlaceholderText('Select a Placement Group');
+    const select = getByPlaceholderText('None');
     expect(select).toBeEnabled();
 
     fireEvent.focus(select);
     fireEvent.change(select, {
-      target: { value: 'my-placement-group (Affinity)' },
+      target: { value: 'my-placement-group' },
     });
 
-    const selectedRegionOption = getByText('my-placement-group (Affinity)');
+    const selectedRegionOption = getByText('my-placement-group');
     fireEvent.click(selectedRegionOption);
 
     expect(
