@@ -7,9 +7,11 @@ import type {
   Dashboard,
   Widgets,
 } from '@linode/api-v4';
+import type { ChartVariant } from 'src/components/AreaChart/AreaChart';
+import type { UserPreferences } from '@linode/api-v4/src/profile';
 
 const color = ['blue', 'red', 'green', 'yellow'];
-const chart_type = ['area', 'area', 'area', 'line'];
+const chart_type: ChartVariant[] = ['area', 'area', 'area', 'line'];
 const scrape_interval = ['2m', '30s', '30s', '30s'];
 
 export const dashboardFactory = Factory.Sync.makeFactory<Dashboard>({
@@ -85,5 +87,18 @@ export const cloudPulseMetricsResponseFactory = Factory.Sync.makeFactory<CloudPu
       series_fetched: 2,
     },
     status: 'success',
+  }
+);
+
+export const userPreferencesFactory = Factory.Sync.makeFactory<UserPreferences>(
+  {
+    aclpPreference: {
+      dashboardId: 'default-id',
+      engine: 'default-engine',
+      region: 'us-ord',
+      resources: ['1'],
+      role: 'default-role',
+      widgets: {},
+    },
   }
 );
