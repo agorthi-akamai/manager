@@ -43,7 +43,7 @@ export interface DateTimeRangePickerProps {
   /** Additional settings for the presets dropdown */
   presetsProps?: {
     /** Default value for the presets field */
-    defaultValue?: { label: string; value: string };
+    defaultValue?: string;
     /** Label for the presets field */
     label?: string;
     /** placeholder for the presets field */
@@ -96,7 +96,7 @@ export const DateTimeRangePicker = (props: DateTimeRangePickerProps) => {
     onChange,
 
     presetsProps: {
-      defaultValue: presetsDefaultValue = presetsOptions[0],
+      defaultValue: presetsDefaultValue = presetsOptions[0].value,
       label: presetsLabel = 'Time Range',
       placeholder: presetsPlaceholder = 'Select a preset',
     } = {},
@@ -117,16 +117,24 @@ export const DateTimeRangePicker = (props: DateTimeRangePickerProps) => {
   const [endDateTime, setEndDateTime] = useState<DateTime | null>(
     endDateTimeValue
   );
-  const [presetValue, setPresetValue] = useState<{
-    label: string;
-    value: string;
-  }>(presetsDefaultValue);
+  const [presetValue, setPresetValue] = useState<
+    | {
+        label: string;
+        value: string;
+      }
+    | undefined
+  >(
+    presetsOptions.find((option) => option.value === presetsDefaultValue) ??
+      presetsOptions[0]
+  );
   const [startTimeZone, setStartTimeZone] = useState<null | string>(
     startTimeZoneValue
   );
   const [startDateError, setStartDateError] = useState<null | string>(null);
   const [endDateError, setEndDateError] = useState<null | string>(null);
-  const [showPresets, setShowPresets] = useState(enablePresets);
+  const [showPresets, setShowPresets] = useState(
+    presetsDefaultValue ? presetsDefaultValue !== 'custom_range' : enablePresets
+  );
 
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
@@ -183,7 +191,7 @@ export const DateTimeRangePicker = (props: DateTimeRangePickerProps) => {
     setEndDateTime(newEndDateTime);
     setPresetValue(
       presetsOptions.find((option) => option.value === value) ??
-        presetsDefaultValue
+        presetsOptions[0]
     );
 
     if (onChange) {
@@ -235,7 +243,7 @@ export const DateTimeRangePicker = (props: DateTimeRangePickerProps) => {
               handlePresetSelection(selection.value);
             }
           }}
-          defaultValue={presetsDefaultValue}
+          defaultValue={presetValue}
           disableClearable
           fullWidth
           isOptionEqualToValue={(option, value) => option.value === value.value}
@@ -284,7 +292,7 @@ export const DateTimeRangePicker = (props: DateTimeRangePickerProps) => {
             <StyledActionButton
               onClick={() => {
                 setShowPresets(true);
-                setPresetValue(presetsDefaultValue);
+                setPresetValue(undefined);
               }}
               style={{ alignSelf: 'flex-start' }}
               variant="text"
