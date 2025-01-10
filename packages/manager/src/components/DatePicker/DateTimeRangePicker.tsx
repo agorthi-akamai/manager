@@ -246,6 +246,7 @@ export const DateTimeRangePicker = (props: DateTimeRangePickerProps) => {
               handlePresetSelection(selection.value);
             }
           }}
+          data-qa-preset="preset-select"
           data-testid="preset-select"
           disableClearable
           fullWidth
