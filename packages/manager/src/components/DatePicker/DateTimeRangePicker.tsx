@@ -9,6 +9,9 @@ import { DateTimePicker } from './DateTimePicker';
 import type { SxProps, Theme } from '@mui/material/styles';
 
 export interface DateTimeRangePickerProps {
+  /** If true, disable the timezone drop down */
+  disabledTimeZone?: boolean;
+
   /** If true, shows the date presets field instead of the date pickers */
   enablePresets?: boolean;
 
@@ -81,6 +84,8 @@ const presetsOptions = [
 
 export const DateTimeRangePicker = (props: DateTimeRangePickerProps) => {
   const {
+    disabledTimeZone = false,
+
     enablePresets = false,
 
     endDateProps: {
@@ -92,9 +97,7 @@ export const DateTimeRangePicker = (props: DateTimeRangePickerProps) => {
     } = {},
 
     format = 'yyyy-MM-dd HH:mm',
-
     onChange,
-
     presetsProps: {
       defaultValue: presetsDefaultValue = presetsOptions[0].value,
       label: presetsLabel = 'Time Range',
@@ -244,7 +247,6 @@ export const DateTimeRangePicker = (props: DateTimeRangePickerProps) => {
             }
           }}
           data-testid="preset-select"
-          defaultValue={presetValue}
           disableClearable
           fullWidth
           isOptionEqualToValue={(option, value) => option.value === value.value}
@@ -266,6 +268,7 @@ export const DateTimeRangePicker = (props: DateTimeRangePickerProps) => {
               onChange: (value) => setStartTimeZone(value),
               value: startTimeZone,
             }}
+            disabledTimeZone={disabledTimeZone}
             errorText={startDateError ?? undefined}
             format={format}
             label={startLabel}
@@ -279,6 +282,7 @@ export const DateTimeRangePicker = (props: DateTimeRangePickerProps) => {
             timeZoneSelectProps={{
               value: startTimeZone,
             }}
+            disabledTimeZone={disabledTimeZone}
             errorText={endDateError ?? undefined}
             format={format}
             label={endLabel}
