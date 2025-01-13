@@ -1,4 +1,4 @@
-import { CircleProgress, Paper } from '@linode/ui';
+import { Box, CircleProgress, Divider, Paper } from '@linode/ui';
 import { Grid } from '@mui/material';
 import React from 'react';
 
@@ -120,7 +120,7 @@ export const CloudPulseDashboardWithFilters = React.memo(
     });
 
     return (
-      <>
+      <Box display="flex" flexDirection="column" gap={2.5}>
         <Paper
           sx={{
             padding: 0,
@@ -156,22 +156,23 @@ export const CloudPulseDashboardWithFilters = React.memo(
                 savePreferences={true}
               />
             </Grid>
-          </Grid>
-          {isFilterBuilderNeeded && (
-            <CloudPulseDashboardFilterBuilder
-              dashboard={dashboard}
-              emitFilterChange={onFilterChange}
-              handleToggleAppliedFilter={toggleAppliedFilter}
-              isServiceAnalyticsIntegration={true}
-            />
-          )}
-          <Grid item mb={3} mt={-3} xs={12}>
-            {showAppliedFilters && (
-              <CloudPulseAppliedFilterRenderer
-                filters={filterData.label}
-                serviceType={dashboard.service_type}
+
+            {isFilterBuilderNeeded && (
+              <CloudPulseDashboardFilterBuilder
+                dashboard={dashboard}
+                emitFilterChange={onFilterChange}
+                handleToggleAppliedFilter={toggleAppliedFilter}
+                isServiceAnalyticsIntegration
               />
             )}
+            <Grid item mb={3} mt={-3} xs={12}>
+              {showAppliedFilters && (
+                <CloudPulseAppliedFilterRenderer
+                  filters={filterData.label}
+                  serviceType={dashboard.service_type}
+                />
+              )}
+            </Grid>
           </Grid>
         </Paper>
         {isMandatoryFiltersSelected ? (
@@ -186,7 +187,7 @@ export const CloudPulseDashboardWithFilters = React.memo(
         ) : (
           renderPlaceHolder('Select filters to visualize metrics.')
         )}
-      </>
+      </Box>
     );
   }
 );

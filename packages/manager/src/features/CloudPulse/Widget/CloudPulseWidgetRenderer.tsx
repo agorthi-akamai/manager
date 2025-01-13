@@ -18,10 +18,10 @@ import type {
 } from './CloudPulseWidget';
 import type {
   AclpConfig,
-  AvailableMetrics,
   Dashboard,
   JWEToken,
-  MetricDefinitions,
+  MetricDefinition,
+  ResourcePage,
   TimeDuration,
   TimeDurationDate,
   Widgets,
@@ -34,7 +34,7 @@ interface WidgetProps {
   isJweTokenFetching: boolean;
   jweToken?: JWEToken | undefined;
   manualRefreshTimeStamp?: number;
-  metricDefinitions: MetricDefinitions | undefined;
+  metricDefinitions: ResourcePage<MetricDefinition> | undefined;
   preferences?: AclpConfig;
   resourceList: CloudPulseResources[] | undefined;
   resources: string[];
@@ -144,7 +144,7 @@ export const RenderWidgets = React.memo(
           if (widget) {
             // find the metric defintion of the widget label
             const availMetrics = metricDefinitions?.data.find(
-              (availMetrics: AvailableMetrics) =>
+              (availMetrics: MetricDefinition) =>
                 widget.label === availMetrics.label
             );
             const cloudPulseWidgetProperties = getCloudPulseGraphProperties({
