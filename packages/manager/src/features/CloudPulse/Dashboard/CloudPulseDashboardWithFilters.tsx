@@ -78,10 +78,7 @@ export const CloudPulseDashboardWithFilters = React.memo(
 
     const handleTimeRangeChange = React.useCallback(
       (timeDuration: TimeDurationDate) => {
-        setTimeDuration({
-          end: timeDuration.end,
-          start: timeDuration.start,
-        });
+        setTimeDuration(timeDuration);
       },
       []
     );
