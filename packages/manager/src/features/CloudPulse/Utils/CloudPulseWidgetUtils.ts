@@ -292,16 +292,14 @@ export const getCloudPulseMetricRequest = (
 
   return {
     absolute_time_duration:
-      widget.time_duration || preset !== 'custom_range'
+      preset !== 'custom_range'
         ? undefined
         : { end: duration.end, start: duration.start },
     aggregate_function: widget.aggregate_function,
     filters: undefined,
     group_by: widget.group_by,
     metric: widget.metric,
-    relative_time_duration: widget.time_duration
-      ? widget.time_duration
-      : getTimeDurationFromPreset(preset),
+    relative_time_duration: getTimeDurationFromPreset(preset),
     resource_ids: resources
       ? resourceIds.map((obj) => parseInt(obj, 10))
       : widget.resource_id.map((obj) => parseInt(obj, 10)),
