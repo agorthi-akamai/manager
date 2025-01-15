@@ -84,7 +84,7 @@ export const defaultTimeDuration = (): TimeDurationDate => {
   };
 };
 
-const convertToGmt = (date: string): string => {
+export const convertToGmt = (date: string): string => {
   const dateObject = DateTime.fromISO(date);
   const updatedDate = dateObject.setZone('GMT');
   return updatedDate.toISO()?.split('.')[0] + 'Z';
