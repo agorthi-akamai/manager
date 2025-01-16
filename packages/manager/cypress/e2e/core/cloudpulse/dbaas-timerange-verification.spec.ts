@@ -1,6 +1,6 @@
 /**
- * @file Integration Tests for CloudPulse Dbass Dashboard.
- */
+* @file Integration Tests for CloudPulse Dbass Dashboard.
+*/
 import { mockAppendFeatureFlags } from 'support/intercepts/feature-flags';
 import {
   mockCreateCloudPulseJWEToken,
@@ -34,6 +34,7 @@ import { mockGetDatabases } from 'support/intercepts/databases';
 import type { Flags } from 'src/featureFlags';
 import { Interception } from 'cypress/types/net-stubbing';
 import { convertToGmt } from 'src/features/CloudPulse/shared/CloudPulseDateTimeRangePicker';
+import { DateTime } from 'luxon';
 const mockRegion = regionFactory.build({
   capabilities: ['Managed Databases'],
   id: 'us-ord',
@@ -58,14 +59,8 @@ const flags: Partial<Flags> = {
   ],
 };
 
-const {
-  metrics,
-  id,
-  serviceType,
-  dashboardName,
-  engine,
-  nodeType,
-} = widgetDetails.dbaas;
+const { metrics, id, serviceType, dashboardName, engine, nodeType } =
+  widgetDetails.dbaas;
 
 const dashboard = dashboardFactory.build({
   label: dashboardName,
@@ -102,52 +97,40 @@ const databaseMock: Database = databaseFactory.build({
 const mockProfile = profileFactory.build({ timezone: 'Asia/Kolkata' });
 
 /**
- * Generates a date in Indian Standard Time (IST) based on a specified number of days offset,
- * hour, and minute. The function also provides individual date components such as day, hour,
+* Generates a date in Indian Standard Time (IST) based on a specified number of days offset,
+* hour, and minute. The function also provides individual date components such as day, hour,
  * minute, month, and AM/PM.
- *
+*
  * @param {number} daysOffset - The number of days to adjust from the current date. Positive
  *                               values give a future date, negative values give a past date.
- * @param {number} hour - The hour to set for the resulting date (0-23).
- * @param {number} [minute=0] - The minute to set for the resulting date (0-59). Defaults to 0.
- *
+* @param {number} hour - The hour to set for the resulting date (0-23).
+* @param {number} [minute=0] - The minute to set for the resulting date (0-59). Defaults to 0.
+*
  * @returns {Object} - Returns an object containing:
- *   - `actualDate`: The formatted date and time in IST (YYYY-MM-DD HH:MM).
- *   - `day`: The day of the month as a number.
- *   - `hour`: The hour in the 24-hour format as a number.
- *   - `minute`: The minute of the hour as a number.
- *   - `month`: The month of the year as a number.
- *   - `ampm`: The AM/PM designation of the time (either 'AM' or 'PM').
- */
+*   - `actualDate`: The formatted date and time in IST (YYYY-MM-DD HH:MM).
+*   - `day`: The day of the month as a number.
+*   - `hour`: The hour in the 24-hour format as a number.
+*   - `minute`: The minute of the hour as a number.
+*   - `month`: The month of the year as a number.
+*   - `ampm`: The AM/PM designation of the time (either 'AM' or 'PM').
+*/
 
 const getDateRangeInIST = (
   daysOffset: number,
   hour: number,
   minute: number = 0
 ) => {
-  const now = new Date();
-  now.setDate(now.getDate() + daysOffset);
 
-  const istOffset = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
-  const istDate = new Date(now.getTime() + istOffset);
+  const now = DateTime.now().set({hour, minute}).minus({days: daysOffset}).setZone("Asia/Kolkata");
 
-  istDate.setHours(hour, minute, 0, 0);
-
-  const year = istDate.getFullYear();
-  const month = String(istDate.getMonth() + 1).padStart(2, '0');
-  const day = String(istDate.getDate()).padStart(2, '0');
-  const formattedHour = String(istDate.getHours()).padStart(2, '0');
-  const formattedMinute = String(istDate.getMinutes()).padStart(2, '0');
-  const ampm = istDate.getHours() >= 12 ? 'PM' : 'AM';
-
-  const actualDate = `${year}-${month}-${day} ${formattedHour}:${formattedMinute}`;
+  const actualDate = now.toFormat('yyyy-LL-dd HH:mm');
   return {
     actualDate,
-    day: parseInt(day, 10),
-    hour: parseInt(formattedHour, 10),
-    minute: parseInt(formattedMinute, 10),
-    month: parseInt(month, 10),
-    ampm,
+    day: now.day,
+    hour: now.hour,
+    minute: now.minute,
+    month:now.month,
+    ampm: now.toFormat('a'),
   };
 };
 
@@ -184,7 +167,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
   });
 
   it('should allow users to select their desired granularity and see the most recent data from the API reflected in the graph', () => {
-    const startDate = getDateRangeInIST(-32, 0, 0); // set start date to  last 32 days
+    const startDate = getDateRangeInIST(32, 0, 0); // set start date to  last 32 days
     const endDate = getDateRangeInIST(0, 0, 0); // set end date to today
 
     ui.autocomplete
@@ -278,5 +261,7 @@ describe('Integration Tests for DBaaS Dashboard ', () => {
         expect(requestPayload.relative_time_duration.unit).to.equal('days');
         expect(requestPayload.relative_time_duration.value).to.equal(30);
       });
+
+
   });
 });
