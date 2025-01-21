@@ -180,12 +180,16 @@ describe('Integration Tests for Dbaas Alert Listing Page', () => {
       });
 
       //clear the previous search 
-      cy.findByText(mockAlerts[0].label)
-      .should('be.visible')
-      .clear();
+      cy.get('[data-qa-filter="alert-search"]') 
+       .within(() => {
+       cy.get('input[data-testid="textfield-input"]') 
+       .click().clear()
+  });
 
-      //   clear search by alert status
-    /*  cy.get('[data-qa-filter="alert-service-filter"]') 
+
+
+ //   clear search by alert status
+      cy.get('[data-qa-filter="alert-service-filter"]') 
         .should('be.visible')
         .within(() => {
            ui.button
@@ -196,15 +200,16 @@ describe('Integration Tests for Dbaas Alert Listing Page', () => {
         });
 
         cy.findByPlaceholderText('Select a Service')
-          .should('be.visible')
-          .type(mockAlerts[0].service_type);
-
+        .should('be.visible')
+        .type(`${mockAlerts[0].service_type.trim()} {enter}`);
+      
+         
           cy.get('[data-qa="alert-table"]') 
           .should('have.length', 2) 
-          .find(`[data-qa-alert-cell="${mockAlerts[0].id}"]`).within(() => {
+          .find(`[data-qa-alert-cell="${mockAlerts[0].service_type}"]`).within(() => {
           cy.findByText(mockAlerts[0].label)
           .should('have.text', mockAlerts[0].label); 
-        });*/
+        });
 
-});
+  });
 });

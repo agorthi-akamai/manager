@@ -125,6 +125,7 @@ export const AlertListing = () => {
       <Grid container display="flex" gap={2} overflow="auto">
         <Grid item md={3} sm={5} sx={{ paddingLeft: 0 }} xs={10}>
           <DebouncedSearchTextField
+            data-qa-filter="alert-search"
             data-testid="alert-search"
             debounceTime={250}
             label=""
@@ -142,6 +143,7 @@ export const AlertListing = () => {
             onChange={(_, selected) => {
               setServiceFilters(selected);
             }}
+            autoHighlight
             data-qa-filter="alert-service-filter"
             data-testid="alert-service-filter"
             label={''}
