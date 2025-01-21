@@ -160,6 +160,7 @@ export const AlertListing = () => {
             onChange={(_, selected) => {
               setStatusFilters(selected);
             }}
+            autoHighlight
             data-qa-filter="alert-status-filter"
             data-testid="alert-status-filter"
             label={''}
