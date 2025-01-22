@@ -1,19 +1,17 @@
 /**
- * @file Integration Tests for the CloudPulse DBaaS Alerts Listing Page.
+ * @file Integration Tests for the CloudPulse Alerts Listing Page.
  * This file contains integration tests to verify the functionality and UI elements
- * on the CloudPulse DBaaS Alerts Listing Page.
+ * on the CloudPulse  Alerts Listing Page.
  */
 
 import { mockAppendFeatureFlags } from 'support/intercepts/feature-flags';
 import { accountFactory, alertFactory } from 'src/factories';
 import { mockGetAccount } from 'support/intercepts/account';
 import type { Flags } from 'src/featureFlags';
-
 import {
   mockGetAllAlertDefinitions,
   mockGetCloudPulseServices,
 } from 'support/intercepts/cloudpulse';
-import { randomDate } from 'src/utilities/random';
 import { formatDate } from 'src/utilities/formatDate';
 import { Alert } from '@linode/api-v4';
 import { ui } from 'support/ui';
@@ -21,7 +19,6 @@ import { ui } from 'support/ui';
 const flags: Partial<Flags> = { aclp: { enabled: true, beta: true } };
 const mockAccount = accountFactory.build();
 const now = new Date();
-const tenDaysAgo = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000);
 const expectedHeaders = [
   'Alert Name',
   'Service',
@@ -37,20 +34,20 @@ const mockAlerts = [
     status: 'enabled',
     type: 'system',
     created_by: 'user1',
-    updated: randomDate(tenDaysAgo, now).toISOString(),
+    updated: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
   }),
   alertFactory.build({
     service_type: 'dbaas',
     severity: 0,
     status: 'disabled',
-    updated: randomDate(tenDaysAgo, now).toISOString(),
+    updated: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
     created_by: 'user4',
   }),
   alertFactory.build({
     service_type: 'linode',
     severity: 2,
     status: 'enabled',
-    updated: randomDate(tenDaysAgo, now).toISOString(),
+    updated: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
     created_by: 'user2',
   }),
   alertFactory.build({
@@ -58,7 +55,7 @@ const mockAlerts = [
     severity: 3,
     status: 'disabled',
     type: 'user',
-    updated: randomDate(tenDaysAgo, now).toISOString(),
+    updated: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
     created_by: 'user3',
   }),
 ];
@@ -75,7 +72,7 @@ const mockAlerts = [
  * @param {number[]} expectedValues - An array of expected values to validate against the sorted column.
  */
 
-function verifyTableSorting(
+ function verifyTableSorting(
   columnDataQa: string,
   sortOrder: 'ascending' | 'descending',
   expectedValues: number[]
@@ -86,33 +83,22 @@ function verifyTableSorting(
 
   cy.get('[data-qa="alert-table"]').within(() => {
     cy.get('[data-qa-alert-cell]').should(($cells) => {
-      // Extract the actual order from the 'data-qa-alert-cell' attribute as numbers
-      const actualOrder = $cells
-        .map((_, cell) =>
-          parseInt(cell.getAttribute('data-qa-alert-cell')!, 10)
-        )
-        .get();
+      const actualOrder = $cells.map((_, cell) =>
+        parseInt(cell.getAttribute('data-qa-alert-cell')!, 10)
+      ).get();
 
-      // Verify the actual order matches the expected order
-      expect(actualOrder).to.deep.equal(expectedValues);
+     expect(actualOrder).to.deep.equal(expectedValues);
     });
   });
 }
 
 describe('Integration Tests for Dbaas Alert Listing Page', () => {
   beforeEach(() => {
-    // Set up feature flags and mock account before each test
     mockAppendFeatureFlags(flags);
     mockGetAccount(mockAccount);
-
     mockGetCloudPulseServices('linode', 'dbaas');
-    // Mock API response for alert definitions
     mockGetAllAlertDefinitions(mockAlerts).as('getAlertDefinitionsList');
-
-    // Visit the alerts definitions page with login
     cy.visitWithLogin('/monitor/alerts/definitions');
-
-    // Wait for the mock API response
     cy.wait('@getAlertDefinitionsList');
   });
 
@@ -128,18 +114,12 @@ describe('Integration Tests for Dbaas Alert Listing Page', () => {
 
       cy.findByText(new RegExp(alert.status, 'i'))
         .should('be.visible')
-        .should(
-          'have.text',
-          alert.status === 'enabled' ? 'Enabled' : 'Disabled'
-        );
+        .should('have.text',alert.status === 'enabled' ? 'Enabled' : 'Disabled');
       cy.findByText(alert.label)
         .should('be.visible')
         .should('have.text', alert.label)
-        .should(
-          'have.attr',
-          'href',
-          `/monitor/alerts/definitions/detail/${alert.service_type}/${alert.id}`
-        );
+        .should('have.attr', 'href',
+          `/monitor/alerts/definitions/detail/${alert.service_type}/${alert.id}`);
 
       cy.findByText(formatDate(alert.updated, { format: 'yyyy-MM-dd HH:mm' }))
         .should('be.visible')
@@ -159,7 +139,7 @@ describe('Integration Tests for Dbaas Alert Listing Page', () => {
     });
     cy.get('[data-qa-action-menu-item="Show Details"]').should('be.visible');
 
-    cy.get('body').click(); //
+    cy.get('body').click(); 
   };
 
   it('should verify sorting for multiple columns in ascending and descending order', () => {
@@ -186,9 +166,15 @@ describe('Integration Tests for Dbaas Alert Listing Page', () => {
 
     // Verify sorting for 'created_by' column in descending order
     verifyTableSorting('created_by', 'descending', [1, 3, 4, 2]);
+
+     // Verify sorting for 'created_by' column in ascending order
+     verifyTableSorting('updated', 'ascending', [1, 4, 3, 2]);
+
+     // Verify sorting for 'created_by' column in descending order
+     verifyTableSorting('updated', 'descending', [2, 3, 4, 1]);
   });
 
-  it.only('should validate the UI elements, headers, alert details, and search functionality', () => {
+  it('should validate the UI elements, headers, alert details, and search functionality', () => {
     // Validate 'Alerts' Link
     cy.findByText('Alerts')
       .should('be.visible')
@@ -225,9 +211,8 @@ describe('Integration Tests for Dbaas Alert Listing Page', () => {
         cy.findByText(headerText).should('have.text', headerText);
       });
     });
-
     // Check each alert's details
-    mockAlerts.forEach((alert) => {
+     mockAlerts.forEach((alert) => {
       checkAlertDetails(alert);
     });
   });
@@ -270,8 +255,7 @@ describe('Integration Tests for Dbaas Alert Listing Page', () => {
       .type(`${mockAlerts[0].service_type}{enter}`);
 
     // Clicks the currently focused element
-
-    cy.focused().click();
+      cy.focused().click();
 
     cy.get('[data-qa="alert-table"]')
       .find('[data-qa-alert-cell]')
