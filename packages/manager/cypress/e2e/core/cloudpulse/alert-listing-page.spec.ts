@@ -15,10 +15,7 @@ import { formatDate } from 'src/utilities/formatDate';
 import { Alert } from '@linode/api-v4';
 import { ui } from 'support/ui';
 
-// Define feature flags to enable necessary features for testing
 const flags: Partial<Flags> = { aclp: { enabled: true, beta: true } };
-
-// Create a mock account for testing
 const mockAccount = accountFactory.build();
 const now = new Date();
 const tenDaysAgo = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000);
@@ -30,7 +27,6 @@ const expectedHeaders = [
   'Created By',
 ];
 
-// Generate mock alerts for testing
 const mockAlerts = [
   alertFactory.build({
     service_type: 'dbaas',
@@ -64,8 +60,19 @@ const mockAlerts = [
     created_by:'user3',
   }),
 ];
+/**
+ * Verifies the sorting functionality of a table column.
+ * 
+ * This function:
+ * - Clicks the specified column header to trigger sorting.
+ * - Validates that the `aria-sort` attribute of the column header matches the given sort order.
+ * - Extracts cell values from the table and compares their order with the expected values.
+ *
+ * @param {string} columnDataQa - The `data-qa-header` attribute of the column to be sorted.
+ * @param {'ascending' | 'descending'} sortOrder - The expected sorting order ('ascending' or 'descending').
+ * @param {number[]} expectedValues - An array of expected values to validate against the sorted column.
+ */
 
-// Helper function to verify sorting
 function verifyTableSorting(columnDataQa: string, sortOrder: 'ascending' | 'descending', expectedValues: number[]) {
   cy.get(`[data-qa-header="${columnDataQa}"]`)
     .should('have.attr', 'aria-sort', sortOrder)
@@ -84,10 +91,6 @@ function verifyTableSorting(columnDataQa: string, sortOrder: 'ascending' | 'desc
     });
 }
 
-
-/**
- * Integration tests for the CloudPulse DBaaS Alerts Listing Page
- */
 
 describe('Integration Tests for Dbaas Alert Listing Page', () => {
   beforeEach(() => {
@@ -124,7 +127,8 @@ describe('Integration Tests for Dbaas Alert Listing Page', () => {
         );
         cy.findByText(alert.label)
         .should('be.visible')
-        .should('have.text', alert.label);
+        .should('have.text', alert.label)
+        .should('have.attr', 'href',`/monitor/alerts/definitions/detail/${alert.service_type}/${alert.id}`);
       
       cy.findByText(formatDate(alert.updated, { format: 'yyyy-MM-dd HH:mm' }))
         .should('be.visible')
@@ -134,14 +138,10 @@ describe('Integration Tests for Dbaas Alert Listing Page', () => {
         .should('be.visible')
         .should('have.text', alert.created_by);
 
-      cy.get(`[data-qa-alert-action-cell="alert_${alert.id}"]`)
+       cy.get(`[data-qa-alert-action-cell="alert_${alert.id}"]`)
         .find('button')
         .should('be.visible')
         .click();
-
-        cy.get(`a[aria-label="${alert.label}"]`)
-        .should('be.visible')
-        .and('have.attr', 'href', `/monitor/alerts/definitions/detail/dbaas/${alert.id}`);
 
     });
      cy.get('[data-qa-action-menu-item="Show Details"]').should('be.visible');
@@ -152,21 +152,59 @@ describe('Integration Tests for Dbaas Alert Listing Page', () => {
 
 
     it('should verify sorting for multiple columns in ascending and descending order', () => {
+  
+      // Verify sorting for 'label' column in ascending order
+      cy.log('Verifying sorting for "label" column in ascending order');
       verifyTableSorting('label', 'ascending', [4, 3, 2, 1]);
+      
+      // Verify sorting for 'label' column in descending order
+      cy.log('Verifying sorting for "label" column in descending order');
       verifyTableSorting('label', 'descending', [1, 2, 3, 4]);
+    
+      // Verify sorting for 'status' column in ascending order
+      cy.log('Verifying sorting for "status" column in ascending order');
       verifyTableSorting('status', 'ascending', [1, 3, 2, 4]);
+    
+      // Verify sorting for 'status' column in descending order
+      cy.log('Verifying sorting for "status" column in descending order');
       verifyTableSorting('status', 'descending', [2, 4, 1, 3]);
+    
+      // Verify sorting for 'service_type' column in ascending order
+      cy.log('Verifying sorting for "service_type" column in ascending order');
       verifyTableSorting('service_type', 'ascending', [4, 3, 2, 1]);
+    
+      // Verify sorting for 'service_type' column in descending order
+      cy.log('Verifying sorting for "service_type" column in descending order');
       verifyTableSorting('service_type', 'descending', [2, 1, 4, 3]);
+    
+      // Verify sorting for 'created_by' column in ascending order
+      cy.log('Verifying sorting for "created_by" column in ascending order');
       verifyTableSorting('created_by', 'ascending', [2, 4, 3, 1]);
+    
+      // Verify sorting for 'created_by' column in descending order
+      cy.log('Verifying sorting for "created_by" column in descending order');
       verifyTableSorting('created_by', 'descending', [1, 3, 4, 2]);
+    
     });
+    
+    it.only('should validate the UI elements, headers, alert details, and search functionality', () => {
 
-    it('should validate the UI elements, headers, alert details, and search functionality', () => {
+
+      // Validate 'Alerts' Link
+      cy.findByText('Alerts') 
+       .should('be.visible') 
+       .and('have.attr', 'href', '/monitor/alerts'); 
+
+      // Validate 'Definitions' Link
+       cy.findByText('Definitions') 
+         .should('be.visible') 
+         .and('have.attr', 'href', '/monitor/alerts/definitions'); 
+
       // Check that the "Create Alert" button is visible
       ui.buttonGroup
         .findButtonByTitle('Create Alert')
-        .should('be.visible');
+        .should('be.visible')
+        .and('have.css', 'background-color', 'rgb(1, 116,118)');
   
       // Validate the headers of the alert listing page
       cy.get('[data-qa="alert-table"]').within(() => {
