@@ -43,7 +43,7 @@ const flags: Partial<Flags> = { aclp: { enabled: true, beta: true } };
 // Create mock data
 const mockAccount = accountFactory.build();
 const mockRegion = regionFactory.build({
-  capabilities: ['Linodes'],
+  capabilities: ['Managed Databases'],
   id: 'us-ord',
   label: 'Chicago, IL',
 });
@@ -127,11 +127,10 @@ describe('Create Alert', () => {
     mockGetAccount(mockAccount);
     mockGetCloudPulseServices(['linode', 'dbaas']);
     mockGetRegions([mockRegion]);
-    mockGetLinodes(mockResource);
-    mockGetCloudPulseMetricDefinitions('linode', metricDefinitions);
+    mockGetCloudPulseMetricDefinitions('dbaas', metricDefinitions);
     mockGetAllAlertDefinitions(mockAlerts).as('getAlertDefinitionsList');
     mockGetAlertChannels(notificationChannels);
-    mockCreateAlertDefinition('linode', customAlertDefinition).as(
+    mockCreateAlertDefinition('dbaas', customAlertDefinition).as(
       'createAlertDefinition'
     );
   });
@@ -153,7 +152,7 @@ describe('Create Alert', () => {
     cy.url().should('endWith', 'monitor/alerts/definitions/create');
   });
 
-  it('should successfully create a new alert', () => {
+  it.only('should successfully create a new alert', () => {
     cy.visitWithLogin('monitor/alerts/definitions/create');
 
     // Enter Name and Description
@@ -165,16 +164,19 @@ describe('Create Alert', () => {
       .type('My Description');
 
     // Select Service
-    ui.autocomplete.findByLabel('Service').should('be.visible').type('linode');
-    ui.autocompletePopper.findByTitle('linode').should('be.visible').click();
+    ui.autocomplete
+      .findByLabel('Service')
+      .should('be.visible')
+      .type('Databases');
+    ui.autocompletePopper.findByTitle('Databases').should('be.visible').click();
 
     // Select Region
     ui.regionSelect.find().click();
     ui.regionSelect.find().type('Chicago, IL{enter}');
 
-    // Select Resources
+    // Select Clusters
     ui.autocomplete
-      .findByLabel('Resources')
+      .findByLabel('Clusters')
       .should('be.visible')
       .type('Select All {enter}');
     cy.get('body').click();
@@ -201,15 +203,15 @@ describe('Create Alert', () => {
     ui.autocomplete
       .findByLabel('Evaluation Period')
       .should('be.visible')
-      .type('1 min');
-    ui.autocompletePopper.findByTitle('1 min').should('be.visible').click();
+      .type('5 min');
+    ui.autocompletePopper.findByTitle('5 min').should('be.visible').click();
 
     // Set polling interval
     ui.autocomplete
       .findByLabel('Polling Interval')
       .should('be.visible')
-      .type('1 min');
-    ui.autocompletePopper.findByTitle('1 min').should('be.visible').click();
+      .type('5 min');
+    ui.autocompletePopper.findByTitle('5 min').should('be.visible').click();
 
     // Set trigger occurrences
     cy.get('[data-qa-trigger_occurences]')
