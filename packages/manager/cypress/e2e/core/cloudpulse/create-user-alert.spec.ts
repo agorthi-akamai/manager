@@ -139,7 +139,8 @@ const fillMetricDetailsForSpecificRule = ({
     ui.autocompletePopper.findByTitle(operator).should('be.visible').click();
 
     // Fill Threshold
-    cy.get('[data-qa-threshold]').should('be.visible').clear().type(threshold);
+    cy.get('[data-qa-threshold]').should('be.visible').clear();
+    cy.get('[data-qa-threshold]').should('be.visible').type(threshold);
   });
 };
 
@@ -293,10 +294,9 @@ describe('Create Alert', () => {
     ui.autocompletePopper.findByTitle('5 min').should('be.visible').click();
 
     // Set trigger occurrences
-    cy.get('[data-qa-trigger-occurrences]')
-      .should('be.visible')
-      .clear()
-      .type('5');
+    cy.get('[data-qa-trigger-occurrences]').should('be.visible').clear();
+
+    cy.get('[data-qa-trigger-occurrences]').should('be.visible').type('5');
 
     // Add notification channel
     ui.buttonGroup.find().contains('Add notification channel').click();
