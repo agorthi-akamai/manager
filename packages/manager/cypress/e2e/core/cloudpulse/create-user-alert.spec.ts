@@ -250,17 +250,19 @@ describe('Create Alert', () => {
       .findByLabel('Data Field')
       .eq(1)
       .should('be.visible')
-      .clear()
+      .clear();
+
+    ui.autocomplete
+      .findByLabel('Data Field')
+      .eq(1)
+      .should('be.visible')
       .type('State of CPU');
 
     cy.findByText('State of CPU').should('be.visible').click();
 
-    ui.autocomplete
-      .findByLabel('Operator')
-      .eq(1)
-      .should('be.visible')
-      .clear()
-      .type('Equal');
+    ui.autocomplete.findByLabel('Operator').eq(1).should('be.visible').clear();
+
+    ui.autocomplete.findByLabel('Operator').eq(1).type('Equal');
 
     cy.findByText('Equal').should('be.visible').click();
 
