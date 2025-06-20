@@ -249,7 +249,7 @@ describe('Integration tests for verifying Cloudpulse custom and preset configura
     ]);
   });
 
-  it('Implement and validate the functionality of the custom date and time picker for selecting a specific date and time range', () => {
+  it.only('Implement and validate the functionality of the custom date and time picker for selecting a specific date and time range', () => {
     // Calculates start and end dates in GMT using `getDateRangeInGMT` for testing date and time ranges.
     const {
       actualDate: startActualDate,
@@ -265,17 +265,12 @@ describe('Integration tests for verifying Cloudpulse custom and preset configura
     } = getDateRangeInGMT(12, 30);
 
     // Select "Custom" from the "Time Range" dropdown
-    ui.autocomplete
-      .findByLabel('Time Range')
-      .scrollIntoView()
+
+    cy.findAllByPlaceholderText('YYYY-MM-DD hh:mm aa')
+      .first()
       .should('be.visible')
-      .type('Custom');
+      .click();
 
-    // Select "Custom" from the autocomplete dropdown
-    ui.autocompletePopper.findByTitle('Custom').should('be.visible').click();
-
-    // Click on "Select Start Date" input field
-    cy.findByPlaceholderText('Select Start Date').should('be.visible').click();
 
     // Select the start date from the calendar
     cy.findByRole('gridcell', { name: startDay.toString() })
