@@ -168,16 +168,16 @@ const getLastMonthRange = (): DateTimeWithPreset => {
   };
 };
 
-// const convertToGmt = (dateStr: string): string => {
-//   return DateTime.fromISO(dateStr.replace(' ', 'T')).toFormat(
-//     'yyyy-MM-dd HH:mm'
-//   );
-// };
-// const formatToUtcDateTime = (dateStr: string): string => {
-//   return DateTime.fromISO(dateStr)
-//     .toUTC() // 🌍 keep it in UTC
-//     .toFormat('yyyy-MM-dd HH:mm');
-// };
+const convertToGmt = (dateStr: string): string => {
+  return DateTime.fromISO(dateStr.replace(' ', 'T')).toFormat(
+    'yyyy-MM-dd HH:mm'
+  );
+};
+const formatToUtcDateTime = (dateStr: string): string => {
+  return DateTime.fromISO(dateStr)
+    .toUTC() // 🌍 keep it in UTC
+    .toFormat('yyyy-MM-dd HH:mm');
+};
 
 // It is going to be modified
 describe('Integration tests for verifying Cloudpulse custom and preset configurations', () => {
@@ -238,14 +238,14 @@ describe('Integration tests for verifying Cloudpulse custom and preset configura
   it('should implement and validate custom date/time picker for a specific date and time range', () => {
     // --- Generate start and end date/time in GMT ---
     const {
-      // actualDate: startActualDate,
+      actualDate: startActualDate,
       day: startDay,
       hour: startHour,
       minute: startMinute,
     } = getDateRangeInGMT(12, 15, true);
 
     const {
-      // actualDate: endActualDate,
+      actualDate: endActualDate,
       day: endDay,
       hour: endHour,
       minute: endMinute,
@@ -260,6 +260,9 @@ describe('Integration tests for verifying Cloudpulse custom and preset configura
       cy.findAllByText(startDay).first().click();
       cy.findAllByText(endDay).first().click();
     });
+    // --- Set timezone ---
+    cy.findByPlaceholderText('Choose a Timezone').as('timezoneInput').clear();
+    cy.get('@timezoneInput').type('(GMT +0:00) Greenwich Mean Time{enter}');
 
     // Updated selector for MUI x-date-pickers v8 time picker button
     cy.get('button[aria-label*="time"]')
@@ -323,10 +326,6 @@ describe('Integration tests for verifying Cloudpulse custom and preset configura
       .scrollIntoView();
     cy.get('@endMeridiemSelect').find('[aria-label="PM"]').click();
 
-    // --- Set timezone ---
-    cy.findByPlaceholderText('Choose a Timezone').as('timezoneInput').clear();
-    cy.get('@timezoneInput').type('(GMT +0:00) Greenwich Mean Time{enter}');
-
     // --- Apply date/time range ---
     cy.get('[data-qa-buttons="apply"]')
       .should('be.visible')
@@ -336,14 +335,14 @@ describe('Integration tests for verifying Cloudpulse custom and preset configura
     // --- Re-validate after apply ---
 
     // TODO for ACLP: Timezone normalization between GMT baselines and API UTC payloads is environment-dependent.
-    // cy.get('[aria-labelledby="start-date"]').should(
-    //   'have.value',
-    //   `${startActualDate} PM`
-    // );
-    // cy.get('[aria-labelledby="end-date"]').should(
-    //   'have.value',
-    //   `${endActualDate} PM`
-    // );
+    cy.get('[aria-labelledby="start-date"]').should(
+      'have.value',
+      `${startActualDate} PM`
+    );
+    cy.get('[aria-labelledby="end-date"]').should(
+      'have.value',
+      `${endActualDate} PM`
+    );
 
     // --- Select Node Type ---
     ui.autocomplete.findByLabel('Node Type').type('Primary{enter}');
@@ -359,12 +358,12 @@ describe('Integration tests for verifying Cloudpulse custom and preset configura
 
         // TODO for ACLP: Timezone normalization between GMT baselines and API UTC payloads is environment-dependent.
         // Commenting out exact time equality checks to unblock CI; date/time are still driven via UI above.
-        // expect(formatToUtcDateTime(body.absolute_time_duration.start)).to.equal(
-        //   convertToGmt(startActualDate)
-        // );
-        // expect(formatToUtcDateTime(body.absolute_time_duration.end)).to.equal(
-        //   convertToGmt(endActualDate)
-        // );
+        expect(formatToUtcDateTime(body.absolute_time_duration.start)).to.equal(
+          convertToGmt(startActualDate)
+        );
+        expect(formatToUtcDateTime(body.absolute_time_duration.end)).to.equal(
+          convertToGmt(endActualDate)
+        );
 
         // Keep a minimal structural assertion so the request shape is still validated
         expect(body).to.have.nested.property('absolute_time_duration.start');
