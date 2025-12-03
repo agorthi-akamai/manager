@@ -102,11 +102,11 @@ export const ValueFieldRenderer = (props: ValueFieldRendererProps) => {
     onChange,
     operator,
     scope,
-    selectedRegions,
-    serviceType,
-    type = 'alerts',
     value,
     values,
+    type = 'alerts',
+    selectedRegions,
+    serviceType,
   } = props;
   // Use operator group for config lookup
   const operatorGroup = getOperatorGroup(operator);

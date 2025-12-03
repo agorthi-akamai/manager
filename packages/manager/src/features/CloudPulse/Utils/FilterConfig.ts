@@ -199,12 +199,12 @@ export const NODEBALANCER_CONFIG: Readonly<CloudPulseServiceTypeFilterMap> = {
     {
       configuration: {
         filterKey: 'port',
+        dimensionKey: 'port',
         filterType: 'string',
         isFilterable: true,
         isMetricsFilter: false,
         isOptional: true,
         name: 'Ports',
-        dimensionKey: 'port',
         neededInViews: [
           CloudPulseAvailableViews.central,
           CloudPulseAvailableViews.service,
@@ -300,13 +300,13 @@ export const FIREWALL_CONFIG: Readonly<CloudPulseServiceTypeFilterMap> = {
     },
     {
       configuration: {
+        dimensionKey: 'interface_id',
         filterKey: 'interface_id',
         filterType: 'string',
         isFilterable: true,
         isMetricsFilter: false,
         isOptional: true,
         name: 'Interface IDs',
-        dimensionKey: 'interface_id',
         neededInViews: [
           CloudPulseAvailableViews.central,
           CloudPulseAvailableViews.service,
@@ -531,6 +531,7 @@ export const LKE_CONFIG: Readonly<CloudPulseServiceTypeFilterMap> = {
     {
       configuration: {
         filterKey: 'region',
+        children: ['resource_id'],
         filterType: 'string',
         isFilterable: false,
         isMetricsFilter: false,

@@ -1,4 +1,5 @@
 import { capitalize } from '@linode/utilities';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryHistory } from 'history';
 import * as React from 'react';
@@ -21,6 +22,22 @@ const mockServices: Item<string, CloudPulseServiceType>[] = [
     value: 'dbaas',
   },
 ];
+
+const flags = {
+  aclpAlerting: {
+    enabled: true,
+    editDisabledStatuses: ['failed', 'in progress'],
+  },
+};
+
+const queryMocks = vi.hoisted(() => ({
+  useFlags: vi.fn().mockReturnValue({}),
+}));
+
+vi.mock('src/hooks/useFlags', async (importOriginal) => ({
+  ...(await importOriginal()),
+  useFlags: queryMocks.useFlags,
+}));
 
 describe('Alert Row', () => {
   it('should render an alert row', async () => {
@@ -172,7 +189,7 @@ describe('Alert Row', () => {
 
   it("should disable 'Edit' action item in menu if alert has no enabled/disabled status", async () => {
     const alert = alertFactory.build({ status: 'in progress', type: 'user' });
-
+    queryMocks.useFlags.mockReturnValue(flags);
     const { getByLabelText, getByText } = renderWithTheme(
       <AlertTableRow
         alert={alert}
@@ -205,5 +222,26 @@ describe('Alert Row', () => {
       'aria-disabled',
       'true'
     );
+  });
+
+  it('should show the delete action item for the user alert', async () => {
+    const alert = alertFactory.build({ type: 'user' });
+    renderWithTheme(
+      <AlertTableRow
+        alert={alert}
+        handlers={{
+          handleDelete: vi.fn(),
+          handleDetails: vi.fn(),
+          handleEdit: vi.fn(),
+          handleStatusChange: vi.fn(),
+        }}
+        services={mockServices}
+      />
+    );
+    const ActionMenu = screen.getByLabelText(
+      `Action menu for Alert ${alert.label}`
+    );
+    await userEvent.click(ActionMenu);
+    expect(screen.getByText('Delete')).toBeVisible();
   });
 });

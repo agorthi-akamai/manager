@@ -60,6 +60,7 @@ export const filterEditFormValues = (
     'severity',
     'rule_criteria',
     'trigger_conditions',
+    'entity_type',
   ]);
   const entityIds = formValues.entity_ids;
   const rules = formValues.rule_criteria.rules;
@@ -90,7 +91,7 @@ export const filterMetricCriteriaFormValues = (
       ...values,
       aggregate_function: rule.aggregate_function ?? 'avg',
       dimension_filters: filterDimensionFilterFormValues(
-        rule.dimension_filters
+        rule.dimension_filters ?? []
       ),
       metric: rule.metric ?? '',
       operator: rule.operator ?? 'eq',
@@ -102,10 +103,15 @@ const filterDimensionFilterFormValues = (
   formValues: DimensionFilterForm[]
 ): DimensionFilter[] => {
   return formValues.map((dimensionFilter) => {
+    const dimensionFilterValue =
+      dimensionFilter.value && dimensionFilter.value?.trim().endsWith(',')
+        ? dimensionFilter.value?.trim().slice(0, -1)
+        : dimensionFilter.value?.trim();
+
     return {
       dimension_label: dimensionFilter.dimension_label ?? '',
       operator: dimensionFilter.operator ?? 'eq',
-      value: dimensionFilter.value ?? '',
+      value: dimensionFilterValue ?? '',
     };
   });
 };

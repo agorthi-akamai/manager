@@ -125,7 +125,7 @@ export const FirewallDetail = () => {
       to: `/firewalls/$id/nodebalancers`,
     },
     {
-      title: `Metrics`,
+      title: 'Metrics',
       to: `/firewalls/$id/metrics`,
     },
   ]);
@@ -254,7 +254,7 @@ export const FirewallDetail = () => {
             </SafeTabPanel>
             <SafeTabPanel index={3}>
               <CloudPulseDashboardWithFilters
-                resource={firewall.id}
+                resource={firewallId}
                 serviceType="firewall"
               />
             </SafeTabPanel>

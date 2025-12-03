@@ -160,6 +160,7 @@ export interface CloudPulseServiceTypeFiltersConfiguration {
    * If this is true, we will pass the filter as a explicit key in the request else inside the filters object of metrics request
    */
   isMetricsFilter: boolean;
+
   /**
    * If this is true, multiselect will be enabled for the filter, only applicable for static and dynamic, not for predefined ones
    */
@@ -194,6 +195,7 @@ export interface CloudPulseServiceTypeFiltersConfiguration {
    *  This controls the order of rendering the filtering componenents
    */
   priority: number;
+
   /**
    * default is predefined filters like (region, resources, timeduration) or dynamic / static
    */

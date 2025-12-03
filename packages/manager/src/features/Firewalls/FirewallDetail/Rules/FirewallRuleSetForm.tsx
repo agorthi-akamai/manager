@@ -28,7 +28,6 @@ export const FirewallRuleSetForm = React.memo(
     const {
       category,
       errors,
-      handleOpenPrefixListDrawer,
       handleSubmit,
       setFieldTouched,
       setFieldValue,
@@ -214,7 +213,6 @@ export const FirewallRuleSetForm = React.memo(
                       {rule.protocol};&nbsp;{rule.ports};&nbsp;
                       {generateAddressesLabelV2({
                         addresses: rule.addresses,
-                        onPrefixListClick: handleOpenPrefixListDrawer,
                         showTruncateChip: false,
                       })}
                     </Box>

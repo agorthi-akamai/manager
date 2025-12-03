@@ -27,24 +27,19 @@ import {
   useStyles,
 } from './shared.styles';
 
-import type { PrefixListRuleReference } from '../../shared';
 import type { Category } from './shared';
 import type { FirewallRuleType } from '@linode/api-v4';
 
 interface FirewallRuleSetDetailsViewProps {
   category: Category;
   closeDrawer: () => void;
-  handleOpenPrefixListDrawer: (
-    prefixListLabel: string,
-    plRuleRef: PrefixListRuleReference
-  ) => void;
   ruleset: FirewallRuleType['ruleset'];
 }
 
 export const FirewallRuleSetDetailsView = (
   props: FirewallRuleSetDetailsViewProps
 ) => {
-  const { category, closeDrawer, handleOpenPrefixListDrawer, ruleset } = props;
+  const { category, closeDrawer, ruleset } = props;
 
   const { isFirewallRulesetsPrefixlistsFeatureEnabled } =
     useIsFirewallRulesetsPrefixlistsEnabled();
@@ -186,7 +181,6 @@ export const FirewallRuleSetDetailsView = (
               {rule.protocol};&nbsp;{rule.ports};&nbsp;
               {generateAddressesLabelV2({
                 addresses: rule.addresses,
-                onPrefixListClick: handleOpenPrefixListDrawer,
                 showTruncateChip: false,
               })}
             </Box>

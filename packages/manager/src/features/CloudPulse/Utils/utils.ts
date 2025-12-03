@@ -339,7 +339,6 @@ export const arePortsValid = (ports: string): string | undefined => {
   if (ports.length > 100) {
     return PORTS_LIMIT_ERROR_MESSAGE;
   }
-
   if (ports.startsWith(',')) {
     return PORTS_LEADING_COMMA_ERROR_MESSAGE;
   }

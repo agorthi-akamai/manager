@@ -29,7 +29,6 @@ import type {
   AclpAlertServiceTypeConfig,
   AclpServices,
 } from 'src/featureFlags';
-
 it('test getServiceTypeLabel method', () => {
   const services = serviceTypesFactory.buildList(3);
   services.forEach((service) => {
@@ -39,6 +38,7 @@ it('test getServiceTypeLabel method', () => {
     );
   });
 });
+
 it('test convertSecondsToMinutes method', () => {
   expect(convertSecondsToMinutes(0)).toBe('0 minutes');
   expect(convertSecondsToMinutes(60)).toBe('1 minute');
@@ -317,62 +317,6 @@ describe('useContextualAlertsState', () => {
     });
 
     expect(result.current.hasUnsavedChanges).toBe(true);
-  });
-});
-
-describe('filterRegionByServiceType', () => {
-  const regions = [
-    regionFactory.build({
-      monitors: {
-        alerts: ['Linodes'],
-        metrics: ['Managed Databases'],
-      },
-    }),
-    ...regionFactory.buildList(3, {
-      monitors: {
-        metrics: [],
-        alerts: [],
-      },
-    }),
-    ...regionFactory.buildList(3, {
-      monitors: {
-        alerts: ['Linodes', 'Managed Databases'],
-        metrics: [],
-      },
-    }),
-    regionFactory.build({
-      monitors: undefined,
-    }),
-  ];
-
-  it('should return empty list for linode metrics', () => {
-    const result = filterRegionByServiceType('metrics', regions, 'linode');
-
-    expect(result).toHaveLength(0);
-  });
-
-  it('should return 4 regions for linode alerts', () => {
-    expect(filterRegionByServiceType('alerts', regions, 'linode')).toHaveLength(
-      4
-    );
-  });
-
-  it('should return 1 region for dbaas metrics', () => {
-    expect(filterRegionByServiceType('metrics', regions, 'dbaas')).toHaveLength(
-      1
-    );
-  });
-
-  it('should return 3 regions for dbaas alerts', () => {
-    expect(filterRegionByServiceType('alerts', regions, 'dbaas')).toHaveLength(
-      3
-    );
-  });
-
-  it('should return no regions for nodebalancer service type', () => {
-    const result = filterRegionByServiceType('alerts', regions, 'nodebalancer');
-
-    expect(result).toHaveLength(0);
   });
 });
 

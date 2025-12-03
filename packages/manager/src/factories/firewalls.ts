@@ -107,11 +107,11 @@ export const firewallRuleSetFactory = Factory.Sync.makeFactory<FirewallRuleSet>(
     created: '2025-11-05T00:00:00',
     deleted: null,
     description: Factory.each((i) => `firewall-ruleset-${i} description`),
-    id: Factory.each((i) => i),
-    is_service_defined: false,
     label: Factory.each((i) => `firewall-ruleset-${i}`),
-    rules: firewallRuleFactory.buildList(3),
+    is_service_defined: false,
+    id: Factory.each((i) => i),
     type: 'inbound',
+    rules: firewallRuleFactory.buildList(3),
     updated: '2025-11-05T00:00:00',
     version: 1,
   }
@@ -120,17 +120,16 @@ export const firewallRuleSetFactory = Factory.Sync.makeFactory<FirewallRuleSet>(
 export const firewallPrefixListFactory =
   Factory.Sync.makeFactory<FirewallPrefixList>({
     created: '2025-11-05T00:00:00',
-    deleted: null,
+    updated: '2025-11-05T00:00:00',
     description: Factory.each((i) => `firewall-prefixlist-${i} description`),
     id: Factory.each((i) => i),
+    name: Factory.each((i) => `pl:system:resolvers:test-${i}`),
+    version: 1,
+    visibility: 'public',
     ipv4: Factory.each((i) =>
       Array.from({ length: 5 }, (_, j) => `139.144.${i}.${j}`)
     ),
     ipv6: Factory.each((i) =>
       Array.from({ length: 5 }, (_, j) => `2600:3c05:e001:bc::${i}${j}`)
     ),
-    name: Factory.each((i) => `pl:system:resolvers:test-${i}`),
-    updated: '2025-11-05T00:00:00',
-    version: 1,
-    visibility: 'public',
   });

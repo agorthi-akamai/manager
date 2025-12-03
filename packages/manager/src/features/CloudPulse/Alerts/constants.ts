@@ -1,7 +1,5 @@
 import type { FieldPath } from 'react-hook-form';
 
-import { PORTS_HELPER_TEXT } from '../Utils/constants';
-
 import type { CreateAlertDefinitionForm } from './CreateAlert/types';
 import type {
   AlertDefinitionScope,
@@ -129,6 +127,7 @@ export const severityMap: Record<AlertSeverityType, string> = {
   3: 'Info',
 };
 
+// TODO: remove in progress once api changes are ready
 export const alertStatusToIconStatusMap: Record<AlertStatusType, Status> = {
   disabled: 'inactive',
   enabled: 'active',
@@ -166,9 +165,9 @@ export const dimensionOperatorTypeMap: Record<
 > = {
   endswith: 'ends with',
   eq: 'equal',
+  in: 'in',
   neq: 'not equal',
   startswith: 'starts with',
-  in: 'in',
 };
 
 export const alertStatuses: Record<AlertStatusType, string> = {
@@ -251,12 +250,12 @@ export const CONFIGS_HELPER_TEXT =
   'Enter one or more configuration IDs separated by commas.';
 
 export const CONFIGS_ERROR_MESSAGE =
-  'Enter valid configuration ID numbers as integers separated by commas without spaces.';
+  'Enter valid configuration ID numbers as integers separated by commas.';
 
 export const CONFIG_ERROR_MESSAGE = 'Enter a valid configuration ID number.';
 export const CONFIG_HELPER_TEXT = 'Enter a configuration ID number.';
 export const CONFIG_IDS_CONSECUTIVE_COMMAS_ERROR_MESSAGE =
-  'Use a single comma to separate configuration IDs.';
+  'Use a single comma to separate IDs.';
 
 export const CONFIG_IDS_LEADING_COMMA_ERROR_MESSAGE =
   'First character must be an integer.';
@@ -265,27 +264,6 @@ export const CONFIGS_ID_PLACEHOLDER_TEXT = 'e.g., 1234,5678';
 
 export const INTERFACE_ID_ERROR_MESSAGE = 'Enter a valid interface ID number.';
 export const INTERFACE_ID_HELPER_TEXT = 'Enter an interface ID number.';
-export const PLACEHOLDER_TEXT_MAP: Record<string, Record<string, string>> = {
-  port: {
-    in: PORTS_PLACEHOLDER_TEXT,
-    default: PORT_PLACEHOLDER_TEXT,
-  },
-  config_id: {
-    in: CONFIGS_ID_PLACEHOLDER_TEXT,
-    default: CONFIG_ID_PLACEHOLDER_TEXT,
-  },
-};
-
-export const HELPER_TEXT_MAP: Record<string, Record<string, string>> = {
-  port: {
-    in: PORTS_HELPER_TEXT,
-    default: PORT_HELPER_TEXT,
-  },
-  config_id: {
-    in: CONFIGS_HELPER_TEXT,
-    default: CONFIG_ERROR_MESSAGE,
-  },
-};
 
 export const entityLabelMap = {
   linode: 'Linode',
