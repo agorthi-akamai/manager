@@ -489,6 +489,24 @@ export const FirewallRulesLanding = React.memo((props: Props) => {
       </StyledDiv>
       <FirewallRuleDrawer
         category={ruleDrawer.category}
+<<<<<<< HEAD
+=======
+        handleOpenPrefixListDrawer={(
+          prefixListLabel,
+          plRuleRef,
+          contextType
+        ) => {
+          openPrefixListDrawer(ruleDrawer.category, prefixListLabel, {
+            plRuleRef,
+            type: contextType,
+            modeViewedFrom: ruleDrawer.mode,
+          });
+        }}
+        inboundAndOutboundRules={[
+          ...(rules.inbound ?? []),
+          ...(rules.outbound ?? []),
+        ]}
+>>>>>>> 5db036f6147fd52b64c700eb31906f75a5cb1240
         isOpen={
           location.pathname.endsWith('add/inbound') ||
           location.pathname.endsWith('add/outbound') ||

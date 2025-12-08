@@ -1,5 +1,10 @@
-import { Box, Chip, Tooltip } from '@linode/ui';
-import { capitalize, truncateAndJoinList } from '@linode/utilities';
+import { useAccount } from '@linode/queries';
+import { BetaChip, Box, Chip, NewFeatureChip, Tooltip } from '@linode/ui';
+import {
+  capitalize,
+  isFeatureEnabledV2,
+  truncateAndJoinList,
+} from '@linode/utilities';
 import React from 'react';
 
 import { Link } from 'src/components/Link';
@@ -72,12 +77,24 @@ export const protocolOptions: FirewallOptionItem<FirewallRuleProtocol>[] = [
   { label: 'IPENCAP', value: 'IPENCAP' },
 ];
 
-export const addressOptions = [
-  { label: 'All IPv4, All IPv6', value: 'all' },
-  { label: 'All IPv4', value: 'allIPv4' },
-  { label: 'All IPv6', value: 'allIPv6' },
-  { label: 'IP / Netmask', value: 'ip/netmask' },
-];
+export const useAddressOptions = () => {
+  const { isFirewallRulesetsPrefixlistsFeatureEnabled } =
+    useIsFirewallRulesetsPrefixlistsEnabled();
+
+  return [
+    { label: 'All IPv4, All IPv6', value: 'all' },
+    { label: 'All IPv4', value: 'allIPv4' },
+    { label: 'All IPv6', value: 'allIPv6' },
+    {
+      label: isFirewallRulesetsPrefixlistsFeatureEnabled
+        ? 'IP / Netmask / Prefix List'
+        : 'IP / Netmask',
+      // We can keep this entire value even if the option is feature-flagged.
+      // Feature-flagging the label (without the "Prefix List" text) is sufficient.
+      value: 'ip/netmask/prefixlist',
+    },
+  ];
+};
 
 export const portPresets: Record<FirewallPreset, keyof typeof PORT_PRESETS> = {
   dns: '53',
@@ -94,6 +111,8 @@ export const allIPs = {
   ipv4: [allIPv4],
   ipv6: [allIPv6],
 };
+
+export const FW_RULESET_CAPABILITY = 'Cloud Firewall Rule Set';
 
 export interface PredefinedFirewall {
   inbound: FirewallRuleType[];
@@ -551,17 +570,60 @@ export const getFirewallDescription = (firewall: Firewall) => {
  * but will eventually also look at account capabilities if available.
  */
 export const useIsFirewallRulesetsPrefixlistsEnabled = () => {
+  const { data: account } = useAccount();
   const flags = useFlags();
+
+  if (!flags) {
+    return {
+      isFirewallRulesetsPrefixlistsFeatureEnabled: false,
+      isFirewallRulesetsPrefixListsBetaEnabled: false,
+      isFirewallRulesetsPrefixListsLAEnabled: false,
+      isFirewallRulesetsPrefixListsGAEnabled: false,
+    };
+  }
 
   // @TODO: Firewall Rulesets & Prefix Lists - check for customer tag/account capability when it exists
   return {
-    isFirewallRulesetsPrefixlistsFeatureEnabled:
-      flags.fwRulesetsPrefixLists?.enabled ?? false,
-    isFirewallRulesetsPrefixListsBetaEnabled:
-      flags.fwRulesetsPrefixLists?.beta ?? false,
-    isFirewallRulesetsPrefixListsLAEnabled:
-      flags.fwRulesetsPrefixLists?.la ?? false,
-    isFirewallRulesetsPrefixListsGAEnabled:
-      flags.fwRulesetsPrefixLists?.ga ?? false,
+    isFirewallRulesetsPrefixlistsFeatureEnabled: isFeatureEnabledV2(
+      FW_RULESET_CAPABILITY,
+      Boolean(flags.fwRulesetsPrefixLists?.enabled),
+      account?.capabilities ?? []
+    ),
+    isFirewallRulesetsPrefixListsBetaEnabled: isFeatureEnabledV2(
+      FW_RULESET_CAPABILITY,
+      Boolean(flags.fwRulesetsPrefixLists?.beta),
+      account?.capabilities ?? []
+    ),
+    isFirewallRulesetsPrefixListsLAEnabled: isFeatureEnabledV2(
+      FW_RULESET_CAPABILITY,
+      Boolean(flags.fwRulesetsPrefixLists?.la),
+      account?.capabilities ?? []
+    ),
+    isFirewallRulesetsPrefixListsGAEnabled: isFeatureEnabledV2(
+      FW_RULESET_CAPABILITY,
+      Boolean(flags.fwRulesetsPrefixLists?.ga),
+      account?.capabilities ?? []
+    ),
   };
+};
+
+/**
+ * Returns the feature chip for Firewall Rulesets & Prefix Lists.
+ *
+ * - Shows `<BetaChip />` if the feature is in Beta.
+ * - Shows `<NewFeatureChip />` if the feature is in GA.
+ * - Returns `null` if the feature is disabled OR if the feature is enabled but no chip applies.
+ */
+export const getFeatureChip = ({
+  isFirewallRulesetsPrefixlistsFeatureEnabled,
+  isFirewallRulesetsPrefixListsBetaEnabled,
+  isFirewallRulesetsPrefixListsGAEnabled,
+}: Omit<
+  ReturnType<typeof useIsFirewallRulesetsPrefixlistsEnabled>,
+  'isFirewallRulesetsPrefixListsLAEnabled'
+>) => {
+  if (!isFirewallRulesetsPrefixlistsFeatureEnabled) return null;
+  if (isFirewallRulesetsPrefixListsBetaEnabled) return <BetaChip />;
+  if (isFirewallRulesetsPrefixListsGAEnabled) return <NewFeatureChip />;
+  return null;
 };
