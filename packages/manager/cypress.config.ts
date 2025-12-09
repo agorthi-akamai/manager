@@ -1,6 +1,12 @@
 import { defineConfig } from 'cypress';
 import cypressOnFix from 'cypress-on-fix';
 
+// ** The missing import for code coverage **
+import codeCoverageTask from '@cypress/code-coverage/task';
+
+import cypressViteConfig from './cypress/vite.config';
+
+// Plugin imports
 import { setupPlugins } from './cypress/support/plugins';
 import { configureApi } from './cypress/support/plugins/configure-api';
 import { configureBrowser } from './cypress/support/plugins/configure-browser';
@@ -29,34 +35,23 @@ import { resetUserPreferences } from './cypress/support/plugins/reset-user-prefe
 import { splitCypressRun } from './cypress/support/plugins/split-run';
 import { logTestTagInfo } from './cypress/support/plugins/test-tagging-info';
 import { vitePreprocess } from './cypress/support/plugins/vite-preprocessor';
-import cypressViteConfig from './cypress/vite.config';
-/**
- * Exports a Cypress configuration object.
- *
- * {@link https://docs.cypress.io/guides/references/configuration#Options | Cypress configuration documentation}
- */
+
+// This variable is only for Vite config, not needed here (Vite uses its own config file)
+// const isE2ECoverage = !!process.env.CYPRESS_COVERAGE || !!process.env.COVERAGE;
+
 export default defineConfig({
   trashAssetsBeforeRuns: false,
-
-  // Browser configuration.
   chromeWebSecurity: false,
   viewportWidth: 1440,
   viewportHeight: 900,
-
-  // Timeouts.
   requestTimeout: 30000,
   responseTimeout: 80000,
   defaultCommandTimeout: 80000,
   pageLoadTimeout: 60000,
-
-  // Recording and test troubleshooting.
   projectId: '5rhsif',
   screenshotOnRunFailure: true,
   video: true,
-
-  // Only retry test when running via CI.
   retries: 0,
-
   experimentalMemoryManagement: true,
 
   component: {
@@ -73,6 +68,8 @@ export default defineConfig({
 
     setupNodeEvents(cypressOn, config) {
       const on = cypressOnFix(cypressOn);
+      // Add code coverage task for component testing
+      codeCoverageTask(on, config);
       return setupPlugins(on, config, [
         loadEnvironmentConfig,
         discardPassedTestRecordings,
@@ -85,13 +82,12 @@ export default defineConfig({
 
   e2e: {
     experimentalRunAllSpecs: true,
-
-    // This can be overridden using `CYPRESS_BASE_URL`.
     baseUrl: 'http://localhost:3000',
     specPattern: 'cypress/e2e/core/**/*.spec.{ts,tsx}',
-
     setupNodeEvents(cypressOn, config) {
       const on = cypressOnFix(cypressOn);
+      // Add code coverage task for e2e testing
+      codeCoverageTask(on, config);
       return setupPlugins(on, config, [
         loadEnvironmentConfig,
         nodeVersionCheck,

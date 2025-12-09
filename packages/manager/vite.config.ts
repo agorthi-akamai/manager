@@ -4,9 +4,13 @@ import svgr from 'vite-plugin-svgr';
 import { defineConfig } from 'vitest/config';
 
 import { urlCanParsePolyfill } from './src/polyfills/urlCanParse';
+import istanbul from 'vite-plugin-istanbul';
 
 // ESM-friendly alternative to `__dirname`.
 const DIRNAME = new URL('.', import.meta.url).pathname;
+
+// Only enable Istanbul for coverage runs (Cypress)
+const isE2ECoverage = !!process.env.COVERAGE || !!process.env.CYPRESS_COVERAGE;
 
 export default defineConfig({
   build: {
@@ -17,6 +21,16 @@ export default defineConfig({
     react(),
     svgr({ svgrOptions: { exportType: 'default' }, include: '**/*.svg' }),
     urlCanParsePolyfill(),
+    ...(isE2ECoverage
+      ? [
+          istanbul({
+            include: 'src/**/*.{js,jsx,ts,tsx}',
+            extension: ['.js', '.jsx', '.ts', '.tsx'],
+            cypress: true,
+            requireEnv: false,
+          }),
+        ]
+      : []),
   ],
   resolve: {
     alias: {
@@ -38,7 +52,7 @@ export default defineConfig({
       ],
       include: [
         'src/components/**/*.{js,jsx,ts,tsx}',
-        'src/hooks/*{js,jsx,ts,tsx}',
+        'src/hooks/*.{js,jsx,ts,tsx}',
         'src/utilities/**/*.{js,jsx,ts,tsx}',
         'src/**/*.utils.{js,jsx,ts,tsx}',
       ],
